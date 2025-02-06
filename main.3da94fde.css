@@ -5006,6 +5006,11 @@ blockquote.large-spacing {
     z-index: -1;
     font-weight: 300;
 }
+@media (max-width: 1300px) {
+    .project-number {
+        font-size: 1em;
+    }
+}
 .h2.with-project-number,
 h2.with-project-number {
     position: relative;
