@@ -5029,6 +5029,7 @@ h2.with-project-number .project-number {
     -webkit-transition: all 0.2s linear;
     -o-transition: all 0.2s linear;
     transition: all 0.2s linear;
+    margin-right: 0rem;
 }
 .project-nav .project-number {
     font-size: 5em;
@@ -5036,9 +5037,26 @@ h2.with-project-number .project-number {
 .project-nav:hover .project-number {
     color: #ccc;
 }
-@media (min-width: 768px) {
+@media (max-width: 1400px) {
     .project-nav.left .project-number {
         margin-left: -4rem;
+    }
+    .project-nav.right .project-number {
+        font-size: 4em;
+    }
+    .project-nav.right {
+        margin-right: 10rem;
+    }
+}
+@media (max-width: 768px) {
+    .project-nav.left .project-number {
+        margin-left: -4rem;
+    }
+    .project-nav.right .project-number {
+        font-size: 3em;
+    }
+    .project-nav.right {
+        margin-right: 20rem;
     }
 }
 .link-like-text,
