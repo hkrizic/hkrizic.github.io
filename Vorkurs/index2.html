@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Speedrun Hero</title>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+			background: #121212;
+			font-family: monospace;
+			color: #fff;
+		}
+		canvas {
+			display: block;
+			margin: 0 auto;
+			background: #222;
+			border: 4px solid #fff;
+		}
+	</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="960" height="540"></canvas>
+<script>
+	const canvas = document.getElementById('gameCanvas');
+	const ctx = canvas.getContext('2d');
+
+	const keys = {};
+
+	const player = {
+		x: 50,
+		y: 450,
+		width: 30,
+		height: 30,
+		color: '#00FF00',
+		dx: 0,
+		dy: 0,
+		speed: 4,
+		jumpPower: -12,
+		gravity: 0.6,
+		grounded: false
+	};
+
+	const bullets = [];
+	const enemyBullets = [];
+
+	const levels = [
+		{
+			platforms: [
+				{ x: 0, y: 510, width: 500, height: 50 },
+				{ x: 600, y: 450, width: 100, height: 20 },
+				{ x: 800, y: 380, width: 100, height: 20 },
+				{ x: 1000, y: 510, width: 2000, height: 50 }
+			],
+			enemies: [
+				{ x: 400, y: 480, width: 30, height: 30, color: '#FF0000', dir: 1 },
+				{ x: 700, y: 430, width: 30, height: 30, color: '#FF0000', dir: -1 }
+			],
+			spikes: []
+		},
+		{
+			platforms: [
+				{ x: 0, y: 510, width: 600, height: 50 },
+				{ x: 700, y: 480, width: 150, height: 20 },
+				{ x: 1000, y: 430, width: 100, height: 20 },
+				{ x: 1300, y: 510, width: 2000, height: 50 }
+			],
+			enemies: [
+				{ x: 650, y: 460, width: 30, height: 30, color: '#FF8800', dir: 1 },
+				{ x: 1100, y: 400, width: 30, height: 30, color: '#FF8800', dir: -1 }
+			],
+			spikes: [
+				{ x: 900, y: 500, width: 20, height: 10 },
+				{ x: 1000, y: 500, width: 20, height: 10 }
+			]
+		},
+		{
+			platforms: [
+				{ x: 0, y: 510, width: 400, height: 50 },
+				{ x: 500, y: 470, width: 100, height: 20 },
+				{ x: 700, y: 420, width: 100, height: 20 },
+				{ x: 900, y: 370, width: 100, height: 20 },
+				{ x: 1200, y: 510, width: 2000, height: 50 }
+			],
+			enemies: [
+				{ x: 600, y: 450, width: 30, height: 30, color: '#FF00FF', dir: 1 },
+				{ x: 1500, y: 480, width: 30, height: 30, color: '#FF00FF', dir: -1 }
+			],
+			spikes: [
+				{ x: 800, y: 500, width: 20, height: 10 },
+				{ x: 820, y: 500, width: 20, height: 10 },
+				{ x: 1500, y: 500, width: 20, height: 10 }
+			]
+		}
+	];
+
+	let currentLevel = 0;
+	let gameTime = 0;
+	let gameWon = false;
+
+	document.addEventListener('keydown', e => keys[e.key] = true);
+	document.addEventListener('keyup', e => keys[e.key] = false);
+
+	function resetLevel() {
+		player.x = 50;
+		player.y = 450;
+		player.dx = 0;
+		player.dy = 0;
+		bullets.length = 0;
+		enemyBullets.length = 0;
+	}
+
+	function update() {
+		if (gameWon) return;
+		const level = levels[currentLevel];
+
+		gameTime += 1 / 60;
+
+		if (keys['ArrowRight'] || keys['d']) player.dx = player.speed;
+		else if (keys['ArrowLeft'] || keys['a']) player.dx = -player.speed;
+		else player.dx = 0;
+
+		if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && player.grounded) {
+			player.dy = player.jumpPower;
+			player.grounded = false;
+		}
+
+		player.dy += player.gravity;
+
+		player.x += player.dx;
+		player.y += player.dy;
+
+		let grounded = false;
+		for (let p of level.platforms) {
+			if (player.x + player.width > p.x && player.x < p.x + p.width && player.y + player.height >= p.y && player.y + player.height <= p.y + p.height) {
+				player.y = p.y - player.height;
+				player.dy = 0;
+				grounded = true;
+			}
+		}
+		player.grounded = grounded;
+
+		if (player.y > canvas.height) {
+			resetLevel();
+		}
+
+		if (keys['f'] && bullets.length < 10) {
+			bullets.push({ x: player.x + player.width, y: player.y + player.height / 2, width: 12, height: 4, speed: 10 });
+			keys['f'] = false;
+		}
+
+		bullets.forEach(b => b.x += b.speed);
+		for (let i = bullets.length - 1; i >= 0; i--) {
+			if (bullets[i].x > canvas.width + 1000) bullets.splice(i, 1);
+		}
+
+		for (let enemy of level.enemies) {
+			enemy.x += enemy.dir * 2;
+			if (Math.random() < 0.01) {
+				enemyBullets.push({ x: enemy.x, y: enemy.y + enemy.height / 2, width: 10, height: 4, speed: -6 });
+			}
+			if (isColliding(player, enemy)) {
+				resetLevel();
+			}
+		}
+
+		level.enemies.forEach(e => {
+			for (let j = bullets.length - 1; j >= 0; j--) {
+				if (isColliding(e, bullets[j])) {
+					e.hit = true;
+					bullets.splice(j, 1);
+				}
+			}
+		});
+		level.enemies = level.enemies.filter(e => !e.hit);
+
+		enemyBullets.forEach(b => b.x += b.speed);
+		for (let b of enemyBullets) {
+			if (isColliding(player, b)) {
+				resetLevel();
+			}
+		}
+
+		for (let spike of level.spikes) {
+			if (isColliding(player, spike)) {
+				resetLevel();
+			}
+		}
+
+		if (player.x > level.platforms[level.platforms.length - 1].x + level.platforms[level.platforms.length - 1].width - 100) {
+			currentLevel++;
+			if (currentLevel >= levels.length) {
+				gameWon = true;
+				setTimeout(() => alert(`All levels complete! Final Time: ${gameTime.toFixed(2)}s`), 100);
+			} else {
+				resetLevel();
+			}
+		}
+	}
+
+	function isColliding(a, b) {
+		return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+	}
+
+	function draw() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		const level = levels[currentLevel];
+		const camX = player.x - 150;
+
+		const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+		gradient.addColorStop(0, '#001F3F');
+		gradient.addColorStop(1, '#0074D9');
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		for (let p of level.platforms) {
+			ctx.fillStyle = '#444';
+			ctx.fillRect(p.x - camX, p.y, p.width, p.height);
+		}
+
+		ctx.fillStyle = player.color;
+		ctx.fillRect(player.x - camX, player.y, player.width, player.height);
+
+		bullets.forEach(b => {
+			ctx.fillStyle = '#FFFF00';
+			ctx.fillRect(b.x - camX, b.y, b.width, b.height);
+		});
+
+		enemyBullets.forEach(b => {
+			ctx.fillStyle = '#FF6666';
+			ctx.fillRect(b.x - camX, b.y, b.width, b.height);
+		});
+
+		level.enemies.forEach(e => {
+			ctx.fillStyle = e.color;
+			ctx.fillRect(e.x - camX, e.y, e.width, e.height);
+		});
+
+		level.spikes.forEach(s => {
+			ctx.fillStyle = '#FF00FF';
+			ctx.beginPath();
+			ctx.moveTo(s.x - camX, s.y + s.height);
+			ctx.lineTo(s.x + s.width / 2 - camX, s.y);
+			ctx.lineTo(s.x + s.width - camX, s.y + s.height);
+			ctx.closePath();
+			ctx.fill();
+		});
+
+		ctx.fillStyle = '#fff';
+		ctx.font = '22px monospace';
+		ctx.fillText(`Level ${currentLevel + 1} | Time: ${gameTime.toFixed(2)}s`, 20, 30);
+
+		if (gameWon) {
+			ctx.font = '48px monospace';
+			ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
+		}
+	}
+
+	function gameLoop() {
+		update();
+		draw();
+		requestAnimationFrame(gameLoop);
+	}
+
+	gameLoop();
+</script>
+</body>
+</html>
