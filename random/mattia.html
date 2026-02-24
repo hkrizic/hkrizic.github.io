@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fragmentierung & Power-Law · Interaktive Lernseite</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f4;
+    --bg-warm: #f5f1ea;
+    --surface: #ffffff;
+    --border: #e2ddd4;
+    --border-light: #ece8e0;
+    --text: #2c2825;
+    --text-body: #44403a;
+    --text-dim: #8a8279;
+    --accent: #b45309;
+    --accent-light: #d97706;
+    --accent-bg: rgba(180, 83, 9, 0.06);
+    --accent-border: rgba(180, 83, 9, 0.2);
+    --blue: #1d4ed8;
+    --blue-light: #3b82f6;
+    --blue-bg: rgba(29, 78, 216, 0.06);
+    --blue-border: rgba(29, 78, 216, 0.15);
+    --green: #15803d;
+    --green-bg: rgba(21, 128, 61, 0.06);
+    --red: #b91c1c;
+    --red-bg: rgba(185, 28, 28, 0.06);
+    --serif: 'Newsreader', Georgia, serif;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-body);
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+    color: #faf8f4;
+    padding: 4.5rem 2rem 3.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(180,83,9,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 80% 30%, rgba(29,78,216,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(250,248,244,0.45);
+    margin-bottom: 1rem;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.02em;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent-light);
+  }
+
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: rgba(250,248,244,0.6);
+    max-width: 540px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  .hero .formula-display {
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    padding: 1rem 2rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    display: inline-block;
+    color: #faf8f4;
+    letter-spacing: 0.02em;
+  }
+
+  .hero .formula-display .hl { color: var(--accent-light); font-weight: 700; }
+  .hero .formula-display .bl { color: var(--blue-light); font-weight: 700; }
+
+  /* ── Content Container ── */
+  .content {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin: 3.5rem 0;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+
+  .section-number {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .section h2 {
+    font-family: var(--serif);
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 1rem;
+    letter-spacing: -0.015em;
+  }
+
+  .section h3 {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.8rem 0 0.6rem;
+  }
+
+  .section p {
+    margin-bottom: 1rem;
+  }
+
+  /* ── Callout Boxes ── */
+  .callout {
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    margin: 1.5rem 0;
+    font-size: 1rem;
+  }
+
+  .callout-amber {
+    background: var(--accent-bg);
+    border-left: 3px solid var(--accent);
+  }
+
+  .callout-blue {
+    background: var(--blue-bg);
+    border-left: 3px solid var(--blue);
+  }
+
+  .callout-green {
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+  }
+
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+  }
+
+  .callout-amber .callout-label { color: var(--accent); }
+  .callout-blue .callout-label { color: var(--blue); }
+  .callout-green .callout-label { color: var(--green); }
+
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ── Inline formula ── */
+  code, .formula-inline {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--bg-warm);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 0.12em 0.4em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  /* ── Formula block ── */
+  .formula-block {
+    background: var(--bg-warm);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.3rem 1.6rem;
+    margin: 1.5rem 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    line-height: 2;
+    color: var(--text);
+  }
+
+  .formula-block .hl { color: var(--accent); font-weight: 700; }
+  .formula-block .bl { color: var(--blue); font-weight: 700; }
+  .formula-block .note {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+    font-weight: 400;
+  }
+
+  /* ── Visual: Fragmentation Illustration ── */
+  .frag-illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: var(--bg-warm);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .frag-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .frag-stage .rocks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    min-height: 80px;
+    align-items: center;
+  }
+
+  .rock {
+    border-radius: 30% 70% 50% 50% / 60% 40% 60% 40%;
+    background: linear-gradient(135deg, #78716c, #57534e);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.12), inset -2px -2px 4px rgba(0,0,0,0.15), inset 2px 2px 4px rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+
+  .frag-arrow {
+    font-size: 1.8rem;
+    color: var(--text-dim);
+    opacity: 0.4;
+  }
+
+  .frag-stage .label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 3rem 0;
+  }
+
+  /* ── Interactive Tool Section ── */
+  .tool-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .tool-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 880px) {
+    .tool-layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-warm);
+  }
+
+  .panel-header h3 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .panel-body { padding: 1.2rem; }
+
+  /* Input mode */
+  .input-mode {
+    display: flex;
+    gap: 0.2rem;
+    background: var(--bg);
+    border-radius: 7px;
+    padding: 2px;
+  }
+
+  .input-mode button {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+
+  .input-mode button.active {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .textarea-wrapper { margin-top: 0.9rem; }
+
+  .textarea-wrapper label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  textarea {
+    width: 100%;
+    height: 230px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    padding: 0.8rem 1rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  textarea::placeholder { color: #c4bfb6; }
+
+  /* Buttons */
+  .actions { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.6rem 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    flex: 1;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(180,83,9,0.2);
+  }
+
+  .btn-secondary {
+    background: var(--bg-warm);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    margin-top: 1.1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .results.visible { display: block; animation: fadeUp 0.4s ease-out; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .result-card .label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.15rem;
+  }
+
+  .result-card .value {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .result-card.wide { grid-column: 1 / -1; }
+
+  .result-card .formula-result {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--blue);
+  }
+
+  .r2-good { color: var(--green) !important; }
+  .r2-ok { color: var(--accent) !important; }
+  .r2-bad { color: var(--red) !important; }
+
+  /* Chart */
+  .chart-container { padding: 1.2rem; }
+  .chart-wrapper { position: relative; height: 440px; }
+
+  .scale-toggle {
+    display: flex;
+    gap: 0.2rem;
+    background: var(--bg);
+    border-radius: 7px;
+    padding: 2px;
+  }
+
+  .scale-toggle button {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.5rem 1.1rem;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .scale-toggle button.active {
+    background: var(--surface);
+    color: var(--blue);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 380px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.8rem; opacity: 0.35; }
+  .empty-state p { font-family: var(--mono); font-size: 0.78rem; line-height: 1.6; }
+
+  .error-msg {
+    background: var(--red-bg);
+    border: 1px solid rgba(185,28,28,0.2);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    margin-top: 0.6rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--red);
+    display: none;
+  }
+
+  .error-msg.visible { display: block; animation: shake 0.3s ease-out; }
+
+  /* Data table */
+  .data-table-wrapper {
+    max-height: 180px;
+    overflow-y: auto;
+    margin-top: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: none;
+  }
+
+  .data-table-wrapper.visible { display: block; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+  }
+
+  .data-table th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-warm);
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 0.35rem 0.7rem;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text);
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--accent-bg); }
+
+  .export-section { margin-top: 0.9rem; display: none; }
+  .export-section.visible { display: block; }
+
+  /* ── Steps / Process ── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+
+  .step-card .step-num {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-card .step-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-card p {
+    font-size: 0.92rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+
+  /* ── Examples list ── */
+  .examples-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin: 1.2rem 0;
+  }
+
+  @media (max-width: 600px) {
+    .examples-grid { grid-template-columns: 1fr; }
+  }
+
+  .example-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+  }
+
+  .example-item .ex-icon {
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .example-item strong {
+    font-size: 0.95rem;
+    color: var(--text);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .example-item p {
+    font-size: 0.88rem;
+    margin-bottom: 0;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 3rem 1.5rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ HERO ════════════════ -->
+<div class="hero">
+  <div class="hero-label">Interaktive Lernseite</div>
+  <h1>Fragmentierung &amp; das <em>Power-Law</em></h1>
+  <p class="subtitle">Warum beim Zerbrechen von Materialien immer viele kleine und wenige grosse Stücke entstehen — und wie man das mathematisch beschreibt.</p>
+  <div class="formula-display">
+    <span class="hl">p</span>(d) = <span class="bl">C</span> · d<sup>&minus;<span class="bl">β</span></sup>
+  </div>
+</div>
+
+<!-- ════════════════ THEORIE ════════════════ -->
+<div class="content">
+
+  <!-- Section 1: Was ist Fragmentierung? -->
+  <div class="section">
+    <div class="section-number">Kapitel 01</div>
+    <h2>Was ist Fragmentierung?</h2>
+
+    <p>
+      Wenn ein Objekt zerbricht — sei es ein Stein, der auf den Boden fällt, eine Explosion, die Gestein sprengt, oder ein Asteroid, der in der Atmosphäre auseinanderfällt — entsteht eine <strong>Verteilung von Fragmentgrössen</strong>. Diese Verteilung ist nicht zufällig, sondern folgt einem universellen Muster.
+    </p>
+
+    <!-- Fragmentation illustration -->
+    <div class="frag-illustration">
+      <div class="frag-stage">
+        <div class="rocks">
+          <div class="rock" style="width:72px;height:64px;"></div>
+        </div>
+        <div class="label">Original</div>
+      </div>
+      <div class="frag-arrow">→</div>
+      <div class="frag-stage">
+        <div class="rocks">
+          <div class="rock" style="width:38px;height:32px;"></div>
+          <div class="rock" style="width:30px;height:28px;"></div>
+          <div class="rock" style="width:22px;height:20px;"></div>
+        </div>
+        <div class="label">1. Bruch</div>
+      </div>
+      <div class="frag-arrow">→</div>
+      <div class="frag-stage">
+        <div class="rocks">
+          <div class="rock" style="width:22px;height:18px;"></div>
+          <div class="rock" style="width:16px;height:14px;"></div>
+          <div class="rock" style="width:18px;height:16px;"></div>
+          <div class="rock" style="width:12px;height:11px;"></div>
+          <div class="rock" style="width:10px;height:9px;"></div>
+          <div class="rock" style="width:14px;height:13px;"></div>
+          <div class="rock" style="width:8px;height:7px;"></div>
+          <div class="rock" style="width:7px;height:6px;"></div>
+          <div class="rock" style="width:6px;height:5px;"></div>
+        </div>
+        <div class="label">Kaskade</div>
+      </div>
+      <div class="frag-arrow">→</div>
+      <div class="frag-stage">
+        <div class="rocks">
+          <div class="rock" style="width:14px;height:12px;"></div>
+          <div class="rock" style="width:8px;height:7px;"></div>
+          <div class="rock" style="width:6px;height:5px;"></div>
+          <div class="rock" style="width:10px;height:9px;"></div>
+          <div class="rock" style="width:5px;height:4px;"></div>
+          <div class="rock" style="width:4px;height:3px;"></div>
+          <div class="rock" style="width:7px;height:6px;"></div>
+          <div class="rock" style="width:3px;height:3px;"></div>
+          <div class="rock" style="width:5px;height:4px;"></div>
+          <div class="rock" style="width:4px;height:3px;"></div>
+          <div class="rock" style="width:3px;height:2px;"></div>
+          <div class="rock" style="width:6px;height:5px;"></div>
+          <div class="rock" style="width:3px;height:3px;"></div>
+          <div class="rock" style="width:4px;height:3px;"></div>
+          <div class="rock" style="width:2px;height:2px;"></div>
+          <div class="rock" style="width:3px;height:2px;"></div>
+        </div>
+        <div class="label">Viele klein, wenig gross</div>
+      </div>
+    </div>
+
+    <p>
+      Das Schlüsselergebnis: Es entstehen <strong>sehr viele kleine</strong> und <strong>sehr wenige grosse</strong> Fragmente. Die Wahrscheinlichkeit <code>p(d)</code>, ein Fragment der Grösse <code>d</code> zu finden, nimmt mit zunehmender Grösse nach einem <em>Potenzgesetz</em> ab.
+    </p>
+
+    <div class="callout callout-amber">
+      <div class="callout-label">Kernidee</div>
+      <p>
+        Fragmentierung ist ein <strong>skalenfreier</strong> Prozess. Die gleiche Physik, die einen Stein in Stücke bricht, wirkt auf jeder Grössenskala — vom Felsbrocken bis zum Staubkorn. Genau dieses «Selbstähnlichkeit» erzeugt ein Potenzgesetz.
+      </p>
+    </div>
+  </div>
+
+  <!-- Section 2: Das Potenzgesetz -->
+  <div class="section">
+    <div class="section-number">Kapitel 02</div>
+    <h2>Das Potenzgesetz der Fragmentierung</h2>
+
+    <p>
+      Die Wahrscheinlichkeitsverteilung der Fragmentgrössen lässt sich beschreiben als:
+    </p>
+
+    <div class="formula-block">
+      <span class="hl">p</span>(d) = <span class="bl">C</span> · d<sup>&minus;<span class="bl">β</span></sup>
+      <span class="note">Wahrscheinlichkeit, ein Fragment der Grösse d zu finden</span>
+    </div>
+
+    <h3>Die Parameter verstehen</h3>
+
+    <p>
+      Die zwei Parameter <code>C</code> und <code>β</code> haben eine anschauliche physikalische Bedeutung:
+    </p>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">β — der Fragmentierungsexponent</div>
+      <p>
+        <strong>β bestimmt, wie steil die Verteilung abfällt</strong> — also wie stark kleine Fragmente gegenüber grossen dominieren. Ein <strong>hohes β</strong> (z.B. 2.5–3) bedeutet: sehr aggressive Fragmentierung, extrem viel Feinmaterial. Ein <strong>niedriges β</strong> (z.B. 1.2–1.5) bedeutet: moderatere Verteilung, relativ mehr grosse Stücke bleiben übrig.
+      </p>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-label">C — die Normierungskonstante</div>
+      <p>
+        <strong>C skaliert die gesamte Verteilung</strong> und hängt von der Gesamtmasse und dem Messbereich ab. C sorgt dafür, dass die Wahrscheinlichkeiten physikalisch sinnvoll sind.
+      </p>
+    </div>
+
+    <h3>Warum Log-Log?</h3>
+
+    <p>
+      Ein Potenzgesetz hat eine besonders elegante Eigenschaft: Nimmt man den Logarithmus beider Seiten, wird aus der Kurve eine <strong>Gerade</strong>:
+    </p>
+
+    <div class="formula-block">
+      log(<span class="hl">p</span>) = log(<span class="bl">C</span>) &minus; <span class="bl">β</span> · log(d)
+      <span class="note">Im Log-Log-Plot: Gerade mit Steigung −β und Achsenabschnitt log(C)</span>
+    </div>
+
+    <p>
+      Das ist der Grund, warum der <strong>Log-Log-Plot</strong> das Standardwerkzeug zur Analyse von Fragmentierungsdaten ist. Wenn deine Daten im Log-Log-Plot auf einer Geraden liegen, hast du ein Potenzgesetz gefunden.
+    </p>
+  </div>
+
+  <!-- Section 3: Woher kommt das? -->
+  <div class="section">
+    <div class="section-number">Kapitel 03</div>
+    <h2>Woher kommt das Potenzgesetz?</h2>
+
+    <p>
+      Der physikalische Ursprung liegt in der <strong>kaskadenhaften Natur</strong> des Brechvorgangs. Wenn ein Objekt zerbricht, brechen die Fragmente selbst wieder, und deren Fragmente wieder — über viele Grössenordnungen hinweg.
+    </p>
+
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">Schritt 1</div>
+        <div class="step-icon">💥</div>
+        <p>Energie wird eingebracht und erzeugt Risse an Schwachstellen</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Schritt 2</div>
+        <div class="step-icon">🔀</div>
+        <p>Risse verzweigen sich und teilen das Material hierarchisch</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Schritt 3</div>
+        <div class="step-icon">📐</div>
+        <p>Jede «Generation» erzeugt statistisch ähnliche Teilungen</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Resultat</div>
+        <div class="step-icon">📊</div>
+        <p>Die Selbstähnlichkeit über Skalen → Potenzgesetz</p>
+      </div>
+    </div>
+
+    <h3>Wo sieht man das in der Natur?</h3>
+
+    <div class="examples-grid">
+      <div class="example-item">
+        <div class="ex-icon">🪨</div>
+        <strong>Gesteinsbruch</strong>
+        <p>Sprengungen im Bergbau, Erosion, Erdrutsche — β ≈ 1.5–2.5</p>
+      </div>
+      <div class="example-item">
+        <div class="ex-icon">☄️</div>
+        <strong>Asteroiden &amp; Meteoriten</strong>
+        <p>Grössenverteilung im Asteroidengürtel — β ≈ 1.8–2.0</p>
+      </div>
+      <div class="example-item">
+        <div class="ex-icon">🧊</div>
+        <strong>Eisbruch</strong>
+        <p>Fragmentierung von Eisbergen und Meereis — β ≈ 1.5–2.2</p>
+      </div>
+      <div class="example-item">
+        <div class="ex-icon">🏗️</div>
+        <strong>Beton &amp; Keramik</strong>
+        <p>Versagen spröder Materialien unter Belastung — β ≈ 2.0–3.0</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 4: Interaktives Tool -->
+  <div class="section">
+    <div class="section-number">Kapitel 04</div>
+    <h2>Interaktives Fitting-Tool</h2>
+
+    <p>
+      Jetzt bist du dran: Gib deine gemessenen Daten ein — Fragmentgrösse <code>d</code> und Wahrscheinlichkeit <code>p(d)</code> — und das Tool fittet automatisch das Potenzgesetz und visualisiert das Ergebnis.
+    </p>
+
+    <div class="callout callout-amber">
+      <div class="callout-label">Tipp</div>
+      <p>
+        Wechsle auf <strong>Log-Log</strong> Darstellung, um zu prüfen, ob deine Daten tatsächlich einem Potenzgesetz folgen. Liegen die Punkte auf einer Geraden? Dann passt das Modell. Systematische Abweichungen deuten auf ein anderes Verhalten hin (z.B. exponentielle Verteilung, bimodale Fragmentierung).
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ INTERACTIVE TOOL ════════════════ -->
+<div class="tool-section">
+  <div class="tool-layout">
+
+    <!-- Left: Input -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Daten eingeben</h3>
+        <div class="input-mode">
+          <button class="active" onclick="setMode('tab')">Tab/Space</button>
+          <button onclick="setMode('csv')">CSV</button>
+          <button onclick="setMode('json')">JSON</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="textarea-wrapper">
+          <label>d &amp; p(d) — eine Zeile pro Datenpunkt</label>
+          <textarea id="dataInput" spellcheck="false" placeholder="0.1   0.95
+0.2   0.82
+0.5   0.55
+1.0   0.31
+2.0   0.14
+5.0   0.042
+10    0.015
+20    0.006"></textarea>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="fitData()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Fit berechnen
+          </button>
+          <button class="btn btn-secondary" onclick="loadExample()">Demo</button>
+          <button class="btn btn-secondary" onclick="clearAll()">Reset</button>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="label">C</div>
+              <div class="value" id="valC">—</div>
+            </div>
+            <div class="result-card">
+              <div class="label">β</div>
+              <div class="value" id="valBeta">—</div>
+            </div>
+            <div class="result-card">
+              <div class="label">R² (log-space)</div>
+              <div class="value" id="valR2">—</div>
+            </div>
+            <div class="result-card">
+              <div class="label">N Datenpunkte</div>
+              <div class="value" id="valN">—</div>
+            </div>
+            <div class="result-card wide">
+              <div class="label">Gleichung</div>
+              <div class="formula-result" id="valFormula">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="data-table-wrapper" id="dataTable">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>d</th><th>p(d)</th><th>p_fit(d)</th></tr></thead>
+            <tbody id="dataTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Export -->
+        <div class="export-section" id="exportSection">
+          <div class="actions">
+            <button class="btn btn-secondary" onclick="exportCSV()" style="flex:1;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV Export
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Chart -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Visualisierung</h3>
+        <div class="scale-toggle" id="scaleToggle">
+          <button onclick="setScale('linear')">Linear</button>
+          <button class="active" onclick="setScale('log')">Log-Log</button>
+        </div>
+      </div>
+      <div id="chartEmpty" class="empty-state">
+        <div class="icon">📈</div>
+        <p>Daten eingeben und<br>«Fit berechnen» klicken<br><br><em style="opacity:0.6">oder «Demo» für Beispieldaten</em></p>
+      </div>
+      <div class="chart-container" id="chartArea" style="display:none;">
+        <div class="chart-wrapper">
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ INTERPRETATION ════════════════ -->
+<div class="content">
+  <div class="section">
+    <div class="section-number">Kapitel 05</div>
+    <h2>Ergebnisse interpretieren</h2>
+
+    <p>
+      Wenn du deine Daten gefittet hast, helfen dir diese Leitlinien bei der Interpretation:
+    </p>
+
+    <h3>Was sagt mir β?</h3>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">Interpretation von β</div>
+      <p>
+        <strong>β &lt; 2:</strong> Die grossen Fragmente tragen den Hauptanteil der Gesamtmasse. Die Fragmentierung war relativ «mild» — es bleiben signifikante grosse Stücke übrig.
+      </p>
+      <p>
+        <strong>β ≈ 2:</strong> Ein kritischer Übergangsbereich. Masse ist ungefähr gleich über alle Grössenordnungen verteilt.
+      </p>
+      <p>
+        <strong>β &gt; 2:</strong> Der Grossteil der Masse steckt in den kleinen Fragmenten. Intensive Zerkleinerung, viel Feinmaterial. Typisch für hochenergetische Prozesse.
+      </p>
+    </div>
+
+    <h3>Wann passt das Modell nicht?</h3>
+
+    <p>
+      Wenn deine Daten im <strong>Log-Log-Plot</strong> deutlich von einer Geraden abweichen, kommen verschiedene Ursachen in Frage: eine <strong>untere Grenze</strong> der Fragmentgrösse (z.B. Kristallgrösse), <strong>Sieblücken</strong> in der Messung, <strong>bimodale Verteilungen</strong> bei mehrstufiger Fragmentierung, oder schlicht ein anderes physikalisches Modell (Weibull, log-normal).
+    </p>
+
+    <div class="callout callout-green">
+      <div class="callout-label">R² einordnen</div>
+      <p>
+        <strong>R² &gt; 0.99:</strong> Exzellenter Fit — die Daten folgen sehr sauber einem Potenzgesetz.<br>
+        <strong>R² = 0.95–0.99:</strong> Guter Fit, leichte Abweichungen möglich.<br>
+        <strong>R² &lt; 0.95:</strong> Das Potenzgesetz beschreibt die Daten nur bedingt. Untersuche die Residuen und prüfe alternative Modelle.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<div class="footer">
+  <p>Interaktive Lernseite · Fragmentierung &amp; Power-Law · Fit-Methode: Lineare Regression im Log-Raum</p>
+</div>
+
+<!-- ════════════════ JAVASCRIPT ════════════════ -->
+<script>
+  let currentMode = 'tab';
+  let currentScale = 'log';
+  let chartInstance = null;
+  let fitResult = null;
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.input-mode button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    const ta = document.getElementById('dataInput');
+    if (mode === 'tab') ta.placeholder = '0.1   0.95\n0.2   0.82\n0.5   0.55\n1.0   0.31';
+    else if (mode === 'csv') ta.placeholder = '0.1,0.95\n0.2,0.82\n0.5,0.55\n1.0,0.31';
+    else ta.placeholder = '[\n  {"d": 0.1, "p": 0.95},\n  {"d": 0.2, "p": 0.82}\n]';
+  }
+
+  function setScale(scale) {
+    currentScale = scale;
+    document.querySelectorAll('.scale-toggle button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (fitResult) renderChart(fitResult.data, fitResult.C, fitResult.beta);
+  }
+
+  function parseData(raw) {
+    raw = raw.trim();
+    if (!raw) throw new Error('Keine Daten eingegeben.');
+    let pairs = [];
+    if (currentMode === 'json') {
+      try {
+        const arr = JSON.parse(raw);
+        pairs = arr.map(item => {
+          const d = item.d ?? item.D ?? item.x ?? item.X;
+          const p = item.p ?? item.P ?? item.y ?? item.Y ?? item['p(d)'];
+          return [parseFloat(d), parseFloat(p)];
+        });
+      } catch (e) { throw new Error('JSON konnte nicht geparst werden.'); }
+    } else {
+      const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const sep = currentMode === 'csv' ? /[,;]/ : /[\t\s]+/;
+      pairs = lines.map((line, i) => {
+        const parts = line.split(sep).map(s => s.trim()).filter(Boolean);
+        if (parts.length < 2) throw new Error(`Zeile ${i + 1}: Brauche mindestens 2 Werte.`);
+        return [parseFloat(parts[0]), parseFloat(parts[1])];
+      });
+    }
+    pairs = pairs.filter(([d, p]) => !isNaN(d) && !isNaN(p) && d > 0 && p > 0);
+    if (pairs.length < 2) throw new Error('Mindestens 2 gültige Datenpunkte nötig (d > 0, p > 0).');
+    return pairs.sort((a, b) => a[0] - b[0]);
+  }
+
+  function linearRegression(x, y) {
+    const n = x.length;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; sxx += x[i]*x[i]; sxy += x[i]*y[i]; }
+    const denom = n * sxx - sx * sx;
+    const slope = (n * sxy - sx * sy) / denom;
+    const intercept = (sy - slope * sx) / n;
+    const yMean = sy / n;
+    let ssTot = 0, ssRes = 0;
+    for (let i = 0; i < n; i++) {
+      ssTot += (y[i] - yMean) ** 2;
+      ssRes += (y[i] - (intercept + slope * x[i])) ** 2;
+    }
+    return { slope, intercept, r2: 1 - ssRes / ssTot };
+  }
+
+  function fitData() {
+    const errorEl = document.getElementById('errorMsg');
+    errorEl.classList.remove('visible');
+    try {
+      const raw = document.getElementById('dataInput').value;
+      const data = parseData(raw);
+      const logD = data.map(([d]) => Math.log(d));
+      const logP = data.map(([, p]) => Math.log(p));
+      const reg = linearRegression(logD, logP);
+      const beta = -reg.slope;
+      const C = Math.exp(reg.intercept);
+      fitResult = { data, C, beta, r2: reg.r2 };
+
+      document.getElementById('results').classList.add('visible');
+      document.getElementById('valC').textContent = formatNum(C);
+      document.getElementById('valBeta').textContent = formatNum(beta);
+      const r2El = document.getElementById('valR2');
+      r2El.textContent = reg.r2.toFixed(6);
+      r2El.className = 'value ' + (reg.r2 > 0.99 ? 'r2-good' : reg.r2 > 0.95 ? 'r2-ok' : 'r2-bad');
+      document.getElementById('valN').textContent = data.length;
+      document.getElementById('valFormula').textContent = `p(d) = ${formatNum(C)} · d^(−${formatNum(beta)})`;
+
+      const tbody = document.getElementById('dataTableBody');
+      tbody.innerHTML = data.map(([d, p], i) => {
+        const pFit = C * Math.pow(d, -beta);
+        return `<tr><td>${i+1}</td><td>${formatNum(d)}</td><td>${formatNum(p)}</td><td>${formatNum(pFit)}</td></tr>`;
+      }).join('');
+      document.getElementById('dataTable').classList.add('visible');
+      document.getElementById('exportSection').classList.add('visible');
+      renderChart(data, C, beta);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.add('visible');
+    }
+  }
+
+  function formatNum(n) {
+    if (Math.abs(n) >= 1000 || (Math.abs(n) < 0.001 && n !== 0)) return n.toExponential(4);
+    if (Math.abs(n) >= 100) return n.toFixed(2);
+    if (Math.abs(n) >= 1) return n.toFixed(4);
+    return n.toPrecision(5);
+  }
+
+  function renderChart(data, C, beta) {
+    document.getElementById('chartEmpty').style.display = 'none';
+    document.getElementById('chartArea').style.display = 'block';
+    if (chartInstance) chartInstance.destroy();
+
+    const isLog = currentScale === 'log';
+    const dMin = data[0][0], dMax = data[data.length-1][0];
+    const fitPoints = [];
+    const nPts = 200;
+
+    if (isLog) {
+      const logMin = Math.log10(dMin) - 0.2, logMax = Math.log10(dMax) + 0.2;
+      for (let i = 0; i <= nPts; i++) {
+        const d = Math.pow(10, logMin + (logMax - logMin) * i / nPts);
+        fitPoints.push({ x: d, y: C * Math.pow(d, -beta) });
+      }
+    } else {
+      const lo = Math.max(dMin * 0.5, dMin - (dMax-dMin)*0.05);
+      const hi = dMax + (dMax-dMin)*0.05;
+      for (let i = 0; i <= nPts; i++) {
+        const d = lo + (hi - lo) * i / nPts;
+        fitPoints.push({ x: d, y: C * Math.pow(d, -beta) });
+      }
+    }
+
+    chartInstance = new Chart(document.getElementById('chart'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Messdaten',
+            data: data.map(([d, p]) => ({ x: d, y: p })),
+            backgroundColor: 'rgba(180, 83, 9, 0.85)',
+            borderColor: 'rgba(180, 83, 9, 1)',
+            borderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            order: 1
+          },
+          {
+            label: `Fit: p(d) = ${formatNum(C)}·d^(−${formatNum(beta)})`,
+            data: fitPoints,
+            type: 'line',
+            borderColor: 'rgba(29, 78, 216, 0.75)',
+            backgroundColor: 'rgba(29, 78, 216, 0.04)',
+            borderWidth: 2.5,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.1,
+            order: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#8a8279',
+              font: { family: "'JetBrains Mono', monospace", size: 11 },
+              usePointStyle: true, pointStyleWidth: 20, padding: 20
+            }
+          },
+          tooltip: {
+            backgroundColor: '#fff',
+            borderColor: '#e2ddd4',
+            borderWidth: 1,
+            titleFont: { family: "'JetBrains Mono', monospace", size: 12 },
+            bodyFont: { family: "'JetBrains Mono', monospace", size: 11 },
+            titleColor: '#2c2825',
+            bodyColor: '#8a8279',
+            padding: 12,
+            callbacks: {
+              label: ctx => `d = ${formatNum(ctx.parsed.x)}, p(d) = ${formatNum(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: isLog ? 'logarithmic' : 'linear',
+            title: { display: true, text: 'Fragmentgrösse d', color: '#8a8279', font: { family: "'JetBrains Mono', monospace", size: 12, weight: '600' } },
+            ticks: {
+              color: '#b0a99e',
+              font: { family: "'JetBrains Mono', monospace", size: 10 },
+              callback: function(val) {
+                if (isLog) { const l = Math.log10(val); return Math.abs(l - Math.round(l)) < 0.01 ? val : ''; }
+                return val;
+              }
+            },
+            grid: { color: 'rgba(226,221,212,0.5)', lineWidth: 0.5 },
+            border: { color: '#e2ddd4' }
+          },
+          y: {
+            type: isLog ? 'logarithmic' : 'linear',
+            title: { display: true, text: 'Wahrscheinlichkeit p(d)', color: '#8a8279', font: { family: "'JetBrains Mono', monospace", size: 12, weight: '600' } },
+            ticks: {
+              color: '#b0a99e',
+              font: { family: "'JetBrains Mono', monospace", size: 10 },
+              callback: function(val) {
+                if (isLog) { const l = Math.log10(val); return Math.abs(l - Math.round(l)) < 0.01 ? val : ''; }
+                return val;
+              }
+            },
+            grid: { color: 'rgba(226,221,212,0.5)', lineWidth: 0.5 },
+            border: { color: '#e2ddd4' }
+          }
+        }
+      }
+    });
+  }
+
+  function loadExample() {
+    document.getElementById('dataInput').value =
+`0.212990969\t0.999
+0.239852789\t0.986842105
+0.283635441\t0.973684211
+0.316631062\t0.960526316
+0.361682777\t0.947368421
+0.377969077\t0.934210526
+0.402081262\t0.921052632
+0.403350325\t0.907894737
+0.403561835\t0.894736842
+0.430423655\t0.881578947
+0.43824954\t0.868421053
+0.440787665\t0.855263158
+0.520315574\t0.842105263
+0.527506927\t0.828947368
+0.529622031\t0.815789474
+0.534909791\t0.802631579
+0.53977453\t0.789473684
+0.588210411\t0.776315789
+0.591171556\t0.763157895
+0.594978743\t0.75
+0.609572961\t0.736842105
+0.61972546\t0.723684211
+0.626282282\t0.710526316
+0.638126864\t0.697368421
+0.650394467\t0.684210526
+0.674718162\t0.671052632
+0.693754098\t0.657894737
+0.714693627\t0.644736842
+0.730768417\t0.631578947
+0.775820132\t0.618421053
+0.781319402\t0.605263158
+0.79083737\t0.592105263
+0.791471901\t0.578947368
+0.808392733\t0.565789474
+0.809027264\t0.552631579
+0.832927938\t0.539473684
+0.83377398\t0.526315789
+0.837369657\t0.513157895
+0.872903403\t0.5
+0.935108611\t0.486842105
+0.968506102\t0.473684211
+0.998329068\t0.460526316
+1.013769327\t0.447368421
+1.03661245\t0.434210526
+1.057763489\t0.421052632
+1.058821041\t0.407894737
+1.063262759\t0.394736842
+1.071934686\t0.381578947
+1.114236765\t0.368421053
+1.146174834\t0.355263158
+1.190380507\t0.342105263
+1.215973265\t0.328947368
+1.215973265\t0.315789474
+1.225491233\t0.302631579
+1.228029358\t0.289473684
+1.253410605\t0.276315789
+1.326381692\t0.263157895
+1.340341378\t0.25
+1.367414708\t0.236842105
+1.388565748\t0.223684211
+1.400833351\t0.210526316
+1.474438969\t0.197368421
+1.479303708\t0.184210526
+1.530066203\t0.171052632
+1.539584171\t0.157894737
+1.548467607\t0.144736842
+1.561158231\t0.131578947
+1.642589733\t0.118421053
+1.761035555\t0.105263158
+1.81729732\t0.092105263
+1.862349034\t0.078947368
+1.920937414\t0.065789474
+1.989889803\t0.052631579
+1.992427928\t0.039473684
+2.344592737\t0.026315789
+3.089743861\t0.013157895`;
+    currentMode = 'tab';
+    document.querySelectorAll('.input-mode button').forEach(b => b.classList.remove('active'));
+    document.querySelector('.input-mode button').classList.add('active');
+    fitData();
+  }
+
+  function clearAll() {
+    document.getElementById('dataInput').value = '';
+    document.getElementById('results').classList.remove('visible');
+    document.getElementById('dataTable').classList.remove('visible');
+    document.getElementById('exportSection').classList.remove('visible');
+    document.getElementById('errorMsg').classList.remove('visible');
+    document.getElementById('chartEmpty').style.display = 'flex';
+    document.getElementById('chartArea').style.display = 'none';
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    fitResult = null;
+  }
+
+  function exportCSV() {
+    if (!fitResult) return;
+    const { data, C, beta, r2 } = fitResult;
+    let csv = `# Power-Law Fit: p(d) = ${C} * d^(-${beta})\n# C = ${C}, beta = ${beta}, R2 = ${r2}\nd,p_measured,p_fit\n`;
+    data.forEach(([d, p]) => { csv += `${d},${p},${C * Math.pow(d, -beta)}\n`; });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'power_law_fit.csv'; a.click();
+  }
+
+  document.getElementById('dataInput').addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') fitData();
+  });
+</script>
+
+</body>
+</html>
