@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amontons-Simulation (100 cm³ | °C / hPa)</title>
+    <style>
+        :root { --primary:#1976d2; }
+        body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f4f6f9;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{margin:1.5rem 0 0.5rem;font-size:2rem;text-align:center;color:var(--primary)}
+        .subtitle{margin-bottom:1rem;font-size:1rem;color:#444}
+        .sim-wrapper{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;width:100%;max-width:1000px}
+        .controls,.visual{background:#fff;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.1);padding:1.5rem}
+        .controls{flex:1 1 280px;display:flex;flex-direction:column;gap:1.2rem}
+        .visual{flex:1 1 280px;position:relative;display:flex;flex-direction:column;align-items:center}
+        label{font-weight:600;display:flex;justify-content:space-between;align-items:center}
+        input[type=range]{width:100%}
+        #box{position:relative;height:320px;width:320px;border:6px solid #555;border-radius:10px;background:linear-gradient(to bottom,#e0f7fa,#b2ebf2);overflow:hidden;margin-top:1rem}
+        #particleCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+        .chart-box{margin-top:1.5rem}
+        canvas#chart{background:#fff;border:1px solid #ccc;border-radius:6px}
+        button{padding:0.5rem 1rem;border:none;border-radius:6px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:background .2s}
+        button:hover{background:#145a9e}
+    </style>
+</head>
+<body>
+<h1>Amontons-Simulation</h1>
+<div class="subtitle">Volumen: 100 cm³ (konstant)</div>
+
+<div class="sim-wrapper">
+    <!-- Visual section -->
+    <div class="visual">
+        <div id="box">
+            <canvas id="particleCanvas"></canvas>
+        </div>
+        <div style="margin-top:0.8rem;text-align:center">
+            <div><strong>T</strong> = <span id="tempVal">20</span> °C</div>
+            <div><strong>p</strong> = <span id="pressVal">846</span> hPa</div>
+        </div>
+    </div>
+
+    <!-- Controls section -->
+    <div class="controls">
+        <label>Temperatur (°C): <span id="tempLabel">20</span></label>
+        <input type="range" id="tempSlider" min="-273" max="177" step="1" value="20" />
+
+        <button id="addData">Add Data</button>
+        <div class="chart-box">
+            <canvas id="chart" width="400" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------- DOM ---------- */
+    const tSlider  = document.getElementById('tempSlider');
+    const tSpan    = document.getElementById('tempVal');
+    const pSpan    = document.getElementById('pressVal');
+    const tLabel   = document.getElementById('tempLabel');
+    const particleCanvas = document.getElementById('particleCanvas');
+    const ctxPart  = particleCanvas.getContext('2d');
+    const chartCanvas = document.getElementById('chart');
+    const ctxChart = chartCanvas.getContext('2d');
+
+    /* ---------- Konstanten ---------- */
+    const R = 8.314;          // J/(mol·K)
+    const V = 1e-4;           // m³  (100 cm³)
+    // n so gewählt, dass p=130 kPa (1300 hPa) bei 450 K -> n = pV/RT
+    const n = 130000 * V / (R * 450);
+
+    /* Canvas-Größe anpassen */
+    function resizeCanvas(){
+        particleCanvas.width  = particleCanvas.clientWidth = particleCanvas.parentElement.clientWidth;
+        particleCanvas.height = particleCanvas.clientHeight = particleCanvas.parentElement.clientHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    /* UI aktualisieren */
+    function pressurePa(Tc){
+        const Tk = Tc + 273.15;
+        return n * R * Tk / V; // Pa
+    }
+    function updateUI(){
+        const T = parseInt(tSlider.value);
+        const p_Pa = pressurePa(T);
+        const p_hPa = p_Pa / 100;
+        /* Labels */
+        tSpan.textContent = T;
+        pSpan.textContent = p_hPa.toFixed(0);
+        tLabel.textContent = T;
+        /* Teilchen-Tempo proportional sqrt(T/T0) */
+        particleSpeed = baseSpeed * Math.sqrt((T+273.15)/(20+273.15));
+    }
+
+    /* Slider Event */
+    tSlider.addEventListener('input', updateUI);
+
+    /* ---------- Teilchen ---------- */
+    const numParticles = 70;
+    const particles=[];
+    function rand(min,max){return Math.random()*(max-min)+min;}
+    const baseSpeed = 0.6;
+    let particleSpeed = baseSpeed;
+
+    function initParticles(){
+        particles.length=0;
+        for(let i=0;i<numParticles;i++){
+            particles.push({
+                x: rand(5, particleCanvas.width-5),
+                y: rand(5, particleCanvas.height-5),
+                vx: rand(-1,1),
+                vy: rand(-1,1)
+            });
+        }
+    }
+    initParticles();
+
+    function updateParticles(){
+        ctxPart.clearRect(0,0,particleCanvas.width,particleCanvas.height);
+        for(const p of particles){
+            p.x += p.vx * particleSpeed;
+            p.y += p.vy * particleSpeed;
+
+            /* Kollisionen mit Wänden */
+            if(p.x < 3){ p.x=3; p.vx*=-1; }
+            if(p.x > particleCanvas.width-3){ p.x=particleCanvas.width-3; p.vx*=-1; }
+            if(p.y < 3){ p.y=3; p.vy*=-1; }
+            if(p.y > particleCanvas.height-3){ p.y=particleCanvas.height-3; p.vy*=-1; }
+
+            ctxPart.beginPath();
+            ctxPart.arc(p.x,p.y,3,0,Math.PI*2);
+            ctxPart.fillStyle='#1976d2';
+            ctxPart.fill();
+        }
+        requestAnimationFrame(updateParticles);
+    }
+    requestAnimationFrame(updateParticles);
+
+    /* ---------- Diagramm (T vs p) ---------- */
+    const dataPoints=[];
+
+    function map(val,inMin,inMax,outMin,outMax){
+        return (val-inMin)/(inMax-inMin)*(outMax-outMin)+outMin;
+    }
+
+    function drawAxes(){
+        ctxChart.clearRect(0,0,chartCanvas.width,chartCanvas.height);
+        ctxChart.strokeStyle='#000';
+        /* y-Achse (p) */
+        ctxChart.beginPath();ctxChart.moveTo(40,10);ctxChart.lineTo(40,260);ctxChart.stroke();
+        /* x-Achse (T) */
+        ctxChart.beginPath();ctxChart.moveTo(40,260);ctxChart.lineTo(380,260);ctxChart.stroke();
+
+        /* Beschriftungen */
+        ctxChart.font='12px Segoe UI';
+        ctxChart.fillText('p (hPa)',6,20);
+        ctxChart.fillText('T (°C)',335,280);
+
+        /* Achsen-Endwerte */
+        ctxChart.fillText('1300', 2, 15);     // p max oben
+        ctxChart.fillText('0',    18, 260);   // p min unten
+        ctxChart.fillText('-280', 12, 275);   // T min links
+        ctxChart.fillText('130',  362, 275);  // T max rechts
+    }
+
+    function drawChart(){
+        drawAxes();
+        for(const pt of dataPoints){
+            const y = map(pt.p, 0, 1300, 260, 10);     // hPa -> Pixel
+            const x = map(pt.t, -280, 130, 40, 380);   // °C  -> Pixel
+            ctxChart.beginPath();
+            ctxChart.arc(x, y, 4, 0, Math.PI * 2);
+            ctxChart.fillStyle = '#d32f2f';
+            ctxChart.fill();
+        }
+    }
+
+    drawChart();
+
+    document.getElementById('addData').addEventListener('click',()=>{
+        const T = parseFloat(tSlider.value);
+        const p_hPa = pressurePa(T)/100;
+        if(p_hPa<=1300 && T>=-280 && T<=130){
+            dataPoints.push({t:T,p:p_hPa});
+            drawChart();
+        }
+    });
+
+    /* Initiale Synchronisierung */
+    updateUI();
+</script>
+</body>
+</html>

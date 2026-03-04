@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITS Mask Editor</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a1a2e'/%3E%3Cstop offset='100%25' stop-color='%230f0f1a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='6' fill='url(%23bg)'/%3E%3Ccircle cx='12' cy='12' r='4' fill='%23888'/%3E%3Ccircle cx='22' cy='10' r='2' fill='%23666'/%3E%3Ccircle cx='20' cy='22' r='3' fill='%23777'/%3E%3Ccircle cx='9' cy='23' r='2' fill='%23555'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ff5555' fill-opacity='0.5' stroke='%23ff6666' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='1' fill='white'/%3E%3C/svg%3E">
+    <script>
+        window.__fitsReadyPromise = new Promise((resolve) => {
+            window.__fitsReadyResolve = resolve;
+        });
+
+        (function () {
+            const localSrc = "fits.js";
+            const cdnSrc = "https://unpkg.com/fitsjs/lib/fits.js";
+            const markReady = () => {
+                if (window.__fitsReadyResolve) window.__fitsReadyResolve();
+            };
+            const script = document.createElement("script");
+            script.src = localSrc;
+            script.onload = markReady;
+            script.onerror = () => {
+                const fallback = document.createElement("script");
+                fallback.src = cdnSrc;
+                fallback.onload = markReady;
+                document.head.appendChild(fallback);
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Top Control Panel --- */
+        #controls {
+            background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #2a2a2a;
+            z-index: 30;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            background: #333;
+            border-color: #444;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        button.active {
+            background: #3a3a3a;
+            border-color: #555;
+            color: #fff;
+        }
+
+        button.primary {
+            background: #2563eb;
+            border-color: #1d4ed8;
+            color: white;
+        }
+
+        button.primary:hover {
+            background: #3b82f6;
+        }
+
+        button.toggle-on {
+            background: #16a34a;
+            border-color: #15803d;
+            color: white;
+        }
+
+        button.toggle-on:hover {
+            background: #22c55e;
+        }
+
+        /* File Input */
+        input[type="file"] {
+            font-size: 13px;
+            color: #888;
+        }
+
+        input[type="file"]::file-selector-button {
+            padding: 8px 16px;
+            cursor: pointer;
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-right: 10px;
+            transition: all 0.15s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: #333;
+        }
+
+        /* Select */
+        select {
+            padding: 8px 12px;
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: #444;
+        }
+
+        /* Number Input */
+        input[type="number"] {
+            width: 60px;
+            padding: 8px 10px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #555;
+        }
+
+        /* Text Input */
+        input[type="text"] {
+            width: 160px;
+            padding: 8px 10px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #555;
+        }
+
+        /* Divider */
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: #333;
+        }
+
+        /* Zoom Display */
+        .zoom-display {
+            font-size: 13px;
+            color: #888;
+            min-width: 50px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* --- Main Area (workspace + inspector) --- */
+        #mainArea {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* --- Workspace --- */
+        #workspace {
+            flex: 1;
+            position: relative;
+            background: #050505;
+            overflow: scroll;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+        }
+
+        /* Custom scrollbars */
+        #workspace::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+
+        #workspace::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 7px;
+        }
+
+        #workspace::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 7px;
+            border: 3px solid #1a1a1a;
+        }
+
+        #workspace::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        #workspace::-webkit-scrollbar-corner {
+            background: #1a1a1a;
+        }
+
+        /* --- Inspector Panel --- */
+        #inspector {
+            width: 220px;
+            background: linear-gradient(90deg, #141414 0%, #1a1a1a 100%);
+            border-left: 1px solid #2a2a2a;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .inspector-title {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        #magnifierCanvas {
+            width: 168px;
+            height: 168px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            image-rendering: pixelated;
+            margin-top: 8px;
+        }
+
+        .inspector-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            color: #e0e0e0;
+            font-variant-numeric: tabular-nums;
+            font-family: monospace;
+        }
+
+        #status {
+            color: #555;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .canvas-stack {
+            position: relative;
+            box-shadow: 0 4px 40px rgba(0,0,0,0.8);
+        }
+
+        #imageCanvas, #maskCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #imageCanvas {
+            z-index: 1;
+        }
+
+        #maskCanvas {
+            z-index: 2;
+            opacity: 0.5;
+        }
+
+        /* --- Bottom Panel --- */
+        #bottomPanel {
+            background: linear-gradient(0deg, #1a1a1a 0%, #141414 100%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            border-top: 1px solid #2a2a2a;
+            z-index: 20;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .panel-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-section-title {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+        }
+
+        /* Scale/Color Buttons */
+        .option-group {
+            display: flex;
+            gap: 2px;
+        }
+
+        .option-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            color: #888;
+        }
+
+        .option-btn:hover {
+            background: #252525;
+            color: #bbb;
+        }
+
+        .option-btn.selected {
+            background: #333;
+            border-color: #444;
+            color: #fff;
+        }
+
+        /* Stretch inputs */
+        .stretch-label {
+            font-size: 12px;
+            color: #888;
+            margin-left: 8px;
+        }
+
+        #vminInput, #vmaxInput {
+            width: 80px;
+        }
+
+        #autoPercentInput {
+            width: 55px;
+        }
+
+        /* Unit label */
+        .unit-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* --- Cursor Ring --- */
+        #cursor-ring {
+            position: fixed;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            display: none;
+            transition: width 0.1s ease, height 0.1s ease;
+        }
+
+        #cursor-ring.mode-brush {
+            background: rgba(255, 60, 60, 0.15);
+            border-color: rgba(255, 100, 100, 0.8);
+        }
+
+        #cursor-ring.mode-eraser {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <div class="control-group">
+        <input type="file" id="fileInput" accept=".fits,.fit">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+        <label>Mode</label>
+        <select id="maskModeSelector">
+            <option value="out">Mask OUT</option>
+            <option value="in">Mask IN</option>
+        </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+        <button id="btnBrush" class="active">Brush</button>
+        <button id="btnEraser">Eraser</button>
+    </div>
+
+    <div class="control-group">
+        <label>Size</label>
+        <input type="number" id="brushSizeInput" min="1" max="500" value="10">
+        <span class="unit-label">px</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+        <label>Circle</label>
+        <input type="number" id="manualX" placeholder="X">
+        <input type="number" id="manualY" placeholder="Y">
+        <input type="number" id="manualR" placeholder="R" value="20">
+        <button id="btnAddCircle">Add</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+        <button id="btnZoomOut">-</button>
+        <span class="zoom-display" id="zoomDisplay">100%</span>
+        <button id="btnZoomIn">+</button>
+        <button id="btnFit">Fit</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+        <label>Export Name</label>
+        <input type="text" id="exportNameInput" placeholder="mask-output">
+    </div>
+
+    <div class="control-group">
+        <button id="btnApplyMask">Apply Mask</button>
+        <button id="btnReset">Reset</button>
+        <button class="primary" id="exportBtn" disabled>Export Mask FITS</button>
+        <button class="primary" id="exportMaskedBtn" disabled>Export Masked FITS</button>
+        <button class="primary" id="exportRegBtn" disabled>Export .reg</button>
+    </div>
+</div>
+
+<div id="mainArea">
+    <div id="workspace">
+        <div id="status">Load a FITS file to begin</div>
+        <div class="canvas-stack" id="canvasContainer" style="display:none;">
+            <canvas id="imageCanvas"></canvas>
+            <canvas id="maskCanvas"></canvas>
+        </div>
+    </div>
+
+    <div id="inspector">
+        <div>
+            <div class="inspector-title">Magnifier</div>
+            <canvas id="magnifierCanvas" width="168" height="168"></canvas>
+        </div>
+        <div class="inspector-info">
+            <div class="info-row">
+                <span class="info-label">X</span>
+                <span class="info-value" id="infoX">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Y</span>
+                <span class="info-value" id="infoY">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Value</span>
+                <span class="info-value" id="infoValue">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Mask</span>
+                <span class="info-value" id="infoMask">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="bottomPanel">
+    <div class="panel-section">
+        <span class="panel-section-title">Scale</span>
+        <div class="option-group" id="scaleOptions">
+            <button class="option-btn selected" data-scale="linear">Linear</button>
+            <button class="option-btn" data-scale="log">Log</button>
+            <button class="option-btn" data-scale="sqrt">Sqrt</button>
+            <button class="option-btn" data-scale="asinh">Asinh</button>
+            <button class="option-btn" data-scale="power">Power</button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel-section">
+        <span class="panel-section-title">Color</span>
+        <div class="option-group" id="colorOptions">
+            <button class="option-btn selected" data-color="gray">Gray</button>
+            <button class="option-btn" data-color="viridis">Viridis</button>
+            <button class="option-btn" data-color="inferno">Inferno</button>
+            <button class="option-btn" data-color="plasma">Plasma</button>
+            <button class="option-btn" data-color="hot">Hot</button>
+            <button class="option-btn" data-color="cool">Cool</button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel-section">
+        <span class="panel-section-title">Stretch</span>
+        <label class="stretch-label">vmin</label>
+        <input type="number" id="vminInput" step="any" value="0">
+        <label class="stretch-label">vmax</label>
+        <input type="number" id="vmaxInput" step="any" value="100">
+        <button id="btnAutoStretch" class="option-btn">Auto</button>
+        <input type="number" id="autoPercentInput" min="50" max="100" value="97" step="1">
+        <span class="unit-label">%</span>
+        <button id="btnZScale" class="option-btn">ZScale</button>
+    </div>
+</div>
+
+<div id="cursor-ring" class="mode-brush"></div>
+
+<script>
+    // --- State ---
+    let rawWidth = 0;
+    let rawHeight = 0;
+    let rawData = null;       // Original FITS data
+    let maskData = null;      // Uint8Array for mask
+    let isDrawing = false;
+
+    // Config
+    let brushRadius = 10;
+    let currentZoom = 1.0;
+    let currentTool = 'brush';
+    let maskMode = 'out';
+    let maskApplied = false;  // Toggle for showing mask as applied vs overlay
+
+    // Display Config
+    let currentScale = 'linear';
+    let currentColor = 'gray';
+    let vmin = 0;
+    let vmax = 1;
+    let dataMin = 0;
+    let dataMax = 1;
+
+    // Circle tracking for .reg export
+    let drawnCircles = [];
+    let currentBaseName = 'mask';
+
+    // --- Color Maps ---
+    const colorMaps = {
+        gray: (t) => [t, t, t],
+        viridis: (t) => {
+            const c = [
+                [0.267, 0.004, 0.329],
+                [0.282, 0.140, 0.458],
+                [0.253, 0.265, 0.530],
+                [0.206, 0.372, 0.553],
+                [0.163, 0.471, 0.558],
+                [0.128, 0.567, 0.551],
+                [0.134, 0.658, 0.517],
+                [0.266, 0.749, 0.441],
+                [0.477, 0.821, 0.318],
+                [0.741, 0.873, 0.150],
+                [0.993, 0.906, 0.144]
+            ];
+            const idx = t * (c.length - 1);
+            const i = Math.floor(idx);
+            const f = idx - i;
+            const c0 = c[Math.min(i, c.length - 1)];
+            const c1 = c[Math.min(i + 1, c.length - 1)];
+            return [
+                c0[0] + f * (c1[0] - c0[0]),
+                c0[1] + f * (c1[1] - c0[1]),
+                c0[2] + f * (c1[2] - c0[2])
+            ];
+        },
+        inferno: (t) => {
+            const c = [
+                [0.001, 0.000, 0.014],
+                [0.133, 0.047, 0.225],
+                [0.341, 0.062, 0.429],
+                [0.549, 0.114, 0.435],
+                [0.735, 0.216, 0.330],
+                [0.878, 0.366, 0.198],
+                [0.962, 0.559, 0.115],
+                [0.988, 0.772, 0.227],
+                [0.988, 0.998, 0.645]
+            ];
+            const idx = t * (c.length - 1);
+            const i = Math.floor(idx);
+            const f = idx - i;
+            const c0 = c[Math.min(i, c.length - 1)];
+            const c1 = c[Math.min(i + 1, c.length - 1)];
+            return [
+                c0[0] + f * (c1[0] - c0[0]),
+                c0[1] + f * (c1[1] - c0[1]),
+                c0[2] + f * (c1[2] - c0[2])
+            ];
+        },
+        plasma: (t) => {
+            const c = [
+                [0.050, 0.030, 0.528],
+                [0.294, 0.012, 0.615],
+                [0.491, 0.012, 0.658],
+                [0.658, 0.134, 0.588],
+                [0.798, 0.280, 0.470],
+                [0.899, 0.434, 0.326],
+                [0.960, 0.600, 0.171],
+                [0.976, 0.782, 0.093],
+                [0.940, 0.975, 0.131]
+            ];
+            const idx = t * (c.length - 1);
+            const i = Math.floor(idx);
+            const f = idx - i;
+            const c0 = c[Math.min(i, c.length - 1)];
+            const c1 = c[Math.min(i + 1, c.length - 1)];
+            return [
+                c0[0] + f * (c1[0] - c0[0]),
+                c0[1] + f * (c1[1] - c0[1]),
+                c0[2] + f * (c1[2] - c0[2])
+            ];
+        },
+        hot: (t) => {
+            const r = Math.min(1, t * 3);
+            const g = Math.max(0, Math.min(1, (t - 0.33) * 3));
+            const b = Math.max(0, Math.min(1, (t - 0.67) * 3));
+            return [r, g, b];
+        },
+        cool: (t) => {
+            return [t, 1 - t, 1];
+        }
+    };
+
+    // --- Scale Functions ---
+    const scaleFunctions = {
+        linear: (t) => t,
+        log: (t) => Math.log10(t * 9 + 1) / Math.log10(10),
+        sqrt: (t) => Math.sqrt(t),
+        asinh: (t) => Math.asinh(t * 10) / Math.asinh(10),
+        power: (t) => Math.pow(t, 2)
+    };
+
+    // --- Elements ---
+    const fileInput = document.getElementById('fileInput');
+    const brushSizeInput = document.getElementById('brushSizeInput');
+    const zoomDisplay = document.getElementById('zoomDisplay');
+    const exportBtn = document.getElementById('exportBtn');
+    const exportMaskedBtn = document.getElementById('exportMaskedBtn');
+    const exportRegBtn = document.getElementById('exportRegBtn');
+    const exportNameInput = document.getElementById('exportNameInput');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const imageCanvas = document.getElementById('imageCanvas');
+    const maskCanvas = document.getElementById('maskCanvas');
+    const statusDiv = document.getElementById('status');
+    const cursorRing = document.getElementById('cursor-ring');
+    const modeSelector = document.getElementById('maskModeSelector');
+    const vminInput = document.getElementById('vminInput');
+    const vmaxInput = document.getElementById('vmaxInput');
+
+    // Inspector elements
+    const magnifierCanvas = document.getElementById('magnifierCanvas');
+    const infoX = document.getElementById('infoX');
+    const infoY = document.getElementById('infoY');
+    const infoValue = document.getElementById('infoValue');
+    const infoMask = document.getElementById('infoMask');
+
+    const ctxImg = imageCanvas.getContext('2d');
+    const ctxMask = maskCanvas.getContext('2d');
+    const ctxMag = magnifierCanvas.getContext('2d');
+
+    function canvasYToDataY(canvasY) {
+        return rawHeight - 1 - canvasY;
+    }
+
+    function dataYToCanvasY(dataY) {
+        return rawHeight - 1 - dataY;
+    }
+
+    // --- Event Listeners ---
+
+    // Brush Size Input
+    brushSizeInput.addEventListener('input', (e) => {
+        brushRadius = Math.max(1, parseInt(e.target.value) || 1);
+        updateCursorSize();
+    });
+
+    // File Input
+    fileInput.addEventListener('change', handleFileSelect);
+
+    // Canvas Drawing Events
+    maskCanvas.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            startDrawing(e);
+        }
+    });
+    maskCanvas.addEventListener('mousemove', (e) => {
+        if (isDrawing) handleDrawEvent(e);
+    });
+    maskCanvas.addEventListener('mouseup', stopDrawing);
+    maskCanvas.addEventListener('mouseout', stopDrawing);
+
+    // Cursor tracking and magnifier update
+    document.addEventListener('mousemove', (e) => {
+        if (canvasContainer.style.display !== 'none') {
+            cursorRing.style.display = 'block';
+            cursorRing.style.left = e.clientX + 'px';
+            cursorRing.style.top = e.clientY + 'px';
+
+            // Update magnifier if mouse is over the canvas
+            const rect = maskCanvas.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const scaleX = maskCanvas.width / rect.width;
+                const scaleY = maskCanvas.height / rect.height;
+                const rawX = Math.floor((e.clientX - rect.left) * scaleX);
+                const rawY = Math.floor((e.clientY - rect.top) * scaleY);
+                const dataY = canvasYToDataY(rawY);
+                updateMagnifier(rawX, dataY);
+            }
+        }
+    });
+
+    // vmin/vmax inputs
+    vminInput.addEventListener('change', (e) => {
+        vmin = parseFloat(e.target.value);
+        if (vmin >= vmax) vmin = vmax - 0.001;
+        renderImage();
+    });
+
+    vmaxInput.addEventListener('change', (e) => {
+        vmax = parseFloat(e.target.value);
+        if (vmax <= vmin) vmax = vmin + 0.001;
+        renderImage();
+    });
+
+    // Mouse wheel zoom
+    document.getElementById('workspace').addEventListener('wheel', (e) => {
+        if (!rawData) return;
+        e.preventDefault();
+
+        const workspace = document.getElementById('workspace');
+        const rect = canvasContainer.getBoundingClientRect();
+
+        // Mouse position relative to canvas
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Mouse position in image coordinates before zoom
+        const imgX = mouseX / currentZoom;
+        const imgY = mouseY / currentZoom;
+
+        // Zoom factor
+        const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+        const oldZoom = currentZoom;
+        currentZoom *= zoomDelta;
+
+        // Clamp zoom
+        currentZoom = Math.max(0.1, Math.min(20, currentZoom));
+
+        // Update display
+        updateZoomDisplay();
+
+        // Adjust scroll to keep mouse position stable
+        const newMouseX = imgX * currentZoom;
+        const newMouseY = imgY * currentZoom;
+
+        workspace.scrollLeft += (newMouseX - mouseX);
+        workspace.scrollTop += (newMouseY - mouseY);
+    }, { passive: false });
+
+    // Middle mouse button pan (or Space + drag)
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let panScrollStartX = 0;
+    let panScrollStartY = 0;
+
+    document.getElementById('workspace').addEventListener('mousedown', (e) => {
+        // Middle mouse button
+        if (e.button === 1) {
+            e.preventDefault();
+            isPanning = true;
+            panStartX = e.clientX;
+            panStartY = e.clientY;
+            const workspace = document.getElementById('workspace');
+            panScrollStartX = workspace.scrollLeft;
+            panScrollStartY = workspace.scrollTop;
+            workspace.style.cursor = 'grabbing';
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            const workspace = document.getElementById('workspace');
+            const dx = e.clientX - panStartX;
+            const dy = e.clientY - panStartY;
+            workspace.scrollLeft = panScrollStartX - dx;
+            workspace.scrollTop = panScrollStartY - dy;
+        }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+        if (e.button === 1 && isPanning) {
+            isPanning = false;
+            document.getElementById('workspace').style.cursor = '';
+        }
+    });
+
+    // Prevent middle click default behavior
+    document.getElementById('workspace').addEventListener('auxclick', (e) => {
+        if (e.button === 1) e.preventDefault();
+    });
+
+    // Button Events
+    document.getElementById('btnBrush').addEventListener('click', () => setTool('brush'));
+    document.getElementById('btnEraser').addEventListener('click', () => setTool('eraser'));
+    document.getElementById('btnAddCircle').addEventListener('click', addManualCircle);
+    document.getElementById('btnZoomIn').addEventListener('click', zoomIn);
+    document.getElementById('btnZoomOut').addEventListener('click', zoomOut);
+    document.getElementById('btnFit').addEventListener('click', fitToScreen);
+    document.getElementById('btnReset').addEventListener('click', resetMask);
+    document.getElementById('btnApplyMask').addEventListener('click', toggleMaskApply);
+    document.getElementById('btnAutoStretch').addEventListener('click', autoStretch);
+    document.getElementById('btnZScale').addEventListener('click', zscaleStretch);
+    exportBtn.addEventListener('click', exportMask);
+    exportMaskedBtn.addEventListener('click', exportMaskedFits);
+    exportRegBtn.addEventListener('click', exportReg);
+    modeSelector.addEventListener('change', changeMaskMode);
+
+    // Scale buttons
+    document.querySelectorAll('#scaleOptions .option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#scaleOptions .option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentScale = btn.dataset.scale;
+            renderImage();
+        });
+    });
+
+    // Color buttons
+    document.querySelectorAll('#colorOptions .option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#colorOptions .option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentColor = btn.dataset.color;
+            renderImage();
+        });
+    });
+
+    // --- Functions ---
+
+    function setTool(tool) {
+        currentTool = tool;
+        document.getElementById('btnBrush').className = tool === 'brush' ? 'active' : '';
+        document.getElementById('btnEraser').className = tool === 'eraser' ? 'active' : '';
+        cursorRing.className = tool === 'brush' ? 'mode-brush' : 'mode-eraser';
+    }
+
+    function changeMaskMode() {
+        if (maskData) {
+            if (confirm("Changing mask mode will reset the current mask. Continue?")) {
+                maskMode = modeSelector.value;
+                resetMask();
+            } else {
+                modeSelector.value = maskMode;
+            }
+        } else {
+            maskMode = modeSelector.value;
+        }
+    }
+
+    function updateCursorSize() {
+        const visualRadius = brushRadius * currentZoom;
+        cursorRing.style.width = (visualRadius * 2) + 'px';
+        cursorRing.style.height = (visualRadius * 2) + 'px';
+    }
+
+    function updateMagnifier(centerX, centerY) {
+        if (!rawData) return;
+
+        const zoomFactor = 8;
+        const srcSize = 21; // Odd number so there's a clear center pixel
+        const magSize = srcSize * zoomFactor; // 168
+        const halfSrc = Math.floor(srcSize / 2); // 10
+
+        // Clear magnifier
+        ctxMag.fillStyle = '#000';
+        ctxMag.fillRect(0, 0, magSize, magSize);
+
+        const canvasCenterY = dataYToCanvasY(centerY);
+
+        // Source region centered on the pixel
+        const srcX = centerX - halfSrc;
+        const srcY = canvasCenterY - halfSrc;
+
+        // Draw zoomed portion of image canvas
+        ctxMag.imageSmoothingEnabled = false;
+        ctxMag.drawImage(
+            imageCanvas,
+            srcX, srcY, srcSize, srcSize,
+            0, 0, magSize, magSize
+        );
+
+        // Draw mask overlay from mask canvas (if not applied)
+        if (!maskApplied) {
+            ctxMag.globalAlpha = 0.5;
+            ctxMag.drawImage(
+                maskCanvas,
+                srcX, srcY, srcSize, srcSize,
+                0, 0, magSize, magSize
+            );
+            ctxMag.globalAlpha = 1.0;
+        }
+
+        // Draw rectangle around the center pixel
+        const centerPixelStart = halfSrc * zoomFactor; // Where center pixel starts
+        ctxMag.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctxMag.lineWidth = 2;
+        ctxMag.strokeRect(centerPixelStart, centerPixelStart, zoomFactor, zoomFactor);
+
+        // Update info display
+        infoX.textContent = centerX;
+        infoY.textContent = centerY;
+
+        if (centerX >= 0 && centerX < rawWidth && centerY >= 0 && centerY < rawHeight) {
+            const idx = centerY * rawWidth + centerX;
+            const val = rawData[idx];
+            infoValue.textContent = isNaN(val) ? 'NaN' : val.toExponential(4);
+
+            if (maskData) {
+                const maskVal = maskData[idx];
+                infoMask.textContent = maskVal === 1 ? 'Keep' : 'Reject';
+            } else {
+                infoMask.textContent = '-';
+            }
+        } else {
+            infoValue.textContent = '-';
+            infoMask.textContent = '-';
+        }
+    }
+
+    function updateStretchInputs() {
+        vminInput.value = vmin.toFixed(2);
+        vmaxInput.value = vmax.toFixed(2);
+    }
+
+    function autoStretch() {
+        if (!rawData) return;
+
+        // Get percentage from input (default 97%)
+        const percent = parseFloat(document.getElementById('autoPercentInput').value) || 97;
+        const clipFraction = (100 - percent) / 200; // e.g., 97% -> clip 1.5% from each side
+
+        const sorted = Float32Array.from(rawData).filter(v => !isNaN(v)).sort((a, b) => a - b);
+        const pLow = Math.floor(sorted.length * clipFraction);
+        const pHigh = Math.floor(sorted.length * (1 - clipFraction));
+
+        vmin = sorted[pLow];
+        vmax = sorted[pHigh];
+
+        updateStretchInputs();
+        renderImage();
+    }
+
+    function zscaleStretch() {
+        if (!rawData) return;
+
+        // ZScale algorithm (simplified IRAF/DS9 implementation)
+        // Sample the image, fit a line, determine optimal display range
+        const nSamples = Math.min(10000, rawData.length);
+        const step = Math.floor(rawData.length / nSamples);
+
+        // Collect samples
+        const samples = [];
+        for (let i = 0; i < rawData.length; i += step) {
+            const v = rawData[i];
+            if (!isNaN(v) && isFinite(v)) {
+                samples.push(v);
+            }
+        }
+
+        if (samples.length < 10) {
+            autoStretch();
+            return;
+        }
+
+        // Sort samples
+        samples.sort((a, b) => a - b);
+
+        // Trim outliers (2.5% from each end)
+        const trimFrac = 0.025;
+        const trimLow = Math.floor(samples.length * trimFrac);
+        const trimHigh = Math.floor(samples.length * (1 - trimFrac));
+        const trimmed = samples.slice(trimLow, trimHigh);
+
+        if (trimmed.length < 10) {
+            autoStretch();
+            return;
+        }
+
+        // Fit a line to the sorted trimmed values
+        // Using indices as x values
+        const n = trimmed.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        for (let i = 0; i < n; i++) {
+            sumX += i;
+            sumY += trimmed[i];
+            sumXY += i * trimmed[i];
+            sumX2 += i * i;
+        }
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        // Calculate median
+        const median = trimmed[Math.floor(n / 2)];
+
+        // Contrast parameter (typical zscale uses contrast ~0.25)
+        const contrast = 0.25;
+
+        // Calculate z1 and z2 based on the fitted line
+        const zslope = slope;
+        const z1 = median - (n / 2) * zslope / contrast;
+        const z2 = median + (n / 2) * zslope / contrast;
+
+        // Clamp to data range
+        vmin = Math.max(dataMin, Math.min(z1, z2));
+        vmax = Math.min(dataMax, Math.max(z1, z2));
+
+        // Ensure valid range
+        if (vmin >= vmax) {
+            vmin = dataMin;
+            vmax = dataMax;
+        }
+
+        updateStretchInputs();
+        renderImage();
+    }
+
+    function toggleMaskApply() {
+        if (!maskData) return;
+        maskApplied = !maskApplied;
+        const btn = document.getElementById('btnApplyMask');
+
+        if (maskApplied) {
+            btn.textContent = 'Show Overlay';
+            btn.classList.add('toggle-on');
+            maskCanvas.style.display = 'none';
+        } else {
+            btn.textContent = 'Apply Mask';
+            btn.classList.remove('toggle-on');
+            maskCanvas.style.display = 'block';
+        }
+        renderImage();
+    }
+
+    // --- FITS Loading ---
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        loadFitsFile(file);
+        e.target.value = '';
+    }
+
+    async function loadFitsFile(file) {
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = "Loading...";
+        canvasContainer.style.display = 'none';
+        exportBtn.disabled = true;
+        exportMaskedBtn.disabled = true;
+        exportRegBtn.disabled = true;
+        setExportBaseName(file.name);
+
+        const ready = await waitForFitsReady();
+        if (!ready || typeof astro === 'undefined' || typeof astro.FITS === 'undefined') {
+            statusDiv.textContent = "Error: FITS library not loaded.";
+            return;
+        }
+
+        new astro.FITS(file, function () {
+            const dataUnit = this.getDataUnit();
+            if (dataUnit) {
+                rawWidth = dataUnit.width;
+                rawHeight = dataUnit.height;
+                dataUnit.getFrame(0, function (data) {
+                    initApp(data, rawWidth, rawHeight);
+                });
+            }
+        });
+    }
+
+    async function tryAutoLoadFromServer() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has('open')) return;
+
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = "Loading...";
+        canvasContainer.style.display = 'none';
+        exportBtn.disabled = true;
+        exportMaskedBtn.disabled = true;
+        exportRegBtn.disabled = true;
+
+        try {
+            const response = await fetch('/file', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const buffer = await response.arrayBuffer();
+            const nameHeader = response.headers.get('X-Masking-File-Name');
+            const fileName = nameHeader || 'image.fits';
+            const file = new File([buffer], fileName);
+            await loadFitsFile(file);
+        } catch (err) {
+            statusDiv.textContent = "Error loading file from app server.";
+            console.error(err);
+        }
+    }
+
+    function initApp(data, w, h) {
+        rawData = data;
+        imageCanvas.width = w;
+        imageCanvas.height = h;
+        maskCanvas.width = w;
+        maskCanvas.height = h;
+
+        // Calculate data range
+        dataMin = Infinity;
+        dataMax = -Infinity;
+        for (let i = 0; i < data.length; i++) {
+            const v = data[i];
+            if (!isNaN(v)) {
+                if (v < dataMin) dataMin = v;
+                if (v > dataMax) dataMax = v;
+            }
+        }
+
+        // Set initial vmin/vmax using 97% auto stretch
+        vmin = dataMin;
+        vmax = dataMax;
+        autoStretch(); // Apply 97% stretch by default
+
+        // Initialize Mask
+        maskData = new Uint8Array(w * h);
+        maskApplied = false;
+        drawnCircles = []; // Clear circle history
+        document.getElementById('btnApplyMask').textContent = 'Apply Mask';
+        document.getElementById('btnApplyMask').classList.remove('toggle-on');
+        maskCanvas.style.display = 'block';
+        resetMask();
+
+        canvasContainer.style.display = 'block';
+        statusDiv.style.display = 'none';
+        exportBtn.disabled = false;
+        exportMaskedBtn.disabled = false;
+        exportRegBtn.disabled = false;
+        fitToScreen();
+    }
+
+    function renderImage() {
+        if (!rawData) return;
+
+        const w = rawWidth;
+        const h = rawHeight;
+        const imgData = ctxImg.createImageData(w, h);
+        const scaleFunc = scaleFunctions[currentScale];
+        const colorFunc = colorMaps[currentColor];
+        const range = vmax - vmin;
+
+        for (let dataY = 0; dataY < h; dataY++) {
+            const canvasY = dataYToCanvasY(dataY);
+            for (let x = 0; x < w; x++) {
+                const dataIdx = dataY * w + x;
+                let val = rawData[dataIdx];
+                if (isNaN(val)) val = vmin;
+
+                // Normalize to vmin-vmax range
+                let norm = (val - vmin) / range;
+                norm = Math.max(0, Math.min(1, norm));
+
+                // Apply scale
+                norm = scaleFunc(norm);
+
+                // Apply mask if in applied mode
+                if (maskApplied && maskData) {
+                    const maskVal = maskData[dataIdx];
+                    // 0 means rejected - set to completely black
+                    if (maskVal === 0) norm = 0;
+                }
+
+                // Apply color map
+                const [r, g, b] = colorFunc(norm);
+                const idx = (canvasY * w + x) * 4;
+                imgData.data[idx] = Math.floor(r * 255);
+                imgData.data[idx + 1] = Math.floor(g * 255);
+                imgData.data[idx + 2] = Math.floor(b * 255);
+                imgData.data[idx + 3] = 255;
+            }
+        }
+        ctxImg.putImageData(imgData, 0, 0);
+    }
+
+    // --- Zoom Logic ---
+
+    function updateZoomDisplay() {
+        const displayW = Math.floor(rawWidth * currentZoom);
+        const displayH = Math.floor(rawHeight * currentZoom);
+        canvasContainer.style.width = displayW + "px";
+        canvasContainer.style.height = displayH + "px";
+        zoomDisplay.textContent = Math.round(currentZoom * 100) + "%";
+        updateCursorSize();
+    }
+
+    function fitToScreen() {
+        if (rawWidth === 0) return;
+        const workspace = document.getElementById('workspace');
+        const scaleW = (workspace.clientWidth - 40) / rawWidth;
+        const scaleH = (workspace.clientHeight - 40) / rawHeight;
+        currentZoom = Math.min(scaleW, scaleH);
+        if (currentZoom <= 0) currentZoom = 0.1;
+        updateZoomDisplay();
+    }
+
+    function zoomIn() {
+        currentZoom *= 1.25;
+        updateZoomDisplay();
+    }
+
+    function zoomOut() {
+        currentZoom /= 1.25;
+        updateZoomDisplay();
+    }
+
+    // --- Drawing Core ---
+
+    function startDrawing(e) {
+        isDrawing = true;
+        handleDrawEvent(e);
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    function handleDrawEvent(e) {
+        const rect = maskCanvas.getBoundingClientRect();
+        const scaleX = maskCanvas.width / rect.width;
+        const scaleY = maskCanvas.height / rect.height;
+        const rawX = (e.clientX - rect.left) * scaleX;
+        const rawY = (e.clientY - rect.top) * scaleY;
+        const dataY = canvasYToDataY(rawY);
+        applyCircle(rawX, dataY, brushRadius, currentTool === 'eraser');
+    }
+
+    function addManualCircle() {
+        if (!maskData) return;
+        const x = parseFloat(document.getElementById('manualX').value);
+        const y = parseFloat(document.getElementById('manualY').value);
+        const r = parseFloat(document.getElementById('manualR').value);
+
+        if (isNaN(x) || isNaN(y) || isNaN(r)) {
+            alert("Please enter valid X, Y and Radius");
+            return;
+        }
+        applyCircle(x, y, r, false);
+    }
+
+    function applyCircle(x, y, r, isErase) {
+        if (!maskData) return;
+
+        const cx = Math.floor(x);
+        const cy = Math.floor(y);
+        const r2 = r * r;
+
+        // Track circles for .reg export (only when painting, not erasing)
+        if (!isErase) {
+            drawnCircles.push({ x: cx, y: cy, r: r });
+        }
+
+        // Update Canvas
+        ctxMask.save();
+        if (isErase) {
+            ctxMask.globalCompositeOperation = 'destination-out';
+            ctxMask.fillStyle = 'rgba(0,0,0,1)';
+        } else {
+            ctxMask.globalCompositeOperation = 'source-over';
+            ctxMask.fillStyle = 'rgba(255, 80, 80, 0.6)';
+        }
+        const canvasY = dataYToCanvasY(cy);
+        ctxMask.beginPath();
+        ctxMask.arc(cx, canvasY, r, 0, Math.PI * 2);
+        ctxMask.fill();
+        ctxMask.restore();
+
+        // Update Data
+        let targetValue;
+        if (maskMode === 'out') {
+            targetValue = isErase ? 1 : 0;
+        } else {
+            targetValue = isErase ? 0 : 1;
+        }
+
+        const minX = Math.max(0, Math.floor(cx - r));
+        const maxX = Math.min(rawWidth, Math.ceil(cx + r));
+        const minY = Math.max(0, Math.floor(cy - r));
+        const maxY = Math.min(rawHeight, Math.ceil(cy + r));
+
+        for (let py = minY; py < maxY; py++) {
+            for (let px = minX; px < maxX; px++) {
+                const dx = px - cx;
+                const dy = py - cy;
+                if (dx * dx + dy * dy <= r2) {
+                    maskData[py * rawWidth + px] = targetValue;
+                }
+            }
+        }
+
+        // Update image if mask is applied
+        if (maskApplied) {
+            renderImage();
+        }
+    }
+
+    function resetMask() {
+        if (!maskData) return;
+        ctxMask.clearRect(0, 0, rawWidth, rawHeight);
+        const defaultVal = (maskMode === 'out') ? 1 : 0;
+        maskData.fill(defaultVal);
+        drawnCircles = []; // Clear circle history
+        if (maskApplied) {
+            renderImage();
+        }
+    }
+
+    async function waitForFitsReady(timeoutMs = 3000) {
+        if (window.astro && window.astro.FITS) return true;
+        if (!window.__fitsReadyPromise) return false;
+        await Promise.race([
+            window.__fitsReadyPromise,
+            new Promise(resolve => setTimeout(resolve, timeoutMs))
+        ]);
+        return !!(window.astro && window.astro.FITS);
+    }
+
+    function setExportBaseName(fileName) {
+        if (!fileName) return;
+        const base = fileName.replace(/\.[^/.]+$/, '');
+        currentBaseName = base || 'mask';
+        exportNameInput.value = currentBaseName;
+    }
+
+    function getExportBaseName() {
+        const inputName = exportNameInput.value.trim();
+        const base = inputName || currentBaseName || 'mask';
+        return base.replace(/[\\/]/g, '_');
+    }
+
+    function buildExportFileName(extension) {
+        const base = getExportBaseName().replace(/\.[^/.]+$/, '');
+        return `${base}${extension}`;
+    }
+
+    // --- Export ---
+
+    function exportMask() {
+        if (!maskData) return;
+
+        const blockSize = 2880;
+        const padKey = (key, value) => {
+            const k = (key + "        ").slice(0, 8);
+            return `${k}= ${value.toString().padStart(20, ' ')}`;
+        };
+
+        const headerLines = [
+            "SIMPLE  =                    T / Standard FITS",
+            "BITPIX  =                    8 / 8-bit integers",
+            "NAXIS   =                    2 / Number of axes",
+            padKey("NAXIS1", rawWidth) + " / Axis 1 width",
+            padKey("NAXIS2", rawHeight) + " / Axis 2 height",
+            "EXTEND  =                    T / Extensions are permitted",
+            "MASKMODE= '" + maskMode.padEnd(8, ' ') + "' / Editor Mode",
+            "COMMENT  Generated by Web FITS Mask Editor",
+            "END"
+        ];
+
+        let headerStr = headerLines.map(l => l.padEnd(80, " ")).join("");
+        while (headerStr.length % blockSize !== 0) headerStr += " ".repeat(80);
+
+        const headerBuffer = new TextEncoder().encode(headerStr);
+
+        const dataBuffer = new Uint8Array(Math.ceil(maskData.length / blockSize) * blockSize);
+        dataBuffer.set(maskData);
+
+        const blob = new Blob([headerBuffer, dataBuffer], {type: 'application/octet-stream'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = buildExportFileName('.fits');
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportMaskedFits() {
+        if (!rawData || !maskData) return;
+
+        const blockSize = 2880;
+        const padKey = (key, value) => {
+            const k = (key + "        ").slice(0, 8);
+            return `${k}= ${value.toString().padStart(20, ' ')}`;
+        };
+
+        const headerLines = [
+            "SIMPLE  =                    T / Standard FITS",
+            "BITPIX  =                  -32 / 32-bit floating point",
+            "NAXIS   =                    2 / Number of axes",
+            padKey("NAXIS1", rawWidth) + " / Axis 1 width",
+            padKey("NAXIS2", rawHeight) + " / Axis 2 height",
+            "EXTEND  =                    T / Extensions are permitted",
+            "MASKMODE= '" + maskMode.padEnd(8, ' ') + "' / Editor Mode",
+            "COMMENT  Generated by Web FITS Mask Editor",
+            "END"
+        ];
+
+        let headerStr = headerLines.map(l => l.padEnd(80, " ")).join("");
+        while (headerStr.length % blockSize !== 0) headerStr += " ".repeat(80);
+
+        const headerBuffer = new TextEncoder().encode(headerStr);
+        const dataBuffer = new ArrayBuffer(rawData.length * 4);
+        const view = new DataView(dataBuffer);
+
+        for (let i = 0; i < rawData.length; i++) {
+            const value = (maskData[i] === 0) ? 0 : rawData[i];
+            view.setFloat32(i * 4, value, false);
+        }
+
+        const paddedSize = Math.ceil(dataBuffer.byteLength / blockSize) * blockSize;
+        const paddedData = new Uint8Array(paddedSize);
+        paddedData.set(new Uint8Array(dataBuffer));
+
+        const blob = new Blob([headerBuffer, paddedData], {type: 'application/octet-stream'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = buildExportFileName('.fits');
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportReg() {
+        if (!drawnCircles || drawnCircles.length === 0) {
+            alert("No circles to export. Draw some mask regions first.");
+            return;
+        }
+
+        // DS9 region file format
+        // Coordinates are in image coordinates (1-indexed for DS9)
+        let regContent = "# Region file format: DS9 version 4.1\n";
+        regContent += "global color=red dashlist=8 3 width=1 font=\"helvetica 10 normal roman\" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n";
+        regContent += "image\n";
+
+        for (const circle of drawnCircles) {
+            // Convert to 1-indexed for DS9
+            const x = circle.x + 1;
+            const y = circle.y + 1;
+            const r = circle.r;
+            regContent += `circle(${x.toFixed(2)},${y.toFixed(2)},${r.toFixed(2)})\n`;
+        }
+
+        const blob = new Blob([regContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = buildExportFileName('.reg');
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    tryAutoLoadFromServer();
+</script>
+</body>
+</html>

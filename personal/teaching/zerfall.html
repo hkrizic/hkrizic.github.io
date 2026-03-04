@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C14 Zerfalls-Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .result, .halfLives {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .result {
+            color: #16a085;
+        }
+        .halfLives {
+            color: #8e44ad;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #nextButton {
+            display: none; /* Versteckt den "Nächstes Isotop" Button initial */
+        }
+    </style>
+</head>
+<body>
+<h1>C14 Zerfalls-Simulator</h1>
+<p>Drücke den Knopf, um T=5370 Jahre zu simulieren.</p>
+<button id="checkButton" onclick="simulateDecay()">Spule 5370 Jahre vor</button>
+<button id="nextButton" onclick="nextIsotope()">Nächstes Isotop</button>
+<div class="result" id="result"></div>
+<div class="halfLives" id="halfLives"></div>
+
+<script>
+    let halfLifeCount = 0; // Zählt die überlebten Halbwertszeiten
+
+    function simulateDecay() {
+        // Erhöhe die Halbwertszeit um 1 bei jedem Klick
+        halfLifeCount++;
+        document.getElementById('halfLives').innerText = `Überlebte Halbwertszeiten: ${halfLifeCount}`;
+
+        // Erzeuge eine zufällige Zahl zwischen 0 und 1
+        let randomValue = Math.random();
+
+        // 50% Wahrscheinlichkeit für "Zerfallen"
+        if (randomValue < 0.5) {
+            document.getElementById('result').innerText = `Zerfallen! Das Isotop hat genau ${halfLifeCount} Halbwertszeiten überlebt.`;
+            document.getElementById('checkButton').style.display = "none"; // Versteckt den "Prüfen"-Button
+            document.getElementById('nextButton').style.display = "inline"; // Zeigt den "Nächstes Isotop"-Button an
+        } else {
+            document.getElementById('result').innerText = "Nicht zerfallen";
+        }
+    }
+
+    function nextIsotope() {
+        // Setzt alle Werte zurück
+        halfLifeCount = 0;
+        document.getElementById('result').innerText = "";
+        document.getElementById('halfLives').innerText = "";
+        document.getElementById('checkButton').style.display = "inline"; // Zeigt den "Prüfen"-Button wieder an
+        document.getElementById('nextButton').style.display = "none"; // Versteckt den "Nächstes Isotop"-Button
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>6er-Zählung mit 24 Würfeln</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+            background: #f4f4f4;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .dice {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+            line-height: 30px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background: white;
+            font-weight: bold;
+        }
+        .six {
+            background-color: #e74c3c;
+            color: white;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+        }
+        table {
+            margin-top: 1rem;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 0.4rem 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<h1>Versuch 3 (©Hrvoje Krizic)</h1>
+<button onclick="wurf24()">Würfeln</button>
+<div id="dice-display"></div>
+<table>
+    <thead>
+    <tr><th>Versuch</th><th>Anzahl 6er</th></tr>
+    </thead>
+    <tbody id="results-body"></tbody>
+</table>
+
+<script>
+    let versuch = 1;
+
+    function wurf24() {
+        const diceDisplay = document.getElementById('dice-display');
+        const resultsBody = document.getElementById('results-body');
+        diceDisplay.innerHTML = '';
+        let sechser = 0;
+
+        for (let i = 0; i < 24; i++) {
+            const wurf = Math.ceil(Math.random() * 6);
+            const div = document.createElement('div');
+            div.className = 'dice';
+            if (wurf === 6) {
+                div.classList.add('six');
+                sechser++;
+            }
+            div.textContent = wurf;
+            diceDisplay.appendChild(div);
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${versuch}.</td><td>${sechser}</td>`;
+        resultsBody.appendChild(row);
+        versuch++;
+    }
+</script>
+</body>
+</html>

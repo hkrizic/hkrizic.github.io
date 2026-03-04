@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Precise Strong Lensing (SIS + Shear): Images, Critical Curve & Caustic</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#0a0b10; --panel:#131826; --ink:#eaf0ff; --muted:#a3aec4;
+      --accent:#76a9ff; --caustic:#ffb400; --crit:#0b0b0b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:linear-gradient(180deg,#0a0b10,#121522); color:var(--ink); }
+    header { padding:16px 18px 8px; }
+    h1 { margin:0 0 4px; font-size:20px; font-weight:800; letter-spacing:.15px; }
+    .sub { color:var(--muted); font-size:13px; }
+    .wrap { display:grid; grid-template-columns: 1fr 360px; gap:16px; padding:12px 16px 18px; }
+    .panes { display:grid; grid-template-columns: 1fr 1fr; gap:12px; height:74vh; min-height:520px; }
+    .card { background:linear-gradient(180deg,#141a2a,#0e1322); border:1px solid #20273a; border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03); overflow:hidden; }
+    .card header { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #21283b; }
+    .title { font-weight:800; }
+    .canvas-wrap { position:relative; display:grid; place-items:center; height:100%; }
+    canvas { width:100%; height:100%; background: radial-gradient(1200px 600px at 50% 0%, #0f1526, #0b0f1a); image-rendering:pixelated; }
+    .legend { position:absolute; left:10px; bottom:10px; font-size:12px; color:#cfd6ea; background:rgba(13,17,29,.55);
+      border:1px solid #1c2438; padding:8px 10px; border-radius:10px; backdrop-filter: blur(6px); }
+    .dot { position:absolute; width:12px; height:12px; border-radius:50%; background:#ffd74d; border:2px solid #0009;
+      transform:translate(-50%,-50%); box-shadow:0 0 0 2px #0006, 0 0 12px 3px rgba(255,220,64,.35); pointer-events:none; }
+    .sidebar { background:var(--panel); border:1px solid #20273a; border-radius:16px; padding:14px; height:74vh; min-height:520px;
+      display:flex; flex-direction:column; gap:10px; }
+    .side-head { font-weight:800; margin-bottom:6px; }
+    .ctrl { display:grid; gap:6px; margin-bottom:12px; }
+    .ctrl label { font-size:13px; color:#c9d2e6; display:flex; justify-content:space-between; }
+    .ctrl input[type=range], .ctrl select { width:100%; }
+    .tog { display:flex; align-items:center; gap:8px; font-size:13px; color:#d9e2f8; }
+    .row { display:flex; gap:8px; }
+    .btn { flex:1; border:1px solid #2a334a; color:#e7ecff; background:linear-gradient(180deg,#1a2442,#151d34);
+      padding:8px 10px; border-radius:12px; cursor:pointer; font-weight:700; }
+    .btn:hover { border-color:#3a4564; }
+    .small { font-size:12px; color:#aeb9d4; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Precise Strong Lensing Playground — SIS + External Shear</h1>
+  <div class="sub">Physics computed in a single right-handed (x East, y North) system. Only drawing flips y. Critical curve is the exact contour detA=0 (marching squares); caustic is its image under the lens equation.</div>
+</header>
+
+<div class="wrap">
+  <div class="panes">
+    <div class="card">
+      <header><span class="title">Source Plane</span><span class="small">orange = caustic • axes in arcsec</span></header>
+      <div class="canvas-wrap">
+        <canvas id="src"></canvas>
+        <div class="legend" id="srcLegend"></div>
+        <div class="dot" id="srcDot" title="drag me"></div>
+      </div>
+    </div>
+    <div class="card">
+      <header><span class="title">Image Plane</span><span class="small">black = critical curve • grayscale = lensed surface brightness</span></header>
+      <div class="canvas-wrap">
+        <canvas id="img"></canvas>
+        <div class="legend" id="imgLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="side-head">Lens & Render Controls</div>
+
+    <div class="ctrl">
+      <label>Einstein radius b (arcsec) <span id="bVal">1.00</span></label>
+      <input type="range" id="b" min="0.10" max="2.00" step="0.01" value="1.00">
+    </div>
+
+    <div class="ctrl">
+      <label>External shear γ <span id="gVal">0.10</span></label>
+      <input type="range" id="g" min="0.00" max="0.50" step="0.005" value="0.10">
+    </div>
+
+    <div class="ctrl">
+      <label>Shear PA φ (deg) <span id="phiVal">30</span>°</label>
+      <input type="range" id="phi" min="0" max="180" step="1" value="30">
+    </div>
+
+    <div class="ctrl">
+      <label>Source size σ (arcsec) <span id="sigVal">0.030</span></label>
+      <input type="range" id="sig" min="0.003" max="0.300" step="0.003" value="0.030">
+      <label class="tog"><input type="checkbox" id="ptMarkers"> Show point-image markers (Newton solver)</label>
+    </div>
+
+    <div class="ctrl">
+      <label>Field of view half-width (arcsec) <span id="fovVal">2.50</span></label>
+      <input type="range" id="fov" min="1.2" max="6.0" step="0.1" value="2.5">
+    </div>
+
+    <div class="ctrl">
+      <label>Render resolution (px) <span id="resVal">480</span></label>
+      <input type="range" id="res" min="300" max="720" step="20" value="480">
+    </div>
+
+    <div class="ctrl">
+      <label>Supersampling (per axis) <span id="ssVal">2×</span></label>
+      <input type="range" id="ss" min="1" max="3" step="1" value="2">
+    </div>
+
+    <div class="row">
+      <button class="btn" id="presetQuad">Preset: Quad</button>
+      <button class="btn" id="presetDouble">Preset: Double</button>
+    </div>
+    <div class="row">
+      <button class="btn" id="presetRing">Preset: Einstein Ring</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+
+    <div class="small">
+      <strong>Math:</strong> \(\beta=\theta-\alpha_{\rm SIS}(\theta)-\Gamma\theta\), with \(\alpha_{\rm SIS}=b\,\theta/|\theta|\) and \(\Gamma=\begin{pmatrix}\gamma_1&\gamma_2\\ \gamma_2& -\gamma_1\end{pmatrix}\), \(\gamma_1=\gamma\cos 2\phi,\ \gamma_2=\gamma\sin 2\phi\). The Jacobian \(A=\partial\beta/\partial\theta=I-(\partial\alpha_{\rm SIS}/\partial\theta+\Gamma)\). Critical curve: \(\det A=0\). Caustic: map that curve via the lens equation.
+    </div>
+  </aside>
+</div>
+
+<script>
+  (() => {
+    // =========================
+    //  COORDINATE CONVENTIONS
+    // =========================
+    // All physics is done in a right-handed math frame: (x East, y North), units: arcsec.
+    // The canvas has y downward. We convert ONLY at draw/read time.
+
+    const srcC = document.getElementById('src');
+    const imgC = document.getElementById('img');
+    const srcCtx = srcC.getContext('2d');
+    const imgCtx = imgC.getContext('2d');
+
+    const srcLegend = document.getElementById('srcLegend');
+    const imgLegend = document.getElementById('imgLegend');
+    const srcDot = document.getElementById('srcDot');
+
+    const ctl = {
+      b:   document.getElementById('b'),
+      g:   document.getElementById('g'),
+      phi: document.getElementById('phi'),
+      sig: document.getElementById('sig'),
+      fov: document.getElementById('fov'),
+      res: document.getElementById('res'),
+      ss:  document.getElementById('ss'),
+      ptMarkers: document.getElementById('ptMarkers'),
+      presetQuad: document.getElementById('presetQuad'),
+      presetDouble: document.getElementById('presetDouble'),
+      presetRing: document.getElementById('presetRing'),
+      reset: document.getElementById('reset'),
+    };
+    const lab = {
+      b: document.getElementById('bVal'),
+      g: document.getElementById('gVal'),
+      phi: document.getElementById('phiVal'),
+      sig: document.getElementById('sigVal'),
+      fov: document.getElementById('fovVal'),
+      res: document.getElementById('resVal'),
+      ss: document.getElementById('ssVal'),
+    };
+
+    // State
+    let N = parseInt(ctl.res.value,10);
+    let FOV = parseFloat(ctl.fov.value);           // half-width (arcsec)
+    let b = parseFloat(ctl.b.value);
+    let gamma = parseFloat(ctl.g.value);
+    let phiDeg = parseFloat(ctl.phi.value);        // position angle for shear
+    let sigma = parseFloat(ctl.sig.value);
+    let SS = parseInt(ctl.ss.value,10);
+    let showMarkers = ctl.ptMarkers.checked;
+
+    // Source center in math coords (arcsec)
+    let beta = { x: 0.18, y: 0.00 };
+
+    // Pixel <-> Math conversion
+    function setCanvasSizes() {
+      N = parseInt(ctl.res.value,10);
+      srcC.width = srcC.height = N;
+      imgC.width = imgC.height = N;
+    }
+    function stepArcsec() { return (2*FOV)/N; }  // pixel scale (arcsec/pixel)
+    function pixToMath(i, j) {
+      // pixel center → math (x, y)
+      const s = stepArcsec();
+      const x = -FOV + (i + 0.5)*s;
+      const y = -FOV + (j + 0.5)*s; // provisional with y up; we will invert for canvas below
+      // We want y North (up). Canvas j grows down. For physics we flip here:
+      const yNorth = FOV - (j + 0.5)*s;
+      return { x, y: yNorth };
+    }
+    function mathToPix(x, y) {
+      const s = stepArcsec();
+      const i = (x + FOV)/s - 0.5;
+      const j = (FOV - y)/s - 0.5; // y North -> canvas row
+      return { i, j };
+    }
+
+    // UI helpers
+    function updLabels(){
+      lab.b.textContent   = b.toFixed(2);
+      lab.g.textContent   = gamma.toFixed(3);
+      lab.phi.textContent = phiDeg.toFixed(0);
+      lab.sig.textContent = sigma.toFixed(3);
+      lab.fov.textContent = FOV.toFixed(2);
+      lab.res.textContent = String(N);
+      lab.ss.textContent  = SS + '×';
+    }
+    function fmt(v){ return (v>=0?'+':'') + v.toFixed(3); }
+
+    // =========================
+    //  LENS MODEL: SIS + SHEAR
+    // =========================
+    // Shear matrix Γ from (γ, φ), with φ measured East of North, and γ1=γ cos 2φ, γ2=γ sin 2φ.
+    function shearComponents(gamma, phiDeg){
+      const th = (2*Math.PI/180)*phiDeg; // 2φ
+      return { g1: gamma*Math.cos(th), g2: gamma*Math.sin(th) };
+    }
+
+    // Physics at image-plane position θ=(x,y), arcsec.
+    function lensAt(x, y) {
+      const eps = 1e-15;
+      const r = Math.hypot(x,y);
+      const rSafe = Math.max(r, eps);
+
+      // SIS deflection α_SIS = b * θ / |θ|
+      const ax_sis = b * x / rSafe;
+      const ay_sis = b * y / rSafe;
+
+      // SIS derivatives (analytic)
+      // ∂(x/r)/∂x = y^2 / r^3 ; ∂(x/r)/∂y = -xy / r^3
+      // ∂(y/r)/∂x = -xy / r^3; ∂(y/r)/∂y = x^2 / r^3
+      const r3 = rSafe*rSafe*rSafe;
+      const daxx = b * (y*y) / r3;
+      const daxy = -b * (x*y) / r3;
+      const dayx = daxy;
+      const dayy = b * (x*x) / r3;
+
+      // Shear deflection α_γ = Γ θ
+      const {g1,g2} = shearComponents(gamma, phiDeg);
+      const ax_sh = g1*x + g2*y;
+      const ay_sh = g2*x - g1*y;
+
+      // Total deflection
+      const ax = ax_sis + ax_sh;
+      const ay = ay_sis + ay_sh;
+
+      // ∂α/∂θ total
+      const Jxx = daxx + g1, Jxy = daxy + g2, Jyx = dayx + g2, Jyy = dayy - g1;
+
+      // Lens equation β = θ - α(θ)
+      const bx = x - ax;
+      const by = y - ay;
+
+      // A = ∂β/∂θ = I - ∂α/∂θ
+      const Axx = 1 - Jxx, Axy = -Jxy, Ayx = -Jyx, Ayy = 1 - Jyy;
+      const detA = Axx*Ayy - Axy*Ayx;
+
+      return { bx, by, ax, ay, Axx, Axy, Ayx, Ayy, detA };
+    }
+
+    // Source brightness: circular Gaussian centered at beta, width sigma.
+    function sourceI(bx, by){
+      const dx = bx - beta.x, dy = by - beta.y;
+      const s2 = sigma*sigma;
+      return Math.exp(-0.5*(dx*dx + dy*dy)/s2);
+    }
+
+    // =========================
+    //  CRITICAL CURVE (detA=0) via marching squares
+    // =========================
+    // Build detA grid over image plane; extract contour segments; chain into polyline.
+    function buildDetAGrid(G=N){
+      const grid = new Array(G);
+      for (let j=0;j<G;j++){
+        grid[j] = new Float64Array(G);
+        for (let i=0;i<G;i++){
+          const s = (2*FOV)/G;
+          const x = -FOV + (i+0.5)*s;
+          const y = FOV - (j+0.5)*s;
+          grid[j][i] = lensAt(x,y).detA;
+        }
+      }
+      return grid;
+    }
+
+    function marchingSquaresZero(grid){
+      // Returns array of polylines; each is array of {x,y} in math coords.
+      const G = grid.length, H = grid[0].length;
+      const segs = [];
+
+      function val(i,j){ return grid[j][i]; }
+      function pXY(i, j){ // corner coords (lower-left at i,j)
+        const s = (2*FOV)/G;
+        // corners: (i,j) is lower-left in math, but our grid is center-based.
+        const x = -FOV + i*s;
+        const y = FOV - j*s;
+        return {x, y};
+      }
+      function interp(p1, p2, v1, v2){
+        const t = v1/(v1 - v2); // linear fraction where v crosses 0 from v1->v2
+        return { x: p1.x + t*(p2.x-p1.x), y: p1.y + t*(p2.y-p1.y) };
+      }
+
+      for (let j=0;j<G-1;j++){
+        for (let i=0;i<H-1;i++){
+          const f00 = val(i,  j);
+          const f10 = val(i+1,j);
+          const f01 = val(i,  j+1);
+          const f11 = val(i+1,j+1);
+
+          const idx =
+                  (f00>0?1:0) |
+                  (f10>0?2:0) |
+                  (f11>0?4:0) |
+                  (f01>0?8:0);
+
+          if (idx===0 || idx===15) continue; // no crossing
+
+          // cell corner points (math coords)
+          const p00 = pXY(i,  j+1); // note: careful with orientation
+          const p10 = pXY(i+1,j+1);
+          const p11 = pXY(i+1,j);
+          const p01 = pXY(i,  j);
+
+          // edges: between which corners do we cross?
+          // We'll produce 0, 1, or 2 segments per cell.
+          let s1=null, s2=null;
+
+          switch(idx){
+            case 1: case 14:
+              s1 = [ interp(p00,p10,f00,f10), interp(p00,p01,f00,f01) ]; break;
+            case 2: case 13:
+              s1 = [ interp(p10,p11,f10,f11), interp(p00,p10,f00,f10) ]; break;
+            case 3: case 12:
+              s1 = [ interp(p10,p11,f10,f11), interp(p00,p01,f00,f01) ]; break;
+            case 4: case 11:
+              s1 = [ interp(p10,p11,f10,f11), interp(p01,p11,f01,f11) ]; break;
+            case 5:
+              s1 = [ interp(p00,p10,f00,f10), interp(p01,p11,f01,f11) ];
+              s2 = [ interp(p00,p01,f00,f01), interp(p10,p11,f10,f11) ];
+              break;
+            case 10:
+              s1 = [ interp(p00,p10,f00,f10), interp(p01,p11,f01,f11) ];
+              s2 = [ interp(p00,p01,f00,f01), interp(p10,p11,f10,f11) ];
+              break;
+            case 6: case 9:
+              s1 = [ interp(p00,p10,f00,f10), interp(p01,p11,f01,f11) ]; break;
+            case 7: case 8:
+              s1 = [ interp(p00,p01,f00,f01), interp(p01,p11,f01,f11) ]; break;
+          }
+          if (s1) segs.push(s1);
+          if (s2) segs.push(s2);
+        }
+      }
+
+      // Chain segments into polylines
+      const lines = [];
+      const used = new Array(segs.length).fill(false);
+      const tol = 1e-6;
+
+      function same(a,b){ return Math.hypot(a.x-b.x, a.y-b.y) < tol; }
+
+      for (let i=0;i<segs.length;i++){
+        if (used[i]) continue;
+        let line = [segs[i][0], segs[i][1]];
+        used[i]=true;
+
+        let extended=true;
+        while(extended){
+          extended=false;
+
+          for (let k=0;k<segs.length;k++){
+            if (used[k]) continue;
+            const s = segs[k];
+            if (same(line[line.length-1], s[0])) { line.push(s[1]); used[k]=true; extended=true; continue; }
+            if (same(line[line.length-1], s[1])) { line.push(s[0]); used[k]=true; extended=true; continue; }
+            if (same(line[0], s[1])) { line.unshift(s[0]); used[k]=true; extended=true; continue; }
+            if (same(line[0], s[0])) { line.unshift(s[1]); used[k]=true; extended=true; continue; }
+          }
+        }
+        // Close almost-closed lines
+        if (line.length>2 && same(line[0], line[line.length-1])) {
+          line.pop();
+        }
+        lines.push(line);
+      }
+      // Choose the longest polyline (the primary tangential critical)
+      lines.sort((a,b)=>b.length-a.length);
+      return lines.length? lines[0] : [];
+    }
+
+    // =========================
+    //  NEWTON SOLVER FOR POINT IMAGES
+    // =========================
+    function solveImagesFor(beta0){
+      const sols = [];
+      const seen = [];
+      const tol = 1e-10;
+
+      function newton(x0,y0){
+        let x=x0, y=y0;
+        for (let it=0; it<40; it++){
+          const L = lensAt(x,y);
+          const rx = L.bx - beta0.x;
+          const ry = L.by - beta0.y;
+          const det = L.Axx*L.Ayy - L.Axy*L.Ayx;
+          if (!isFinite(det) || Math.abs(det)<1e-14) break;
+          const dx = ( L.Ayy*rx - L.Axy*ry )/det;
+          const dy = (-L.Ayx*rx + L.Axx*ry )/det;
+          x -= dx; y -= dy;
+          if (Math.hypot(dx,dy)<tol) break;
+        }
+        return {x,y};
+      }
+
+      const rings = [0.4*FOV, 0.8*FOV, 1.2*FOV, b, 1.6*b];
+      for (const R of rings){
+        const M = 72;
+        for (let k=0;k<M;k++){
+          const t = 2*Math.PI*(k/M);
+          const g = newton(R*Math.cos(t), R*Math.sin(t));
+          if (!isFinite(g.x) || !isFinite(g.y)) continue;
+          if (Math.hypot(g.x,g.y) > 1.2*FOV) continue;
+          // residual check
+          const L = lensAt(g.x,g.y);
+          const res = Math.hypot(L.bx-beta0.x, L.by-beta0.y);
+          if (res>1e-6) continue;
+          // de-dup
+          let dup=false;
+          for (const q of seen){ if (Math.hypot(q.x-g.x,q.y-g.y) < 2e-3){ dup=true; break; } }
+          if (!dup){ seen.push(g); sols.push(g); }
+        }
+      }
+      return sols;
+    }
+
+    // =========================
+    //  RENDERING
+    // =========================
+    function drawAxes(ctx){
+      const W = ctx.canvas.width;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, W/2 + 0.5); ctx.lineTo(W, W/2 + 0.5);
+      ctx.moveTo(W/2 + 0.5, 0); ctx.lineTo(W/2 + 0.5, W);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function render(){
+      setCanvasSizes();
+      updLabels();
+
+      // Position the draggable source dot (source plane)
+      const sp = mathToPix(beta.x, beta.y);
+      srcDot.style.left = `${sp.i}px`;
+      srcDot.style.top  = `${sp.j}px`;
+
+      // ---- compute critical curve via marching squares on image plane ----
+      const detGrid = buildDetAGrid(Math.max(320, Math.floor(N*0.9)));
+      const critPoly = marchingSquaresZero(detGrid); // array of {x,y} in math coords
+
+      // ---- caustic = map crit points through lens equation ----
+      const caustic = critPoly.map(p => {
+        const L = lensAt(p.x, p.y);
+        return { x: L.bx, y: L.by };
+      });
+
+      // ---- SOURCE PLANE ----
+      srcCtx.fillStyle = '#0d1222';
+      srcCtx.fillRect(0,0,N,N);
+      drawAxes(srcCtx);
+
+      // draw caustic
+      if (caustic.length>1){
+        srcCtx.save();
+        srcCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--caustic') || '#ffb400';
+        srcCtx.lineWidth = 2;
+        srcCtx.beginPath();
+        let p = mathToPix(caustic[0].x, caustic[0].y);
+        srcCtx.moveTo(p.i+0.5, p.j+0.5);
+        for (let k=1;k<caustic.length;k++){
+          p = mathToPix(caustic[k].x, caustic[k].y);
+          srcCtx.lineTo(p.i+0.5, p.j+0.5);
+        }
+        srcCtx.closePath();
+        srcCtx.stroke();
+        srcCtx.restore();
+      }
+
+      srcLegend.innerHTML = `<div><strong>β</strong> = (${fmt(beta.x)}″, ${fmt(beta.y)}″)</div>
+                           <div>Inside caustic → 4 images • Outside → 2</div>`;
+
+      // ---- IMAGE PLANE (ray shooting with supersampling) ----
+      const imgData = imgCtx.createImageData(N, N);
+      const buf = imgData.data;
+      const s = Math.max(1, Math.min(3, SS));
+      const invs2 = 1/(s*s);
+
+      let k=0;
+      for (let j=0;j<N;j++){
+        for (let i=0;i<N;i++, k+=4){
+          let acc = 0;
+          for (let u=0; u<s; u++){
+            for (let v=0; v<s; v++){
+              // subpixel center in canvas → math θ
+              const x = -FOV + ((i + (u+0.5)/s) + 0.5)*(2*FOV)/N;
+              const y =  FOV - ((j + (v+0.5)/s) + 0.5)*(2*FOV)/N; // y North
+              const L = lensAt(x, y);
+              acc += sourceI(L.bx, L.by);
+            }
+          }
+          const I = Math.min(1, Math.pow(acc*invs2, 0.85)*1.35);
+          const lum = (I*255)|0;
+          buf[k]=buf[k+1]=buf[k+2]=lum; buf[k+3]=255;
+        }
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+
+      // critical curve overlay
+      if (critPoly.length>1){
+        imgCtx.save();
+        imgCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--crit') || '#0b0b0b';
+        imgCtx.lineWidth = 1.7;
+        imgCtx.beginPath();
+        let p = mathToPix(critPoly[0].x, critPoly[0].y);
+        imgCtx.moveTo(p.i+0.5, p.j+0.5);
+        for (let k=1;k<critPoly.length;k++){
+          p = mathToPix(critPoly[k].x, critPoly[k].y);
+          imgCtx.lineTo(p.i+0.5, p.j+0.5);
+        }
+        imgCtx.closePath();
+        imgCtx.stroke();
+        imgCtx.restore();
+      }
+
+      drawAxes(imgCtx);
+
+      // Optional: mark exact image positions for point-like source
+      if (showMarkers && sigma < 0.015){
+        const pts = solveImagesFor(beta);
+        imgCtx.save();
+        imgCtx.fillStyle = '#ffffff';
+        for (const q of pts){
+          const p = mathToPix(q.x, q.y);
+          imgCtx.beginPath();
+          imgCtx.arc(p.i, p.j, 3, 0, 2*Math.PI);
+          imgCtx.fill();
+        }
+        imgCtx.restore();
+
+        imgLegend.innerHTML = `<div><strong>b</strong>=${b.toFixed(2)}″ • <strong>γ</strong>=${gamma.toFixed(3)} • <strong>φ</strong>=${phiDeg.toFixed(0)}° • SS=${s}×</div>
+                             <div class="small">${pts.length} image(s) for tiny source (Newton).</div>`;
+      } else {
+        imgLegend.innerHTML = `<div><strong>b</strong>=${b.toFixed(2)}″ • <strong>γ</strong>=${gamma.toFixed(3)} • <strong>φ</strong>=${phiDeg.toFixed(0)}° • SS=${s}×</div>`;
+      }
+    }
+
+    // =========================
+    //  INTERACTION
+    // =========================
+    function bind(el, fn){ el.addEventListener('input', ()=>{ fn(); render(); }); el.addEventListener('change', ()=>{ fn(); render(); }); }
+    bind(ctl.b,   ()=> b = parseFloat(ctl.b.value));
+    bind(ctl.g,   ()=> gamma = parseFloat(ctl.g.value));
+    bind(ctl.phi, ()=> phiDeg = parseFloat(ctl.phi.value));
+    bind(ctl.sig, ()=> sigma = parseFloat(ctl.sig.value));
+    bind(ctl.fov, ()=> FOV = parseFloat(ctl.fov.value));
+    bind(ctl.res, ()=> {/* size set in render() */});
+    bind(ctl.ss,  ()=> SS = parseInt(ctl.ss.value,10));
+    ctl.ptMarkers.addEventListener('change', ()=>{ showMarkers = ctl.ptMarkers.checked; render(); });
+
+    // Dragging the source on the *source* canvas
+    function canvasToBeta(ev){
+      const r = srcC.getBoundingClientRect();
+      const i = Math.max(0, Math.min(N-1, ev.clientX - r.left));
+      const j = Math.max(0, Math.min(N-1, ev.clientY - r.top));
+      // convert to math coords:
+      const s = (2*FOV)/N;
+      const x = -FOV + (i)*s;
+      const y =  FOV - (j)*s;
+      return {x,y};
+    }
+    let dragging=false;
+    srcC.addEventListener('pointerdown', (ev)=>{ dragging=true; beta = canvasToBeta(ev); render(); });
+    window.addEventListener('pointermove', (ev)=>{ if(!dragging) return; beta = canvasToBeta(ev); render(); });
+    window.addEventListener('pointerup', ()=> dragging=false);
+    window.addEventListener('pointerleave', ()=> dragging=false);
+
+    // Presets
+    ctl.presetQuad.addEventListener('click', ()=>{
+      b=1.00; gamma=0.12; phiDeg=25; sigma=0.030; beta={x:0.10,y:0.00};
+      ctl.b.value=b; ctl.g.value=gamma; ctl.phi.value=phiDeg; ctl.sig.value=sigma; render();
+    });
+    ctl.presetDouble.addEventListener('click', ()=>{
+      b=1.00; gamma=0.08; phiDeg=45; sigma=0.030; beta={x:0.60,y:0.10};
+      ctl.b.value=b; ctl.g.value=gamma; ctl.phi.value=phiDeg; ctl.sig.value=sigma; render();
+    });
+    ctl.presetRing.addEventListener('click', ()=>{
+      b=1.00; gamma=0.00; phiDeg=0; sigma=0.080; beta={x:0.00,y:0.00};
+      ctl.b.value=b; ctl.g.value=gamma; ctl.phi.value=phiDeg; ctl.sig.value=sigma; render();
+    });
+    ctl.reset.addEventListener('click', ()=>{
+      b=1.00; gamma=0.10; phiDeg=30; sigma=0.030; FOV=2.5; SS=2; beta={x:0.18,y:0.00}; showMarkers=false;
+      ctl.b.value=b; ctl.g.value=gamma; ctl.phi.value=phiDeg; ctl.sig.value=sigma; ctl.fov.value=FOV; ctl.res.value=480; ctl.ss.value=SS; ctl.ptMarkers.checked=false; render();
+    });
+
+    // Initial draw
+    render();
+  })();
+</script>
+</body>
+</html>

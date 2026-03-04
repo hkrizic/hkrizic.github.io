@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hrvoje Krizic - Physicist & Cellist. ETH Zurich, Cosmology, Gravitational Waves, String Theory.">
+    <title>Hrvoje Krizic</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav nav--light" id="nav">
+        <div class="container">
+            <div class="nav__inner">
+                <a href="index.html" class="nav__logo">HK</a>
+
+                <ul class="nav__links" id="navLinks">
+                    <li><a href="index.html" class="nav__link">Home</a></li>
+                    <li><a href="research.html" class="nav__link">Research</a></li>
+                    <li><a href="cellist.html" class="nav__link">Concerts & Media</a></li>
+                    <li><a href="teaching/" class="nav__link">Teaching</a></li>
+                </ul>
+
+                <div class="nav__toggle" id="navToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero with Background Image -->
+    <section class="hero hero--image">
+        <div class="hero__bg" style="background-image: url('assets/images/hero-bg.jpg');"></div>
+        <div class="container">
+            <div class="hero__content">
+                <h1 class="hero__title fade-in">Hrvoje Krizic</h1>
+                <p class="hero__subtitle fade-in fade-in-delay-1">Physicist & Cellist</p>
+                <p class="hero__description fade-in fade-in-delay-2">
+                    PhD student in Cosmology at the University of Geneva.<br>
+                    Research in strong gravitational lensing and time-delay cosmography.
+                </p>
+            </div>
+        </div>
+        <div class="hero__scroll">scroll</div>
+    </section>
+
+    <!-- About Preview -->
+    <section class="section" id="about">
+        <div class="container">
+            <div class="about">
+                <div class="about__image">
+                    <img src="assets/images/portrait.jpg" alt="Hrvoje Krizic">
+                </div>
+                <div class="about__content">
+                    <h2>About</h2>
+                    <p class="about__text">
+                        I am a PhD student at the Department of Theoretical Physics, University of Geneva, working on strong gravitational lens modeling in the context of time-delay cosmography. My research aims to constrain the Hubble constant through advanced modeling techniques for high-resolution imaging data within the TDCOSMO collaboration.
+                    </p>
+                    <p class="about__text">
+                        I completed my Bachelor's and Master's degrees in Physics at ETH Zurich. During my time there, I served as a teaching assistant since 2021 and authored the textbook <em>"Tutorium Mathematik fur Naturwissenschaften"</em>, published by Springer Verlag in 2024.
+                    </p>
+                    <p class="about__text">
+                        Beyond physics, I am a passionate cellist. I have performed as a soloist with various orchestras across Switzerland, Germany, Croatia, and the Netherlands, and currently play in various formations across Switzerland.
+                    </p>
+
+                    <div class="about__links">
+                        <a href="research.html" class="about__link">Research Projects</a>
+                        <a href="cellist.html" class="about__link">Concerts & Media</a>
+                        <a href="https://link.springer.com/book/10.1007/978-3-662-69221-9" class="about__link" target="_blank">Springer Book</a>
+                        <a href="teaching/" class="about__link">Teaching Portal</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section section--tight" id="contact">
+        <div class="container">
+            <div class="contact">
+                <h2>Contact</h2>
+                <div class="contact__info">
+                    <p class="contact__item"><a href="mailto:Hrvoje.Krizic@unige.ch">hrvoje.krizic@unige.ch</a></p>
+                    <p class="contact__item"><a href="mailto:krizic.hrvoje@outlook.com">krizic.hrvoje@outlook.com</a> <span class="text-muted">— Cello inquiries</span></p>
+                    <p class="contact__item text-muted">Geneva, Switzerland</p>
+                </div>
+                <div class="contact__social">
+                    <a href="https://www.linkedin.com/in/hrvoje-krizic/" target="_blank" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/hkrizic" target="_blank" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://www.instagram.com/harrykrizic" target="_blank" title="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCl5IdY8HXcKFb3qzR-nQ9NQ" target="_blank" title="YouTube">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Hrvoje Krizic</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu toggle
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Close menu on link click
+        document.querySelectorAll('.nav__link').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Scroll button click
+        const scrollBtn = document.querySelector('.hero__scroll');
+        if (scrollBtn) {
+            scrollBtn.addEventListener('click', () => {
+                const target = document.getElementById('about');
+                const targetY = target.getBoundingClientRect().top + window.scrollY;
+                const startY = window.scrollY;
+                const diff = targetY - startY;
+                let start;
+
+                requestAnimationFrame(function step(time) {
+                    if (!start) start = time;
+                    const progress = Math.min((time - start) / 1200, 1);
+                    const ease = 0.5 - Math.cos(progress * Math.PI) / 2;
+                    window.scrollTo(0, startY + diff * ease);
+                    if (progress < 1) requestAnimationFrame(step);
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipsii</title>
+    <link rel="apple-touch-icon" href="heartemoji.png" type="image/png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pipsii-Ziit">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #d3d3d3;
+            transition: background-color 0.5s ease;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: bold;
+            color: black;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .time {
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .result {
+            font-size: 36px;
+            margin-top: 20px;
+        }
+        .next-time {
+            font-size: 20px;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        /* New modern and minimal sunset part */
+        .sunset {
+            font-size: 22px;
+            font-weight: 500;
+            color: #333;
+            padding: 15px;
+            text-align: center;
+            width: 280px;
+            margin-top: 50px;
+        }
+
+        .sunset .sunset-icon {
+            font-size: 35px;
+            margin-bottom: 10px;
+            color: #ff7e5f; /* Give a slight color for the icon */
+        }
+
+        /* Make sure it looks good on smaller screens */
+        @media (max-width: 768px) {
+            .sunset {
+                font-size: 18px;
+                width: 220px;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="title">Isch es Pipsii-Ziit?</div>
+<div class="time" id="time"></div>
+<div class="result" id="result"></div>
+<div class="next-time" id="next-time"></div>
+
+<!-- Redesigned minimal sunset part -->
+<div class="sunset" id="sunset">
+    <div class="sunset-icon">🌅</div>
+    <div id="sunset-time">Loading sunset time...</div>
+</div>
+
+<script>
+    function updateTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+
+        const timeString = `${hours}:${minutes}`;
+        document.getElementById('time').textContent = timeString;
+
+        const digitsSum = [...hours, ...minutes].reduce((acc, digit) => acc + parseInt(digit), 0);
+
+        if (digitsSum === 7 || digitsSum === 12 || digitsSum === 16) {
+            document.getElementById('result').textContent = "Jaaaaa ❤️";
+            document.body.style.backgroundColor = "#f7c6d9";
+            document.getElementById('next-time').textContent = "         ";
+        } else {
+            document.getElementById('result').textContent = "Nope :(";
+            document.body.style.backgroundColor = "#d3d3d3";
+            const nextValidTime = findNextValidTime(hours, minutes);
+            document.getElementById('next-time').textContent = `Nöchschtii Pipsii-Ziit: ${nextValidTime}`;
+        }
+    }
+
+    function findNextValidTime(currentHours, currentMinutes) {
+        let hours = parseInt(currentHours);
+        let minutes = parseInt(currentMinutes) + 1;
+
+        while (true) {
+            if (minutes === 60) {
+                minutes = 0;
+                hours = (hours + 1) % 24;
+            }
+
+            const hourStr = hours.toString().padStart(2, '0');
+            const minuteStr = minutes.toString().padStart(2, '0');
+            const digitsSum = [...hourStr, ...minuteStr].reduce((acc, digit) => acc + parseInt(digit), 0);
+
+            if (digitsSum === 7 || digitsSum === 12 || digitsSum === 16) {
+                return `${hourStr}:${minuteStr}`;
+            }
+
+            minutes++;
+        }
+    }
+
+    function fetchSunsetTime() {
+        const latitude = 47.378177;  // Latitude for Zürich
+        const longitude = 8.548620;  // Longitude for Zürich
+
+        fetch(`https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&formatted=0`)
+            .then(response => response.json())
+            .then(data => {
+                const sunsetTime = new Date(data.results.sunset).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('sunset-time').textContent = `Sonnenuntergang: ${sunsetTime}`;
+            })
+            .catch(error => console.error('Error fetching sunset time:', error));
+    }
+
+    fetchSunsetTime();
+    setInterval(updateTime, 1000);
+    updateTime();
+</script>
+<script>
+    // Aktuelle Version der App
+    const currentVersion = '1.0.1'; // Ändere diese Version bei jedem Update der Seite
+
+    // Überprüfe, ob eine neue Version verfügbar ist
+    const savedVersion = localStorage.getItem('appVersion');
+
+    if (savedVersion !== currentVersion) {
+        // Falls die Version geändert wurde, lösche den Cache und aktualisiere
+        localStorage.setItem('appVersion', currentVersion);
+        console.log('Neue Version erkannt. Aktualisieren...');
+        window.location.reload(true); // Erzwingt das Neuladen der Seite ohne Cache
+    }
+</script>
+
+</body>
+</html>

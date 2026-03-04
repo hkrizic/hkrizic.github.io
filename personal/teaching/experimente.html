@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boyle–Mariotte Simulation (cm³ / bar)</title>
+    <style>
+        :root { --primary:#1976d2; }
+        body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f4f6f9;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{margin:1.5rem 0 0.5rem;font-size:2rem;text-align:center;color:var(--primary)}
+        .temperature{margin-bottom:1rem;font-size:1rem;color:#444}
+        .sim-wrapper{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;width:100%;max-width:1000px}
+        .controls,.visual{background:#fff;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.1);padding:1.5rem}
+        .controls{flex:1 1 280px;display:flex;flex-direction:column;gap:1.2rem}
+        .visual{flex:1 1 280px;position:relative;display:flex;flex-direction:column;align-items:center}
+        label{font-weight:600;display:flex;justify-content:space-between;align-items:center}
+        input[type=range]{width:100%}
+        #cylinder{position:relative;height:320px;width:120px;border:6px solid #555;border-radius:10px;background:linear-gradient(to bottom,#e0f7fa,#b2ebf2);overflow:hidden;margin-top:1rem}
+        #piston{position:absolute;left:0;width:100%;height:12px;background:#333;cursor:grab}
+        .scale{position:absolute;right:-45px;top:0;height:100%;width:45px;display:flex;flex-direction:column;justify-content:space-between;padding:6px 0}
+        .scale div{height:1px;background:#000;position:relative}
+        .scale div::after{content:attr(data-v);position:absolute;right:-4.3ch;top:-0.6rem;font-size:0.7rem;color:#000}
+        #particleCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+        .chart-box{margin-top:1.5rem}
+        canvas#chart{background:#fff;border:1px solid #ccc;border-radius:6px}
+        button{padding:0.5rem 1rem;border:none;border-radius:6px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;transition:background .2s}
+        button:hover{background:#145a9e}
+    </style>
+</head>
+<body>
+<h1>Boyle–Mariotte Simulation</h1>
+<div class="temperature">Temperature: 20&nbsp;°C (isothermal)</div>
+
+<div class="sim-wrapper">
+    <!-- Visual section -->
+    <div class="visual">
+        <div id="cylinder">
+            <canvas id="particleCanvas"></canvas>
+            <div id="piston"></div>
+            <div class="scale" id="scale"></div>
+        </div>
+        <div style="margin-top:0.8rem;text-align:center">
+            <div><strong>V</strong> = <span id="volumeVal">15</span> cm³</div>
+            <div><strong>P</strong> = <span id="pressureVal">1013</span> hPa</div>
+        </div>
+    </div>
+
+    <!-- Controls section -->
+    <div class="controls">
+        <label>Volume (cm³): <span id="volLabel">15</span></label>
+        <input type="range" id="volumeSlider" min="3" max="25" step="0.1" value="15" />
+
+        <button id="addData">Add Data</button>
+        <div class="chart-box">
+            <canvas id="chart" width="400" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------- DOM ---------- */
+    const vSlider  = document.getElementById('volumeSlider');
+    const vSpan    = document.getElementById('volumeVal');
+    const pSpan    = document.getElementById('pressureVal');
+    const volLabel = document.getElementById('volLabel');
+    const piston   = document.getElementById('piston');
+    const cylinder = document.getElementById('cylinder');
+    const particleCanvas = document.getElementById('particleCanvas');
+    const ctxPart  = particleCanvas.getContext('2d');
+    const chartCanvas = document.getElementById('chart');
+    const ctxChart = chartCanvas.getContext('2d');
+
+    /* ---------- Konstanten ---------- */
+    const MIN_V = 0;      // cm³ (Diagrammuntergrenze)
+    const MAX_V = 25;     // cm³ (Sliderobergrenze & Diagrammobergrenze)
+    const SLIDER_MIN_V = 3; // physikalisch erreichbar
+    const SLIDER_MAX_V = 25;
+    const V0    = 15;     // cm³ (Startwert)
+    const P0    = 1013;   // hPa (≈ 1 atm)
+    const PVconst = V0 * P0;   // nRT (Konstante)
+
+    /* Canvas-Größe dem Zylinder anpassen */
+    function resizeCanvas(){
+        particleCanvas.width  = cylinder.clientWidth;
+        particleCanvas.height = cylinder.clientHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    /* Volumen-Skala aufbauen */
+    const scaleEl = document.getElementById('scale');
+    function buildScale(){
+        scaleEl.innerHTML='';
+        for(let i=0;i<=10;i++){
+            const tick = document.createElement('div');
+            const vVal = SLIDER_MIN_V + (SLIDER_MAX_V - SLIDER_MIN_V) * (10-i) / 10;
+            tick.setAttribute('data-v', vVal.toFixed(0));
+            scaleEl.appendChild(tick);
+        }
+    }
+    buildScale();
+
+    /* UI aktualisieren */
+    function updateUI(){
+        const V = parseFloat(vSlider.value);
+        const P = PVconst / V;
+        /* Labels */
+        vSpan.textContent   = V.toFixed(1);
+        pSpan.textContent   = P.toFixed(0);          // hPa
+        volLabel.textContent= V.toFixed(1);
+        /* Kolbenposition */
+        const minFrac = 0.1, maxFrac = 1.0;  // Position in % des Zylinders (von unten)
+        const frac = (V - SLIDER_MIN_V) / (SLIDER_MAX_V - SLIDER_MIN_V) * (maxFrac - minFrac) + minFrac;
+        piston.style.bottom = (frac * 100) + '%';
+        /* Teilchen-Tempo relativ zu P/P₀ */
+        particleSpeed = baseSpeed * Math.sqrt(P / P0);
+    }
+    vSlider.addEventListener('input', updateUI);
+
+    /* ---------- Teilchen ---------- */
+    const numParticles = 60;
+    const particles=[];
+    function rand(min,max){return Math.random()*(max-min)+min;}
+    const baseSpeed = 0.6;
+    let particleSpeed = baseSpeed;
+
+    function initParticles(){
+        particles.length=0;
+        for(let i=0;i<numParticles;i++){
+            particles.push({
+                x: rand(5, particleCanvas.width-5),
+                y: rand(5, particleCanvas.height-20),
+                vx: rand(-1,1),
+                vy: rand(-1,1)
+            });
+        }
+    }
+    initParticles();
+
+    function updateParticles(){
+        ctxPart.clearRect(0,0,particleCanvas.width,particleCanvas.height);
+        const pistonTop = piston.offsetTop + piston.clientHeight;
+        for(const p of particles){
+            p.x += p.vx * particleSpeed;
+            p.y += p.vy * particleSpeed;
+
+            /* Kollisionen mit Wänden */
+            if(p.x < 3){ p.x=3; p.vx*=-1; }
+            if(p.x > particleCanvas.width-3){ p.x=particleCanvas.width-3; p.vx*=-1; }
+            if(p.y < pistonTop+3){ p.y=pistonTop+3; p.vy*=-1; }
+            if(p.y > particleCanvas.height-3){ p.y=particleCanvas.height-3; p.vy*=-1; }
+
+            ctxPart.beginPath();
+            ctxPart.arc(p.x,p.y,3,0,Math.PI*2);
+            ctxPart.fillStyle='#1976d2';
+            ctxPart.fill();
+        }
+        requestAnimationFrame(updateParticles);
+    }
+    requestAnimationFrame(updateParticles);
+
+    /* ---------- Diagramm (V vs P) ---------- */
+    const dataPoints=[];
+
+    function map(val,inMin,inMax,outMin,outMax){
+        return (val-inMin)/(inMax-inMin)*(outMax-outMin)+outMin;
+    }
+
+    function drawAxes(){
+        ctxChart.clearRect(0,0,chartCanvas.width,chartCanvas.height);
+        ctxChart.strokeStyle='#000';
+        /* y-Achse */
+        ctxChart.beginPath();ctxChart.moveTo(40,10);ctxChart.lineTo(40,260);ctxChart.stroke();
+        /* x-Achse */
+        ctxChart.beginPath();ctxChart.moveTo(40,260);ctxChart.lineTo(380,260);ctxChart.stroke();
+
+        /* Beschriftungen */
+        ctxChart.font='12px Segoe UI';
+        ctxChart.fillText('V (cm³)',6,20);
+        ctxChart.fillText('P (bar)',335,280);
+
+        /* Achsen-Endwerte */
+        ctxChart.fillText('25', 6, 15);       // V max oben an y-Achse
+        ctxChart.fillText('0', 10, 260);      // V min unten
+        ctxChart.fillText('0', 35, 275);      // P min links
+        ctxChart.fillText('4', 370, 275);     // P max rechts
+    }
+
+    function drawChart(){
+        drawAxes();
+        for(const pt of dataPoints){
+            const x = map(pt.p, 0, 4, 40, 380);               // P in bar
+            const y = map(pt.v, MIN_V, MAX_V, 260, 10);       // V in cm³
+            ctxChart.beginPath();
+            ctxChart.arc(x, y, 4, 0, Math.PI * 2);
+            ctxChart.fillStyle = '#d32f2f';
+            ctxChart.fill();
+        }
+    }
+    drawChart();
+
+    document.getElementById('addData').addEventListener('click',()=>{
+        const V = parseFloat(vSlider.value);
+        const P_hPa = PVconst / V;
+        const P_bar = P_hPa / 1000;            // Umrechnung hPa -> bar
+        if(P_bar <= 4){                       // nur Punkte innerhalb des Achsenbereichs
+            dataPoints.push({v:V,p:P_bar});
+            drawChart();
+        }
+    });
+
+    /* Initiale Synchronisierung */
+    updateUI();
+</script>
+</body>
+</html>

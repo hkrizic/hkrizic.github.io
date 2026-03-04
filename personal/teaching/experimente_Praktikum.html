@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Würfel-Zerfallssimulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background: #f9f9f9;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .dice {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+            line-height: 30px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background: white;
+            font-weight: bold;
+        }
+        #dice-container {
+            margin-top: 10px;
+        }
+        .section {
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+<h1>Versuch 2 (©Hrvoje Krizic)</h1>
+
+<div class="section">
+    <h2>Versuch: Zerfallsgesetz</h2>
+    <button onclick="simulateDecayStep()">Nächster Zerfallsschritt</button>
+    <p id="decay-status"></p>
+    <div id="decay-table"></div>
+    <div id="decay-dice"></div>
+</div>
+
+<script>
+    let N = 280;
+    let decayData = [];
+    let step = 0;
+
+    function simulateDecayStep() {
+        let dice = Array.from({length: N}, () => Math.ceil(Math.random() * 6));
+        let zerfallen = dice.filter(v => v === 6).length;
+        let verbleibend = N - zerfallen;
+
+        decayData.push({ step, zerfallen, verbleibend });
+
+        document.getElementById('decay-status').innerText = `Schritt ${step}: ${zerfallen} zerfallen, ${verbleibend} übrig.`;
+        renderDecayTable();
+        renderDiceVisual(dice);
+
+        N = verbleibend;
+        step++;
+
+        if (N <= 2) {
+            alert('Simulation beendet: Weniger als 3 aktive Würfel.');
+        }
+    }
+
+    function renderDecayTable() {
+        let html = `<table border="1" cellpadding="5"><tr><th>Wurf-Nr.</th><th>Zerfallen</th><th>Verbleibend</th></tr>`;
+        decayData.forEach(d => {
+            html += `<tr><td>${d.step}</td><td>${d.zerfallen}</td><td>${d.verbleibend}</td></tr>`;
+        });
+        html += `</table>`;
+        document.getElementById('decay-table').innerHTML = html;
+    }
+
+    function renderDiceVisual(diceArray) {
+        const container = document.getElementById('decay-dice');
+        container.innerHTML = '';
+        diceArray.forEach(val => {
+            const el = document.createElement('div');
+            el.className = 'dice';
+            el.style.backgroundColor = val === 6 ? '#e74c3c' : '#ecf0f1';
+            el.textContent = val;
+            container.appendChild(el);
+        });
+    }
+</script>
+</body>
+</html>

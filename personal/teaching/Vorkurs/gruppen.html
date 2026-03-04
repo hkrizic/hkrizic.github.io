@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Gruppeneinteilung nach Nachname</title>
+<style>
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 36px; background:#f7f7f8; color:#222;}
+h1 { text-align:center; font-weight:700; letter-spacing:.3px;}
+.summary {text-align:center; margin-top:6px; color:#666;}
+.groups { display:grid; grid-template-columns: repeat(3, minmax(280px, 1fr)); gap:20px; margin-top:28px;}
+.group { background:#fff; border-radius:14px; padding:18px 18px 8px 18px; box-shadow: 0 6px 16px rgba(0,0,0,.06);}
+.group h2 { margin:0 0 6px 0; font-size:18px;}
+.group .range { color:#666; font-size:13px; }
+.count { font-weight:600; margin:6px 0 10px 0;}
+ul { list-style:none; padding-left:0; margin:0; max-height: 380px; overflow:auto;}
+li { padding:4px 0; border-bottom:1px dashed #eee;}
+li:last-child { border-bottom:none;}
+.footer { margin-top:28px; text-align:center; color:#888; font-size:12px;}
+</style>
+</head>
+<body>
+<h1>Gruppeneinteilung nach Nachname</h1>
+<div class="summary">Gesamt: <b>184</b> Studierende</div>
+<div class="groups">
+
+<div class="group">
+<h2>Gruppe Einstein</h2>
+<div class="range">A – C</div>
+<div class="count">Anzahl: 26</div>
+<ul>
+<li>Abreu Giulio</li>
+<li>Almasan Isabel Andrea</li>
+<li>Althaus Patrick</li>
+<li>Alvaro Sanchez Martín</li>
+<li>Ampikapathy Nila</li>
+<li>Antony Bryan</li>
+<li>Asfour Chiara</li>
+<li>Atmacagil Arda</li>
+<li>Bamert Mathias</li>
+<li>Bär Paul</li>
+<li>Bauer Nelson</li>
+<li>Bayer Anna</li>
+<li>Beerenwinkel Marlene</li>
+<li>Behrndt Niklas</li>
+<li>Beyeler Lilo</li>
+<li>Bian Keyan</li>
+<li>Borysov Yevhen</li>
+<li>Boucek Eric</li>
+<li>Brachmann Leonard</li>
+<li>Brüderlin Maxie</li>
+<li>Brühwiler Ramona</li>
+<li>Bula David</li>
+<li>Caslli Kevin</li>
+<li>Cek Onat</li>
+<li>Çelen Ege</li>
+<li>Chan Keanu</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Curie</h2>
+<div class="range">D – Ge</div>
+<div class="count">Anzahl: 27</div>
+<ul>
+<li>Decio Remo</li>
+<li>Dempewolff Linda</li>
+<li>Deng Renzhe</li>
+<li>Dicken Clemens</li>
+<li>Döge Jannes Karl</li>
+<li>Donnola Maja</li>
+<li>Dvořák Matěj</li>
+<li>Ehrenhöfer Philipp</li>
+<li>Elsener Cyrill</li>
+<li>Fang Helena</li>
+<li>Fedier Noah</li>
+<li>Fellenberg Julius</li>
+<li>Feuilleux Maelis</li>
+<li>Fileva Sophia</li>
+<li>Fink Niko</li>
+<li>Fischer Aaron</li>
+<li>Flütsch Lian</li>
+<li>Fölster Linnea</li>
+<li>Frei Adrian</li>
+<li>Friedman Mia</li>
+<li>Frohn Annika</li>
+<li>Galstyan Andranik</li>
+<li>gao Lion</li>
+<li>Garbani Evan</li>
+<li>Geldbach Simon</li>
+<li>Georgiadis Gregorios</li>
+<li>Georgiev Hristo</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Feynman</h2>
+<div class="range">Gi – Ji</div>
+<div class="count">Anzahl: 27</div>
+<ul>
+<li>Gilabert Prem</li>
+<li>Gjuraj Samuel</li>
+<li>Goltz Nina</li>
+<li>Grazzini Caterina</li>
+<li>Gredig Mia Sara</li>
+<li>Halter Nina</li>
+<li>Hammerschmidt Fiona</li>
+<li>Heinimann Louis</li>
+<li>Hengster Alexander-Rupert</li>
+<li>Hensel Anton</li>
+<li>Hermann Edwin</li>
+<li>Hisker Gustav</li>
+<li>Hoffner Robert</li>
+<li>Holtgreve Mira</li>
+<li>Hong Eric</li>
+<li>Horber Leo</li>
+<li>Imboden Nando Jonas</li>
+<li>Imhof Sarina</li>
+<li>Ineichen Marc</li>
+<li>Jaekel Nicolas</li>
+<li>Jakobsen Lennart Arne</li>
+<li>Jaskovic Filip</li>
+<li>Jenny Samuel</li>
+<li>Jeong Gaeun</li>
+<li>Jia Linya-Christin</li>
+<li>Jiang Qirui</li>
+<li>Jiang Shuyu</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Newton</h2>
+<div class="range">Jo – Li</div>
+<div class="count">Anzahl: 27</div>
+<ul>
+<li>Joliat Clément</li>
+<li>Jung Felix</li>
+<li>Jung Florian</li>
+<li>Jurcik Jakub</li>
+<li>Kabadayi Efe</li>
+<li>Karidis Matteo</li>
+<li>Kat Rene</li>
+<li>Keller Simon</li>
+<li>Kiefer Moritz</li>
+<li>Kiener Celina</li>
+<li>Kim Clara</li>
+<li>Kiori Konstantinos</li>
+<li>Klassen Tobias</li>
+<li>Klein Lopez Felix</li>
+<li>Kocher Damien</li>
+<li>Kramer Elias</li>
+<li>Krämer Gian Luis</li>
+<li>Kreuzer Theodor</li>
+<li>Kröger Hendrik</li>
+<li>Kukorelly Dalma</li>
+<li>Küttel Lars</li>
+<li>Kuvalekar Soham</li>
+<li>Liebenstein Luis</li>
+<li>Lin Xiaoman</li>
+<li>Liu Haiming</li>
+<li>Liu Hexuan</li>
+<li>Liu Shizong</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Bohr</h2>
+<div class="range">Lu – Ro</div>
+<div class="count">Anzahl: 28</div>
+<ul>
+<li>Ludwig Linus</li>
+<li>Manieri Alessandro</li>
+<li>Martina Ciferri</li>
+<li>Marucci Giulia</li>
+<li>Mauch Sofia</li>
+<li>Meszaros Marcell Gabor</li>
+<li>Meyer Theis</li>
+<li>Michelucci Caterina Sofia</li>
+<li>Mitev Amélie</li>
+<li>Naef Maximilien</li>
+<li>Nagel Anja</li>
+<li>Nakhleh Joud</li>
+<li>Nenova Simona</li>
+<li>Neuerburg Aeneas</li>
+<li>Niederacher Julia</li>
+<li>Nowak Darius</li>
+<li>Obregon Kai</li>
+<li>Ortiz Maria</li>
+<li>Özkan Emin</li>
+<li>Passalis Filippos</li>
+<li>Peters Jonas</li>
+<li>Preis Ian</li>
+<li>Ramseier Pascal</li>
+<li>Ribeiro Ventura Leonardo</li>
+<li>Riepp Julian</li>
+<li>Riggenbach Ida</li>
+<li>Roarty Cian</li>
+<li>Roth Adrian</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Hawking</h2>
+<div class="range">Ru – Ti</div>
+<div class="count">Anzahl: 25</div>
+<ul>
+<li>Ruess Martínez Guillermo Francisco</li>
+<li>Ruisinger Jonas</li>
+<li>Sageder Leander</li>
+<li>Saporito Marco</li>
+<li>Schärer Eliane</li>
+<li>Scheithauer Maja</li>
+<li>Schmidt-Wellenburg Julian</li>
+<li>Schneider Liam</li>
+<li>Sebben Nicola</li>
+<li>Senn Remirez Pablo</li>
+<li>Seyferth Thornike</li>
+<li>Silvestri Sofia Emelie</li>
+<li>Staub Julian</li>
+<li>Stefanetti Elia</li>
+<li>Stoll Friedrich</li>
+<li>Storni Gianluca</li>
+<li>Strobl Viktor</li>
+<li>Szucsany Laszlo</li>
+<li>Tabernig Jonathan</li>
+<li>Takacs Liliana</li>
+<li>Tami Daniel</li>
+<li>Taverna Nicola</li>
+<li>Terenzi Eleonora</li>
+<li>Tian Xiya</li>
+<li>Tiwary Saanvi</li>
+</ul></div>
+<div class="group">
+<h2>Gruppe Noether</h2>
+<div class="range">Tr – Z</div>
+<div class="count">Anzahl: 24</div>
+<ul>
+<li>Trebst Philip</li>
+<li>Tsanev Kaloyan</li>
+<li>Uhles Floria</li>
+<li>Urso Nada</li>
+<li>van de Vijfeijken Diana</li>
+<li>Vassilev Ilia</li>
+<li>Velchev Kristian</li>
+<li>Verma Abhinav</li>
+<li>Vögeli Selina</li>
+<li>Waksman Lina</li>
+<li>Walcher Philippe</li>
+<li>Weiller Andreas</li>
+<li>Wenger Xeno</li>
+<li>Wieser David</li>
+<li>Wirth Aaron</li>
+<li>Wixmerten Jan</li>
+<li>Wrenger Hanno</li>
+<li>Wu Han</li>
+<li>Wyss Dwayne Kalen</li>
+<li>Yu Jiacheng</li>
+<li>Yushko Liliia</li>
+<li>Zavagli Jona</li>
+<li>Zeller Valentin</li>
+<li>Zwinger Melissa</li>
+</ul></div>
+</div>
+<div class="footer">Automatisch gruppiert nach Bereichsgrenzen A–C, D–Ge, Gi–Ji, Jo–Li, Lu–Ro, Ru–Ti, Tr–Z.</div>
+</body></html>
