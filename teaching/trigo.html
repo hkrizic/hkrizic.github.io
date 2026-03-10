@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Einheitskreis – Trigonometrie lernen</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f4;
+  --surface: #fff;
+  --surface2: #f2efe8;
+  --border: #e5e0d5;
+  --text: #2c2a25;
+  --text-dim: #8a857a;
+  --accent: #e8553a;
+  --accent-soft: #fef0ed;
+  --sin: #e8553a;
+  --cos: #2a7de1;
+  --tan: #d4a017;
+  --correct: #3a9e6e;
+  --correct-bg: #edf8f2;
+  --wrong: #d44;
+  --wrong-bg: #fdeeed;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.7;
+  overflow-x:hidden;
+}
+::selection{background:var(--accent);color:#fff;}
+
+/* ── Layout ── */
+.container{max-width:800px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0;}
+
+/* ── Header ── */
+header{
+  text-align:center;
+  padding:56px 20px 20px;
+}
+header h1{
+  font-family:'Fraunces',serif;
+  font-size:clamp(1.6rem,4.5vw,2.4rem);
+  font-weight:700;
+  color:var(--text);
+  letter-spacing:-0.02em;
+}
+header h1 span{color:var(--accent);}
+header p{color:var(--text-dim);margin-top:6px;font-size:0.95rem;}
+
+/* ── Tabs ── */
+.tabs{
+  position:sticky;top:0;z-index:100;
+  background:rgba(250,248,244,0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  display:flex;justify-content:center;gap:0;
+  padding:0;
+}
+.tab{
+  padding:14px 24px;
+  font-weight:600;font-size:0.9rem;
+  color:var(--text-dim);
+  border:none;background:none;
+  cursor:pointer;
+  border-bottom:2.5px solid transparent;
+  transition:all 0.2s;
+  font-family:inherit;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── Pages ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── Card ── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+
+/* ── Unit Circle ── */
+.circle-section{text-align:center;}
+.canvas-container{
+  position:relative;
+  width:100%;
+  max-width:520px;
+  aspect-ratio:1;
+  margin:0 auto;
+  touch-action:none;
+}
+.canvas-container canvas{
+  width:100%;height:100%;
+  border-radius:var(--radius);
+  cursor:crosshair;
+}
+
+.readout{
+  display:flex;justify-content:center;gap:16px;
+  margin-top:16px;flex-wrap:wrap;
+}
+.readout-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px 16px;
+  box-shadow:var(--shadow);
+}
+.readout-dot{width:10px;height:10px;border-radius:50%;}
+.readout-label{font-weight:600;font-size:0.85rem;color:var(--text-dim);}
+.readout-val{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:600;font-size:1.05rem;
+  min-width:65px;text-align:right;
+}
+
+.angle-big{
+  font-family:'Fraunces',serif;
+  font-size:2rem;font-weight:700;
+  margin-top:18px;
+  color:var(--text);
+}
+.angle-big small{
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.9rem;font-weight:400;
+  color:var(--text-dim);margin-left:8px;
+}
+
+/* Controls */
+.circle-controls{
+  display:flex;gap:8px;justify-content:center;
+  margin-top:14px;flex-wrap:wrap;
+}
+.pill{
+  padding:7px 16px;
+  border-radius:20px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  font-family:inherit;font-size:0.82rem;font-weight:600;
+  color:var(--text-dim);
+  cursor:pointer;transition:all 0.15s;
+}
+.pill:hover{border-color:var(--accent);color:var(--accent);}
+.pill.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Tip box */
+.tip{
+  margin-top:20px;
+  background:var(--accent-soft);
+  border-left:3px solid var(--accent);
+  border-radius:0 10px 10px 0;
+  padding:14px 18px;
+  font-size:0.88rem;
+  color:var(--text);
+  text-align:left;
+}
+.tip strong{color:var(--accent);}
+
+/* ── Cheatsheet ── */
+.cheat-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;margin-top:20px;
+}
+@media(max-width:500px){.cheat-grid{grid-template-columns:1fr;}}
+.cheat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.cheat-card h4{
+  font-family:'Fraunces',serif;
+  font-size:1rem;margin-bottom:6px;
+}
+.cheat-card p{font-size:0.85rem;color:var(--text-dim);line-height:1.6;}
+.cheat-card .mono{
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.82rem;
+  background:var(--surface2);
+  padding:2px 7px;border-radius:5px;
+  display:inline-block;margin:1px 0;
+}
+
+/* Quadrant visual */
+.quad-visual{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;max-width:320px;margin:16px auto;
+  border-radius:12px;overflow:hidden;
+}
+.quad-box{
+  padding:16px;text-align:center;
+  font-size:0.82rem;font-weight:600;
+}
+.quad-box .q-num{font-family:'Fraunces',serif;font-size:1.2rem;margin-bottom:4px;}
+.quad-box .signs{font-family:'JetBrains Mono',monospace;font-size:0.78rem;margin-top:2px;}
+
+/* ── Quiz ── */
+.quiz-top{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+}
+.quiz-score-display{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:600;font-size:0.95rem;
+  color:var(--accent);
+}
+.quiz-bar-track{
+  width:100%;height:5px;
+  background:var(--surface2);
+  border-radius:3px;margin-bottom:24px;overflow:hidden;
+}
+.quiz-bar-fill{
+  height:100%;background:var(--accent);
+  border-radius:3px;transition:width 0.4s;
+}
+
+.q-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:var(--shadow);
+  animation:slideUp 0.3s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.q-category{
+  font-size:0.72rem;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--text-dim);font-weight:700;margin-bottom:4px;
+}
+.q-number{
+  font-size:0.82rem;color:var(--text-dim);margin-bottom:12px;
+}
+.q-text{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.15rem;font-weight:600;
+  margin-bottom:22px;line-height:1.5;
+}
+
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:450px){.q-options{grid-template-columns:1fr;}}
+.q-opt{
+  padding:13px 16px;
+  border:2px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.95rem;font-weight:500;
+  cursor:pointer;transition:all 0.15s;
+  text-align:center;color:var(--text);
+}
+.q-opt:hover{border-color:var(--accent);background:var(--accent-soft);}
+.q-opt:disabled{cursor:default;}
+.q-opt.is-correct{border-color:var(--correct);background:var(--correct-bg);color:var(--correct);}
+.q-opt.is-wrong{border-color:var(--wrong);background:var(--wrong-bg);color:var(--wrong);}
+
+.q-explain{
+  margin-top:18px;padding:14px 16px;
+  background:var(--surface2);border-radius:10px;
+  font-size:0.88rem;color:var(--text);
+  display:none;line-height:1.6;
+}
+.q-explain.show{display:block;}
+.q-explain strong{color:var(--accent);}
+
+.q-next{
+  margin-top:16px;width:100%;
+  padding:13px;border:none;border-radius:10px;
+  background:var(--accent);color:#fff;
+  font-family:inherit;font-size:0.95rem;font-weight:700;
+  cursor:pointer;display:none;transition:transform 0.1s;
+}
+.q-next:active{transform:scale(0.98);}
+.q-next.show{display:block;}
+
+.q-filters{
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;
+}
+.q-filter{
+  padding:6px 14px;border-radius:20px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  font-family:inherit;font-size:0.78rem;font-weight:600;
+  color:var(--text-dim);cursor:pointer;transition:all 0.15s;
+}
+.q-filter:hover{border-color:var(--accent);}
+.q-filter.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Summary */
+.summary{
+  text-align:center;padding:48px 24px;
+}
+.summary .big-pct{
+  font-family:'Fraunces',serif;
+  font-size:3.5rem;font-weight:700;
+  color:var(--accent);
+}
+.summary .sub{color:var(--text-dim);margin-top:4px;font-size:1rem;}
+.summary .msg{margin-top:16px;font-size:1.05rem;}
+.summary button{
+  margin-top:24px;
+  padding:13px 36px;border:none;border-radius:10px;
+  background:var(--accent);color:#fff;
+  font-family:inherit;font-size:0.95rem;font-weight:700;
+  cursor:pointer;
+}
+
+/* ── Angle input tool ── */
+.angle-tool{
+  display:flex;gap:10px;align-items:center;
+  margin-top:14px;
+}
+.angle-tool input{
+  flex:1;padding:10px 14px;
+  border:2px solid var(--border);border-radius:10px;
+  font-family:'JetBrains Mono',monospace;font-size:0.95rem;
+  background:var(--surface);color:var(--text);outline:none;
+}
+.angle-tool input:focus{border-color:var(--accent);}
+.angle-tool button{
+  padding:10px 20px;border:none;border-radius:10px;
+  background:var(--accent);color:#fff;
+  font-family:inherit;font-weight:700;font-size:0.9rem;
+  cursor:pointer;white-space:nowrap;
+}
+.angle-result{
+  margin-top:12px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.88rem;
+  line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trigonometrie am <span>Einheitskreis</span></h1>
+  <p>Verschiebe, entdecke, übe – alles was du brauchst.</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPage('learn')">Einheitskreis</button>
+  <button class="tab" onclick="showPage('cheat')">Kurzübersicht</button>
+  <button class="tab" onclick="showPage('quiz')">100 Aufgaben</button>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 1: INTERACTIVE UNIT CIRCLE            -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page active" id="page-learn">
+<section>
+<div class="container circle-section">
+
+  <div class="canvas-container">
+    <canvas id="uc"></canvas>
+  </div>
+
+  <div class="angle-big" id="angleBig">45° <small>= π/4</small></div>
+
+  <div class="readout">
+    <div class="readout-item">
+      <div class="readout-dot" style="background:var(--sin)"></div>
+      <span class="readout-label">sin</span>
+      <span class="readout-val" id="vSin" style="color:var(--sin)">0.707</span>
+    </div>
+    <div class="readout-item">
+      <div class="readout-dot" style="background:var(--cos)"></div>
+      <span class="readout-label">cos</span>
+      <span class="readout-val" id="vCos" style="color:var(--cos)">0.707</span>
+    </div>
+    <div class="readout-item">
+      <div class="readout-dot" style="background:var(--tan)"></div>
+      <span class="readout-label">tan</span>
+      <span class="readout-val" id="vTan" style="color:var(--tan)">1.000</span>
+    </div>
+  </div>
+
+  <div class="circle-controls">
+    <button class="pill on" id="btnSnap" onclick="toggleSnap()">Einrasten 15°</button>
+    <button class="pill" id="btnExact" onclick="toggleExact()">Exakte Werte</button>
+    <button class="pill" id="btnTan" onclick="toggleShowTan()">tan-Linie</button>
+  </div>
+
+  <div class="tip" id="tipBox">
+    <strong>Tipp:</strong> Ziehe den <strong>Punkt</strong> auf dem Kreis herum! Die <span style="color:var(--sin)">rote Linie</span> ist sin (y-Koordinate) und die <span style="color:var(--cos)">blaue Linie</span> ist cos (x-Koordinate). Alles was du brauchst, steckt in diesem Kreis.
+  </div>
+
+  <!-- Angle reducer -->
+  <div class="card" style="margin-top:24px;text-align:left;">
+    <h4 style="font-family:'Fraunces',serif;margin-bottom:6px;">Winkel umrechnen</h4>
+    <p style="font-size:0.85rem;color:var(--text-dim);">Gib einen beliebigen Winkel ein (auch negativ oder >360°) – ich zeige dir den reduzierten Winkel und die Werte.</p>
+    <div class="angle-tool">
+      <input type="number" id="angleIn" placeholder="z.B. –405 oder 765">
+      <button onclick="doReduce()">Zeigen →</button>
+    </div>
+    <div class="angle-result" id="angleResult"></div>
+  </div>
+
+</div>
+</section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 2: CHEATSHEET                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-cheat">
+<section>
+<div class="container">
+
+  <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;margin-bottom:6px;">Auf einen Blick</h2>
+  <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:20px;">Die wichtigsten Fakten – mehr brauchst du eigentlich nicht.</p>
+
+  <!-- Quadrant visual -->
+  <div class="card" style="text-align:center;">
+    <h4 style="font-family:'Fraunces',serif;margin-bottom:10px;">Vorzeichen in den Quadranten</h4>
+    <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px;">Merkhilfe: <strong style="color:var(--accent);">A</strong>lle · <strong style="color:var(--sin);">S</strong>in · <strong style="color:var(--tan);">T</strong>an · <strong style="color:var(--cos);">C</strong>os</p>
+    <div class="quad-visual">
+      <div class="quad-box" style="background:#edf8f2;order:1;">
+        <div class="q-num">II</div>
+        90°–180°
+        <div class="signs" style="color:var(--sin);">sin + &nbsp;cos − &nbsp;tan −</div>
+      </div>
+      <div class="quad-box" style="background:#e8f5e9;order:2;">
+        <div class="q-num">I</div>
+        0°–90°
+        <div class="signs" style="color:var(--correct);">sin + &nbsp;cos + &nbsp;tan +</div>
+      </div>
+      <div class="quad-box" style="background:#fff8e1;order:3;">
+        <div class="q-num">III</div>
+        180°–270°
+        <div class="signs" style="color:var(--tan);">sin − &nbsp;cos − &nbsp;tan +</div>
+      </div>
+      <div class="quad-box" style="background:#e3f2fd;order:4;">
+        <div class="q-num">IV</div>
+        270°–360°
+        <div class="signs" style="color:var(--cos);">sin − &nbsp;cos + &nbsp;tan −</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>📐 Was steckt im Kreis?</h4>
+      <p>
+        Punkt auf dem Kreis:<br>
+        <span class="mono">P = (cos α, sin α)</span><br>
+        cos = x-Wert, sin = y-Wert<br>
+        <span class="mono">tan α = sin α / cos α</span>
+      </p>
+    </div>
+    <div class="cheat-card">
+      <h4>🔄 Negative Winkel</h4>
+      <p>
+        <span class="mono">sin(−α) = −sin(α)</span><br>
+        <span class="mono">cos(−α) = cos(α)</span><br>
+        <span class="mono">tan(−α) = −tan(α)</span><br>
+        cos ist «gerade», die anderen «ungerade».
+      </p>
+    </div>
+    <div class="cheat-card">
+      <h4>♻️ Periodizität</h4>
+      <p>
+        <span class="mono">sin(α+360°) = sin(α)</span><br>
+        <span class="mono">cos(α+360°) = cos(α)</span><br>
+        <span class="mono">tan(α+180°) = tan(α)</span><br>
+        Einfach 360° abziehen/addieren!
+      </p>
+    </div>
+    <div class="cheat-card">
+      <h4>🎯 Gleichungen lösen</h4>
+      <p>
+        1. Referenzwinkel finden<br>
+        2. In welchen Quadranten stimmt das Vorzeichen?<br>
+        3. Q2: <span class="mono">180°−α</span>&nbsp; Q3: <span class="mono">180°+α</span>&nbsp; Q4: <span class="mono">360°−α</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Special angles table -->
+  <div class="card" style="margin-top:20px;overflow-x:auto;">
+    <h4 style="font-family:'Fraunces',serif;margin-bottom:12px;">Spezielle Winkel (1. Quadrant)</h4>
+    <p style="font-size:0.83rem;color:var(--text-dim);margin-bottom:12px;">Diese 5 auswendig lernen – der Rest ergibt sich durch Quadrantenregeln!</p>
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+      <thead>
+        <tr>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);color:var(--text-dim);font-size:0.75rem;">α</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">0°</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">30°</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">45°</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">60°</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">90°</th>
+        </tr>
+      </thead>
+      <tbody style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;">
+        <tr>
+          <td style="padding:8px;text-align:center;font-weight:700;color:var(--sin);">sin</td>
+          <td style="padding:8px;text-align:center;">0</td>
+          <td style="padding:8px;text-align:center;">½</td>
+          <td style="padding:8px;text-align:center;">√2/2</td>
+          <td style="padding:8px;text-align:center;">√3/2</td>
+          <td style="padding:8px;text-align:center;">1</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;text-align:center;font-weight:700;color:var(--cos);">cos</td>
+          <td style="padding:8px;text-align:center;">1</td>
+          <td style="padding:8px;text-align:center;">√3/2</td>
+          <td style="padding:8px;text-align:center;">√2/2</td>
+          <td style="padding:8px;text-align:center;">½</td>
+          <td style="padding:8px;text-align:center;">0</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;text-align:center;font-weight:700;color:var(--tan);">tan</td>
+          <td style="padding:8px;text-align:center;">0</td>
+          <td style="padding:8px;text-align:center;">1/√3</td>
+          <td style="padding:8px;text-align:center;">1</td>
+          <td style="padding:8px;text-align:center;">√3</td>
+          <td style="padding:8px;text-align:center;">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-top:10px;">Trick: sin-Zeile rückwärts = cos-Zeile! (0, ½, √2/2, √3/2, 1 ↔ 1, √3/2, √2/2, ½, 0)</p>
+  </div>
+
+</div>
+</section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 3: 100 PRACTICE QUESTIONS             -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-quiz">
+<section>
+<div class="container">
+
+  <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;margin-bottom:16px;">Üben</h2>
+
+  <div class="q-filters" id="qFilters">
+    <button class="q-filter on" data-c="all" onclick="setFilter('all',this)">Alle 100</button>
+    <button class="q-filter" data-c="werte" onclick="setFilter('werte',this)">Werte (30)</button>
+    <button class="q-filter" data-c="gleich" onclick="setFilter('gleich',this)">Gleichungen (25)</button>
+    <button class="q-filter" data-c="vorz" onclick="setFilter('vorz',this)">Vorzeichen (15)</button>
+    <button class="q-filter" data-c="red" onclick="setFilter('red',this)">Reduktion (15)</button>
+    <button class="q-filter" data-c="id" onclick="setFilter('id',this)">Identitäten (15)</button>
+  </div>
+
+  <div class="quiz-top">
+    <div class="quiz-score-display" id="scoreDisp">0 / 0</div>
+    <button class="pill" onclick="restartQuiz()" style="font-size:0.8rem;">↻ Neu mischen</button>
+  </div>
+  <div class="quiz-bar-track"><div class="quiz-bar-fill" id="barFill" style="width:0%"></div></div>
+
+  <div id="qArea"></div>
+  <div id="qSummary" style="display:none;"></div>
+
+</div>
+</section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<script>
+// ── Helpers ──
+const toRad=d=>d*Math.PI/180;
+const r3=n=>Math.round(n*1000)/1000;
+const sinD=d=>r3(Math.sin(toRad(d)));
+const cosD=d=>r3(Math.cos(toRad(d)));
+const tanD=d=>Math.abs(Math.cos(toRad(d)))<1e-10?undefined:r3(Math.sin(toRad(d))/Math.cos(toRad(d)));
+
+// ── Page switching ──
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.tab')[['learn','cheat','quiz'].indexOf(p)].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════
+// UNIT CIRCLE
+// ══════════════════════════════════
+const cv=document.getElementById('uc');
+const cx2d=cv.getContext('2d');
+const DPR=window.devicePixelRatio||1;
+let curDeg=45, snap=true, exact=false, showTan=false, dragging=false;
+
+const EXACT={
+  0:{s:'0',c:'1',t:'0'},30:{s:'½',c:'√3/2',t:'1/√3'},45:{s:'√2/2',c:'√2/2',t:'1'},
+  60:{s:'√3/2',c:'½',t:'√3'},90:{s:'1',c:'0',t:'—'},
+  120:{s:'√3/2',c:'−½',t:'−√3'},135:{s:'√2/2',c:'−√2/2',t:'−1'},
+  150:{s:'½',c:'−√3/2',t:'−1/√3'},180:{s:'0',c:'−1',t:'0'},
+  210:{s:'−½',c:'−√3/2',t:'1/√3'},225:{s:'−√2/2',c:'−√2/2',t:'1'},
+  240:{s:'−√3/2',c:'−½',t:'√3'},270:{s:'−1',c:'0',t:'—'},
+  300:{s:'−√3/2',c:'½',t:'−√3'},315:{s:'−√2/2',c:'√2/2',t:'−1'},
+  330:{s:'−½',c:'√3/2',t:'−1/√3'},360:{s:'0',c:'1',t:'0'}
+};
+
+const PI_FRAC={0:'0',30:'π/6',45:'π/4',60:'π/3',90:'π/2',120:'2π/3',135:'3π/4',
+  150:'5π/6',180:'π',210:'7π/6',225:'5π/4',240:'4π/3',270:'3π/2',
+  300:'5π/3',315:'7π/4',330:'11π/6',360:'2π'};
+
+function resize(){
+  const r=cv.parentElement.getBoundingClientRect();
+  const s=Math.min(r.width,r.height);
+  cv.style.width=s+'px';cv.style.height=s+'px';
+  cv.width=s*DPR;cv.height=s*DPR;
+  cx2d.setTransform(DPR,0,0,DPR,0,0);
+  draw();
+}
+
+function setAngle(d){
+  if(snap)d=Math.round(d/15)*15;
+  curDeg=((d%360)+360)%360;
+  updateReadout();draw();updateTip();
+}
+
+function updateReadout(){
+  const d=curDeg,rad=toRad(d);
+  const s=Math.sin(rad),c=Math.cos(rad);
+  const t=Math.abs(c)<1e-10?undefined:s/c;
+  const pf=PI_FRAC[d]||(d*Math.PI/180).toFixed(2);
+  document.getElementById('angleBig').innerHTML=d+'° <small>= '+pf+'</small>';
+
+  if(exact&&EXACT[d]){
+    document.getElementById('vSin').textContent=EXACT[d].s;
+    document.getElementById('vCos').textContent=EXACT[d].c;
+    document.getElementById('vTan').textContent=EXACT[d].t;
+  } else {
+    document.getElementById('vSin').textContent=s.toFixed(3);
+    document.getElementById('vCos').textContent=c.toFixed(3);
+    document.getElementById('vTan').textContent=t===undefined?'—':t.toFixed(3);
+  }
+}
+
+function updateTip(){
+  const d=curDeg;
+  let q,signs;
+  if(d<90){q='I';signs='sin+, cos+, tan+';}
+  else if(d<180){q='II';signs='sin+, cos−, tan−';}
+  else if(d<270){q='III';signs='sin−, cos−, tan+';}
+  else{q='IV';signs='sin−, cos+, tan−';}
+  if(d===0||d===90||d===180||d===270||d===360){
+    document.getElementById('tipBox').innerHTML=`<strong>${d}°</strong> liegt auf einer Achse. Schau dir die Koordinaten an – mindestens ein Wert ist 0 oder ±1.`;
+  } else {
+    document.getElementById('tipBox').innerHTML=`<strong>${d}°</strong> liegt im <strong>${q}. Quadranten</strong> → ${signs}. Der Punkt hat die Koordinaten (cos, sin) = (${cosD(d)}, ${sinD(d)}).`;
+  }
+}
+
+function draw(){
+  const W=cv.width/DPR,H=cv.height/DPR;
+  const cx=W/2,cy=H/2,R=Math.min(W,H)*0.37;
+  const rad=toRad(curDeg);
+  const px=cx+R*Math.cos(rad),py=cy-R*Math.sin(rad);
+  const sv=Math.sin(rad),cv2=Math.cos(rad);
+
+  cx2d.clearRect(0,0,W,H);
+
+  // Soft bg circle area
+  cx2d.fillStyle='rgba(232,85,58,0.025)';
+  cx2d.beginPath();cx2d.arc(cx,cy,R,0,Math.PI*2);cx2d.fill();
+
+  // Grid lines light
+  cx2d.strokeStyle='rgba(0,0,0,0.05)';cx2d.lineWidth=1;
+  for(let i=-1;i<=1;i+=0.5){
+    if(i===0)continue;
+    cx2d.beginPath();cx2d.moveTo(cx+i*R,cy-R-10);cx2d.lineTo(cx+i*R,cy+R+10);cx2d.stroke();
+    cx2d.beginPath();cx2d.moveTo(cx-R-10,cy-i*R);cx2d.lineTo(cx+R+10,cy-i*R);cx2d.stroke();
+  }
+
+  // Axes
+  cx2d.strokeStyle='rgba(0,0,0,0.18)';cx2d.lineWidth=1.5;
+  cx2d.beginPath();cx2d.moveTo(cx-R-20,cy);cx2d.lineTo(cx+R+20,cy);cx2d.stroke();
+  cx2d.beginPath();cx2d.moveTo(cx,cy-R-20);cx2d.lineTo(cx,cy+R+20);cx2d.stroke();
+
+  // Axis ticks + labels
+  cx2d.fillStyle='rgba(0,0,0,0.35)';cx2d.font='500 11px Nunito';cx2d.textAlign='center';cx2d.textBaseline='top';
+  cx2d.fillText('1',cx+R,cy+6);cx2d.fillText('−1',cx-R,cy+6);
+  cx2d.textBaseline='middle';cx2d.textAlign='right';
+  cx2d.fillText('1',cx-8,cy-R);cx2d.fillText('−1',cx-8,cy+R);
+
+  // Unit circle
+  cx2d.strokeStyle='rgba(0,0,0,0.2)';cx2d.lineWidth=2;
+  cx2d.beginPath();cx2d.arc(cx,cy,R,0,Math.PI*2);cx2d.stroke();
+
+  // Special angle dots
+  cx2d.fillStyle='rgba(0,0,0,0.08)';
+  for(let a=0;a<360;a+=15){
+    const ar=toRad(a);const r2=a%30===0?3.5:2;
+    cx2d.beginPath();cx2d.arc(cx+R*Math.cos(ar),cy-R*Math.sin(ar),r2,0,Math.PI*2);cx2d.fill();
+  }
+
+  // Angle arc
+  cx2d.strokeStyle='rgba(232,85,58,0.4)';cx2d.lineWidth=2;
+  const arcR=R*0.13;
+  cx2d.beginPath();cx2d.arc(cx,cy,arcR,0,-rad,curDeg>0);cx2d.stroke();
+  // α label
+  const la=rad/2;const lr=R*0.2;
+  cx2d.fillStyle='var(--accent)';cx2d.font='600 13px Nunito';cx2d.textAlign='center';cx2d.textBaseline='middle';
+  cx2d.fillText('α',cx+lr*Math.cos(la),cy-lr*Math.sin(la));
+
+  // Radius line
+  cx2d.strokeStyle='rgba(0,0,0,0.35)';cx2d.lineWidth=1.5;
+  cx2d.beginPath();cx2d.moveTo(cx,cy);cx2d.lineTo(px,py);cx2d.stroke();
+
+  // ── cos line (blue, horizontal) ──
+  cx2d.strokeStyle='var(--cos)';cx2d.lineWidth=3.5;cx2d.globalAlpha=0.85;
+  cx2d.beginPath();cx2d.moveTo(cx,cy);cx2d.lineTo(px,cy);cx2d.stroke();
+  cx2d.globalAlpha=1;
+  // label
+  if(Math.abs(cv2)>0.08){
+    cx2d.fillStyle='var(--cos)';cx2d.font='700 12px Nunito';cx2d.textAlign='center';cx2d.textBaseline='top';
+    cx2d.fillText('cos',(cx+px)/2,cy+8);
+  }
+
+  // ── sin line (red, vertical) ──
+  cx2d.strokeStyle='var(--sin)';cx2d.lineWidth=3.5;cx2d.globalAlpha=0.85;
+  cx2d.beginPath();cx2d.moveTo(px,cy);cx2d.lineTo(px,py);cx2d.stroke();
+  cx2d.globalAlpha=1;
+  if(Math.abs(sv)>0.08){
+    cx2d.fillStyle='var(--sin)';cx2d.font='700 12px Nunito';cx2d.textAlign='left';cx2d.textBaseline='middle';
+    cx2d.fillText('sin',px+8,(cy+py)/2);
+  }
+
+  // ── tan line (gold, optional) ──
+  if(showTan&&Math.abs(cv2)>0.02){
+    const tv=sv/cv2;
+    const tanY=cy-tv*R;
+    const tanX=cx+(cv2>0?R:-R);
+    if(tanY>-100&&tanY<H+100){
+      cx2d.strokeStyle='rgba(212,160,23,0.25)';cx2d.lineWidth=1;cx2d.setLineDash([4,4]);
+      cx2d.beginPath();cx2d.moveTo(cx,cy);cx2d.lineTo(tanX,tanY);cx2d.stroke();
+      cx2d.setLineDash([]);
+      cx2d.strokeStyle='var(--tan)';cx2d.lineWidth=3;cx2d.globalAlpha=0.8;
+      cx2d.beginPath();cx2d.moveTo(cv2>0?cx+R:cx-R,cy);cx2d.lineTo(tanX,tanY);cx2d.stroke();
+      cx2d.globalAlpha=1;
+      if(Math.abs(tv)>0.15){
+        cx2d.fillStyle='var(--tan)';cx2d.font='700 12px Nunito';cx2d.textAlign='left';
+        cx2d.fillText('tan',tanX+6,(cy+tanY)/2);
+      }
+    }
+  }
+
+  // Right-angle marker
+  if(Math.abs(sv)>0.05&&Math.abs(cv2)>0.05){
+    const sz=8;
+    const sx=sv>0?-sz:sz; // flip based on quadrant
+    const sy=cv2>0?0:0;
+    cx2d.strokeStyle='rgba(0,0,0,0.2)';cx2d.lineWidth=1;
+    cx2d.beginPath();
+    cx2d.moveTo(px,cy+((sv>0)?-sz:sz));
+    cx2d.lineTo(px+((cv2>0)?-sz:sz),cy+((sv>0)?-sz:sz));
+    cx2d.lineTo(px+((cv2>0)?-sz:sz),cy);
+    cx2d.stroke();
+  }
+
+  // ── Point ──
+  cx2d.fillStyle='#fff';cx2d.strokeStyle='var(--accent)';cx2d.lineWidth=3;
+  cx2d.beginPath();cx2d.arc(px,py,9,0,Math.PI*2);cx2d.fill();cx2d.stroke();
+  cx2d.fillStyle='var(--accent)';
+  cx2d.beginPath();cx2d.arc(px,py,4,0,Math.PI*2);cx2d.fill();
+
+  // Coordinate label
+  cx2d.fillStyle='rgba(0,0,0,0.55)';cx2d.font='500 11px JetBrains Mono';
+  const ox=cv2>=0?14:-14;const oy=sv>=0?-16:20;
+  cx2d.textAlign=cv2>=0?'left':'right';cx2d.textBaseline='middle';
+  cx2d.fillText(`(${cv2.toFixed(2)}, ${sv.toFixed(2)})`,px+ox,py+oy);
+}
+
+function getAngle(ex,ey){
+  const r=cv.getBoundingClientRect();
+  const w=r.width;
+  const dx=ex-r.left-w/2;
+  const dy=-(ey-r.top-w/2);
+  let a=Math.atan2(dy,dx)*180/Math.PI;
+  if(a<0)a+=360;
+  return a;
+}
+
+cv.addEventListener('pointerdown',e=>{e.preventDefault();dragging=true;cv.setPointerCapture(e.pointerId);setAngle(getAngle(e.clientX,e.clientY));});
+cv.addEventListener('pointermove',e=>{if(!dragging)return;e.preventDefault();setAngle(getAngle(e.clientX,e.clientY));});
+cv.addEventListener('pointerup',()=>{dragging=false;});
+cv.addEventListener('pointercancel',()=>{dragging=false;});
+
+function toggleSnap(){snap=!snap;document.getElementById('btnSnap').classList.toggle('on',snap);setAngle(curDeg);}
+function toggleExact(){exact=!exact;document.getElementById('btnExact').classList.toggle('on',exact);updateReadout();}
+function toggleShowTan(){showTan=!showTan;document.getElementById('btnTan').classList.toggle('on',showTan);draw();}
+
+// Reduce angle tool
+function doReduce(){
+  const v=parseFloat(document.getElementById('angleIn').value);
+  if(isNaN(v))return;
+  let red=v%360;if(red<0)red+=360;
+  const rad=toRad(red);
+  const s=Math.sin(rad),c=Math.cos(rad),t=Math.abs(c)<1e-10?undefined:s/c;
+  const ev=EXACT[red];
+
+  let html=`<span style="color:var(--accent)">${v}° → ${red}°</span>`;
+  if(v!==red){
+    if(v<0) html+=` <span style="color:var(--text-dim)">(+${Math.ceil(-v/360)*360}°)</span>`;
+    else html+=` <span style="color:var(--text-dim)">(−${Math.floor(v/360)*360}°)</span>`;
+  }
+  html+='<br>';
+  html+=`<span style="color:var(--sin)">sin = ${ev?ev.s:s.toFixed(4)}</span> · `;
+  html+=`<span style="color:var(--cos)">cos = ${ev?ev.c:c.toFixed(4)}</span> · `;
+  html+=`<span style="color:var(--tan)">tan = ${ev?ev.t:t===undefined?'—':t.toFixed(4)}</span>`;
+  document.getElementById('angleResult').innerHTML=html;
+
+  curDeg=red;updateReadout();draw();updateTip();
+}
+
+// ══════════════════════════════════
+// QUIZ ENGINE
+// ══════════════════════════════════
+function buildQuestions(){
+  const Q=[];
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const wrongs=(correct,pool,n=3)=>{const w=[];let tries=0;while(w.length<n&&tries<80){const c=pool[0|Math.random()*pool.length];if(c!==correct&&!w.includes(c))w.push(c);tries++;}return w;};
+  const POOL=['0','½','−½','√2/2','−√2/2','√3/2','−√3/2','1','−1','1/√3','−1/√3','√3','−√3','—'];
+
+  // ── 30x Werte bestimmen ──
+  const wData=[
+    ['sin',135,'√2/2'],['cos',240,'−½'],['tan',-30,'−1/√3'],['cos',765,'√2/2'],
+    ['tan',225,'1'],['sin',-120,'−√3/2'],['sin',270,'−1'],['tan',300,'−√3'],
+    ['cos',-120,'−½'],['tan',-405,'−1'],['sin',330,'−½'],['cos',135,'−√2/2'],
+    ['sin',150,'½'],['cos',210,'−√3/2'],['tan',315,'−1'],['sin',60,'√3/2'],
+    ['cos',0,'1'],['tan',180,'0'],['sin',45,'√2/2'],['cos',90,'0'],
+    ['tan',120,'−√3'],['sin',210,'−½'],['cos',300,'½'],['tan',30,'1/√3'],
+    ['sin',0,'0'],['cos',180,'−1'],['tan',240,'√3'],['sin',90,'1'],
+    ['cos',330,'√3/2'],['tan',150,'−1/√3']
+  ];
+  for(const[fn,a,cor]of wData){
+    const w=wrongs(cor,POOL);
+    Q.push({cat:'werte',q:`${fn}(${a}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`${a<0||a>=360?a+'° reduziert auf '+((a%360+360)%360)+'°. ':''}Aus dem Einheitskreis: ${fn}(${((a%360)+360)%360}°) = ${cor}`});
+  }
+
+  // ── 25x Gleichungen lösen ──
+  const SOL_POOL=['0°','30°','45°','60°','90°','120°','135°','150°','180°','210°','225°','240°','270°','300°','315°','330°',
+    '30°, 150°','45°, 135°','60°, 120°','210°, 330°','225°, 315°','240°, 300°',
+    '45°, 225°','135°, 315°','60°, 240°','120°, 300°','30°, 210°','150°, 330°',
+    '90°, 270°','0°, 180°','120°, 240°','150°, 210°'];
+  const gData=[
+    ['sin','−1','270°'],['cos','√2/2','45°, 315°'],['tan','0','0°, 180°'],
+    ['sin','½','30°, 150°'],['tan','−1','135°, 315°'],['cos','−√3/2','150°, 210°'],
+    ['sin','−√2/2','225°, 315°'],['cos','0','90°, 270°'],['tan','1','45°, 225°'],
+    ['sin','√3/2','60°, 120°'],['cos','−½','120°, 240°'],['tan','√3','60°, 240°'],
+    ['sin','1','90°'],['cos','1','0°'],['tan','−√3','120°, 300°'],
+    ['cos','−1','180°'],['sin','0','0°, 180°'],['cos','½','60°, 300°'],
+    ['tan','−1/√3','150°, 330°'],['sin','−½','210°, 330°'],
+    ['tan','1/√3','30°, 210°'],['sin','√2/2','45°, 135°'],
+    ['cos','−√2/2','135°, 225°'],['sin','−√3/2','240°, 300°'],['tan','−√3','120°, 300°']
+  ];
+  for(const[fn,val,cor]of gData){
+    const w=wrongs(cor,SOL_POOL);
+    Q.push({cat:'gleich',q:`Alle α∈[0°,360°[ mit ${fn}(α) = ${val}`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`Referenzwinkel bestimmen → Vorzeichen → Quadranten wählen → ${cor}`});
+  }
+
+  // ── 15x Vorzeichen ──
+  const vData=[
+    ['sin(60°) _ sin(50°)','≥','Sin steigt von 0°–90°, also sin(60°) > sin(50°).'],
+    ['sin(40°) _ tan(40°)','≤','Im Q1: tan = sin/cos, cos<1, also tan > sin.'],
+    ['tan(60°) _ 2·tan(30°)','≥','tan(60°)=√3≈1.73 vs 2·tan(30°)=2/√3≈1.15.'],
+    ['cos(110°)·cos(210°) _ 0','≥','Beide negativ (Q2, Q3), Produkt positiv.'],
+    ['sin(40°) _ 2·sin(20°)','≤','sin(40°)≈0.643, 2·sin(20°)≈0.684.'],
+    ['cos(160°) _ cos(130°)','≤','Beide in Q2 negativ, cos nimmt ab → cos(160°) < cos(130°).'],
+    ['tan(125°)·tan(225°) _ 0','≤','tan(125°)<0 (Q2), tan(225°)>0 (Q3). Produkt negativ.'],
+    ['tan(380°) _ tan(480°)','≥','tan(380°)=tan(20°)>0, tan(480°)=tan(120°)<0.'],
+    ['sin(200°) _ 0','<','200° in Q3 → sin negativ.'],
+    ['cos(350°) _ cos(10°)','=','cos(360°−α) = cos(α). Also cos(350°)=cos(10°).'],
+    ['tan(89°) _ tan(91°)','≥','tan(89°) gross positiv, tan(91°) gross negativ.'],
+    ['sin(150°) _ sin(30°)','=','sin(180°−α) = sin(α).'],
+    ['cos(45°) _ cos(315°)','=','cos(360°−α) = cos(α).'],
+    ['sin(100°) _ sin(80°)','=','sin(180°−α)=sin(α). 100°=180°−80°.'],
+    ['tan(45°) _ 1','=','sin(45°)/cos(45°) = 1. Exakt.']
+  ];
+  for(const[qText,cor,expl]of vData){
+    const syms=['<','≤','=','≥','>'];
+    const opts=cor==='≥'?shuffle(['<','=','≥','>']):cor==='≤'?shuffle(['<','≤','=','>']):cor==='='?shuffle(['<','=','>','≥']):cor==='<'?shuffle(['<','≤','=','>']):shuffle(['<','=','≥','>']);
+    // Make sure correct is in
+    if(!opts.includes(cor)){opts[0]=cor;shuffle(opts);}
+    Q.push({cat:'vorz',q:qText.replace('_','⬜'),opts,ans:cor,expl});
+  }
+
+  // ── 15x Reduktion ──
+  const rData=[
+    ['sin(−120°)','−√3/2','sin(−α) = −sin(α). sin(120°) = √3/2.'],
+    ['cos(−30°)','√3/2','cos(−α) = cos(α). cos(30°) = √3/2.'],
+    ['tan(−405°)','−1','−405°+2·360° = 315°. tan(315°) = −1.'],
+    ['cos(765°)','√2/2','765°−2·360° = 45°. cos(45°) = √2/2.'],
+    ['sin(−30°)','−½','sin(−30°) = −sin(30°) = −½.'],
+    ['cos(−120°)','−½','cos(−120°) = cos(120°) = −½.'],
+    ['tan(540°)','0','540°−360° = 180°. tan(180°) = 0.'],
+    ['sin(390°)','½','390°−360° = 30°. sin(30°) = ½.'],
+    ['cos(−225°)','−√2/2','cos(−225°) = cos(225°) = −√2/2.'],
+    ['tan(−150°)','1/√3','tan(−150°) = −tan(150°) = −(−1/√3) = 1/√3.'],
+    ['sin(720°)','0','720°−2·360° = 0°. sin(0°) = 0.'],
+    ['cos(450°)','0','450°−360° = 90°. cos(90°) = 0.'],
+    ['tan(−90°)','—','tan(90°) ist nicht definiert → bleibt undefiniert.'],
+    ['sin(−330°)','½','sin(−330°) = −sin(330°) = −(−½) = ½.'],
+    ['cos(−315°)','√2/2','cos(−315°) = cos(315°) = √2/2.']
+  ];
+  for(const[qText,cor,expl]of rData){
+    const w=wrongs(cor,POOL);
+    Q.push({cat:'red',q:qText+' = ?',opts:shuffle([cor,...w]),ans:cor,expl});
+  }
+
+  // ── 15x Identitäten ──
+  const NPOOL=['0','½','−½','1','−1','√2','−√2','√3','−√3','√3/2','−√3/2','2','−2','−3'];
+  const iData=[
+    ['sin(120°) + sin(240°)','0','√3/2 + (−√3/2) = 0.'],
+    ['tan(140°) + tan(220°)','0','tan(220°)=tan(40°), tan(140°)=−tan(40°). Summe=0.'],
+    ['sin(585°) − cos(−315°)','−√2','sin(225°)=−√2/2, cos(315°)=√2/2. Differenz=−√2.'],
+    ['tan(120°) · tan(420°)','−3','tan(420°)=tan(60°)=√3, tan(120°)=−√3. Produkt=−3.'],
+    ['tan(150°) · tan(300°)','1','(−1/√3)·(−√3) = 1.'],
+    ['cos(135°) + cos(225°)','−√2','−√2/2 + (−√2/2) = −√2.'],
+    ['tan(240°) / tan(60°)','1','√3 / √3 = 1.'],
+    ['sin²(60°) + cos²(60°)','1','Immer 1! (Pythagoras)'],
+    ['tan(−75°) − tan(465°)','0','tan(465°)=tan(105°)=−tan(75°). Also 0.'],
+    ['sin(45°) · cos(45°)','½','(√2/2)·(√2/2) = ½.'],
+    ['sin(0°)+sin(90°)+sin(180°)+sin(270°)','0','0+1+0+(−1) = 0.'],
+    ['cos(60°) − cos(120°)','1','½−(−½) = 1.'],
+    ['tan(45°) + tan(135°)','0','1+(−1) = 0.'],
+    ['sin(30°)cos(60°) + cos(30°)sin(60°)','1','= sin(30°+60°) = sin(90°) = 1.'],
+    ['2·sin(30°)·cos(30°)','√3/2','= sin(2·30°) = sin(60°) = √3/2.']
+  ];
+  for(const[qText,cor,expl]of iData){
+    const w=wrongs(cor,NPOOL);
+    Q.push({cat:'id',q:qText+' = ?',opts:shuffle([cor,...w]),ans:cor,expl});
+  }
+
+  return Q;
+}
+
+let allQ=buildQuestions(), filtered=[...allQ], qi=0, sc=0, ans=0;
+
+function setFilter(c,btn){
+  document.querySelectorAll('.q-filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  filtered=c==='all'?[...allQ]:allQ.filter(q=>q.cat===c);
+  shuffleArr(filtered);
+  qi=0;sc=0;ans=0;
+  document.getElementById('qSummary').style.display='none';
+  renderQ();updateScore();
+}
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}}
+function restartQuiz(){
+  allQ=buildQuestions();
+  const activeFilter=document.querySelector('.q-filter.on')?.dataset.c||'all';
+  filtered=activeFilter==='all'?[...allQ]:allQ.filter(q=>q.cat===activeFilter);
+  shuffleArr(filtered);qi=0;sc=0;ans=0;
+  document.getElementById('qSummary').style.display='none';
+  renderQ();updateScore();
+}
+function updateScore(){
+  document.getElementById('scoreDisp').textContent=`${sc} / ${ans} richtig`;
+  document.getElementById('barFill').style.width=(filtered.length?ans/filtered.length*100:0)+'%';
+}
+
+const CAT_NAMES={werte:'Werte bestimmen',gleich:'Gleichung lösen',vorz:'Vorzeichen',red:'Reduktion',id:'Identität'};
+
+function renderQ(){
+  const area=document.getElementById('qArea');
+  if(qi>=filtered.length){
+    area.innerHTML='';
+    const pct=filtered.length?Math.round(sc/filtered.length*100):0;
+    document.getElementById('qSummary').style.display='block';
+    document.getElementById('qSummary').innerHTML=`
+      <div class="q-card summary">
+        <div class="big-pct">${pct}%</div>
+        <div class="sub">${sc} von ${filtered.length} richtig</div>
+        <div class="msg">${pct>=80?'Hervorragend! Du bist bereit für die Prüfung! 🎉':pct>=60?'Gut! Schau dir die Fehler nochmal am Einheitskreis an.':'Kein Stress – geh zurück zum Einheitskreis und übe die Quadrantenregeln.'}</div>
+        <button onclick="restartQuiz()">Nochmal üben</button>
+      </div>`;
+    return;
+  }
+  const q=filtered[qi];
+  area.innerHTML=`
+    <div class="q-card">
+      <div class="q-category">${CAT_NAMES[q.cat]}</div>
+      <div class="q-number">Frage ${qi+1} von ${filtered.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="q-options">
+        ${q.opts.map((o,i)=>`<button class="q-opt" onclick="checkQ(this,'${o.replace(/'/g,"\\'")}')"><span>${o}</span></button>`).join('')}
+      </div>
+      <div class="q-explain" id="qExpl">${q.expl}</div>
+      <button class="q-next" id="qNext" onclick="nextQ()">Weiter →</button>
+    </div>`;
+}
+
+function checkQ(btn,chosen){
+  const q=filtered[qi];
+  document.querySelectorAll('.q-opt').forEach(b=>{
+    b.disabled=true;
+    if(b.querySelector('span').textContent===q.ans)b.classList.add('is-correct');
+  });
+  if(chosen!==q.ans)btn.classList.add('is-wrong');
+  else sc++;
+  ans++;
+  updateScore();
+  document.getElementById('qExpl').classList.add('show');
+  document.getElementById('qNext').classList.add('show');
+}
+function nextQ(){qi++;renderQ();}
+
+// ── Init ──
+window.addEventListener('load',()=>{
+  resize();setAngle(45);
+  shuffleArr(filtered);
+  renderQ();updateScore();
+});
+window.addEventListener('resize',resize);
+</script>
+</body>
+</html>
