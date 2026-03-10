@@ -56,6 +56,8 @@ let radarPlaying = false;
 let radarInterval = null;
 let currentLat = 46.2044;
 let currentLon = 6.1432;
+let lastResult = null;
+let dayChart = null;
 
 const $ = (s) => document.querySelector(s);
 
@@ -109,10 +111,30 @@ function getGeolocation() {
         }
         navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-            (err) => reject(err),
+            (err) => {
+                // Retry with high accuracy if low accuracy failed
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                    (err2) => reject(err2),
+                    { timeout: 15000, enableHighAccuracy: true }
+                );
+            },
             { timeout: 10000, enableHighAccuracy: false }
         );
     });
+}
+
+async function reverseGeocode(lat, lon) {
+    try {
+        const params = new URLSearchParams({
+            latitude: lat, longitude: lon, count: 1, language: 'en', format: 'json',
+        });
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?${params}`);
+        if (!res.ok) return 'My Location';
+        const data = await res.json();
+        const r = data.results?.[0];
+        return r ? `${r.name}, ${r.country || ''}` : 'My Location';
+    } catch { return 'My Location'; }
 }
 
 // ============================================================
@@ -250,7 +272,7 @@ function renderDaily(days) {
             ? `<span class="daily-rain">\uD83D\uDCA7${d.rain}%</span>`
             : `<span class="daily-rain"></span>`;
         return `
-        <div class="daily-card">
+        <div class="daily-card" data-day-index="${i}" style="cursor:pointer">
             <span class="daily-day">${label}</span>
             <span class="daily-icon">${WEATHER_ICONS[d.code] || ''}</span>
             <span class="daily-temp-low">${d.tMin}\u00B0</span>
@@ -266,6 +288,13 @@ function renderDaily(days) {
     $('#daily-forecast').innerHTML = `
         <h2 class="section-title">7-Day Forecast</h2>
         <div class="daily-cards">${cards}</div>`;
+
+    // Click handlers for day detail
+    $('#daily-forecast').querySelectorAll('.daily-card').forEach(card => {
+        card.addEventListener('click', () => {
+            openDayDetail(parseInt(card.dataset.dayIndex));
+        });
+    });
 }
 
 function renderChart(tempStats) {
@@ -663,6 +692,244 @@ function toggleRadarPlay() {
 }
 
 // ============================================================
+// Day Detail View
+// ============================================================
+let dayTempChart = null;
+let dayPrecipChart = null;
+
+function openDayDetail(dayIndex) {
+    if (!lastResult) return;
+    const day = lastResult.days[dayIndex];
+    if (!day) return;
+
+    const dayDate = day.date;
+    const dt = new Date(dayDate + 'T12:00');
+    const fullDay = DAY_NAMES_LONG[dt.getDay()];
+    const dateStr = dt.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+
+    // Filter hourly data for this day
+    const dayTemp = lastResult.tempStats.filter(s => s.time.startsWith(dayDate));
+    const dayPrecip = lastResult.precipStats.filter(s => s.time.startsWith(dayDate));
+
+    // Calculate hourly confidence for this day
+    const dayConf = dayTemp.map((ts, i) => {
+        const ps = dayPrecip[i] || { std: 0 };
+        return calcConfidence(ts.std, ps.std) * 100;
+    });
+
+    const avgConf = dayConf.length > 0
+        ? dayConf.reduce((s, v) => s + v, 0) / dayConf.length : 0;
+    const totalPrecip = dayPrecip.reduce((s, p) => s + (p.mean || 0), 0);
+
+    // Title
+    $('#day-modal-title').textContent = `${fullDay}, ${dateStr}`;
+
+    // Stats
+    const cl = confLevel(day.confidence);
+    $('#day-modal-stats').innerHTML = `
+        <div class="day-stat">
+            <div class="day-stat-value">${day.tMax}°</div>
+            <div class="day-stat-label">High</div>
+        </div>
+        <div class="day-stat">
+            <div class="day-stat-value">${day.tMin}°</div>
+            <div class="day-stat-label">Low</div>
+        </div>
+        <div class="day-stat">
+            <div class="day-stat-value">${day.rain}%</div>
+            <div class="day-stat-label">Rain</div>
+        </div>
+        <div class="day-stat">
+            <div class="day-stat-value" style="color:${cl.color}">${day.confidence}%</div>
+            <div class="day-stat-label">Conf.</div>
+        </div>`;
+
+    // Temperature chart
+    renderDayTempChart(dayTemp);
+
+    // Precipitation chart
+    renderDayPrecipChart(dayPrecip);
+
+    // Confidence breakdown
+    const tempConfs = dayTemp.map(ts => Math.exp(-Math.pow(ts.std / CONF_TEMP_REF, 2)) * 100);
+    const precipConfs = dayPrecip.map(ps => Math.exp(-Math.pow(ps.std / CONF_PRECIP_REF, 2)) * 100);
+    const avgTempConf = tempConfs.length > 0 ? tempConfs.reduce((a, b) => a + b, 0) / tempConfs.length : 0;
+    const avgPrecipConf = precipConfs.length > 0 ? precipConfs.reduce((a, b) => a + b, 0) / precipConfs.length : 0;
+    const tcl = confLevel(avgTempConf);
+    const pcl = confLevel(avgPrecipConf);
+    const ccl = confLevel(avgConf);
+
+    $('#day-modal-confidence').innerHTML = `
+        <div class="day-conf-bar-row">
+            <span class="day-conf-label">Temp</span>
+            <div class="day-conf-bar-bg"><div class="day-conf-bar-fill" style="width:${Math.round(avgTempConf)}%;background:${tcl.color}"></div></div>
+            <span class="day-conf-val" style="color:${tcl.color}">${Math.round(avgTempConf)}%</span>
+        </div>
+        <div class="day-conf-bar-row">
+            <span class="day-conf-label">Precip</span>
+            <div class="day-conf-bar-bg"><div class="day-conf-bar-fill" style="width:${Math.round(avgPrecipConf)}%;background:${pcl.color}"></div></div>
+            <span class="day-conf-val" style="color:${pcl.color}">${Math.round(avgPrecipConf)}%</span>
+        </div>
+        <div class="day-conf-bar-row">
+            <span class="day-conf-label">Overall</span>
+            <div class="day-conf-bar-bg"><div class="day-conf-bar-fill" style="width:${Math.round(avgConf)}%;background:${ccl.color}"></div></div>
+            <span class="day-conf-val" style="color:${ccl.color}">${Math.round(avgConf)}%</span>
+        </div>`;
+
+    // Show modal
+    $('#day-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDayDetail() {
+    $('#day-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+    if (dayTempChart) { dayTempChart.destroy(); dayTempChart = null; }
+    if (dayPrecipChart) { dayPrecipChart.destroy(); dayPrecipChart = null; }
+}
+
+function renderDayTempChart(data) {
+    const ctx = $('#day-temp-chart').getContext('2d');
+    if (dayTempChart) dayTempChart.destroy();
+
+    const labels = data.map(d => {
+        const h = new Date(d.time).getHours();
+        return h % 3 === 0 ? `${h}:00` : '';
+    });
+
+    dayTempChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    data: data.map(d => d.max),
+                    fill: { target: 4 },
+                    backgroundColor: 'rgba(107,143,191,0.06)',
+                    borderWidth: 0, pointRadius: 0, tension: 0.3,
+                },
+                {
+                    data: data.map(d => d.mean !== null ? d.mean + d.std : null),
+                    fill: { target: 3 },
+                    backgroundColor: 'rgba(107,143,191,0.15)',
+                    borderWidth: 0, pointRadius: 0, tension: 0.3,
+                },
+                {
+                    data: data.map(d => d.mean),
+                    fill: false,
+                    borderColor: '#6B8FBF',
+                    borderWidth: 2.5, pointRadius: 0, tension: 0.3,
+                },
+                {
+                    data: data.map(d => d.mean !== null ? d.mean - d.std : null),
+                    fill: false,
+                    borderWidth: 0, pointRadius: 0, tension: 0.3,
+                },
+                {
+                    data: data.map(d => d.min),
+                    fill: false,
+                    borderWidth: 0, pointRadius: 0, tension: 0.3,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(45,55,72,0.92)',
+                    titleFont: { size: 11 }, bodyFont: { size: 11 },
+                    padding: 8, cornerRadius: 6,
+                    filter: (item) => item.datasetIndex === 2,
+                    callbacks: {
+                        title: (items) => {
+                            const d = data[items[0].dataIndex];
+                            return new Date(d.time).getHours() + ':00';
+                        },
+                        label: (item) => {
+                            const d = data[item.dataIndex];
+                            return `${d.mean.toFixed(1)}°C (±${d.std.toFixed(1)}°)`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false }, border: { display: false },
+                    ticks: { maxRotation: 0, font: { size: 10 }, color: '#94A3B8' },
+                },
+                y: {
+                    grid: { color: 'rgba(226,232,240,0.5)' }, border: { display: false },
+                    ticks: { font: { size: 10 }, color: '#94A3B8', callback: v => v + '°' },
+                },
+            },
+        },
+    });
+}
+
+function renderDayPrecipChart(data) {
+    const ctx = $('#day-precip-chart').getContext('2d');
+    if (dayPrecipChart) dayPrecipChart.destroy();
+
+    const labels = data.map(d => {
+        const h = new Date(d.time).getHours();
+        return h % 3 === 0 ? `${h}:00` : '';
+    });
+
+    dayPrecipChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    data: data.map(d => d.mean),
+                    backgroundColor: 'rgba(91,164,207,0.5)',
+                    borderColor: '#5BA4CF',
+                    borderWidth: 1,
+                    borderRadius: 3,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(45,55,72,0.92)',
+                    titleFont: { size: 11 }, bodyFont: { size: 11 },
+                    padding: 8, cornerRadius: 6,
+                    callbacks: {
+                        title: (items) => {
+                            const d = data[items[0].dataIndex];
+                            return new Date(d.time).getHours() + ':00';
+                        },
+                        label: (item) => {
+                            const d = data[item.dataIndex];
+                            return `${d.mean.toFixed(1)} mm (max ${d.max.toFixed(1)})`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false }, border: { display: false },
+                    ticks: { maxRotation: 0, font: { size: 10 }, color: '#94A3B8' },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(226,232,240,0.5)' }, border: { display: false },
+                    ticks: { font: { size: 10 }, color: '#94A3B8', callback: v => v + ' mm' },
+                },
+            },
+        },
+    });
+}
+
+// ============================================================
 // Search & Location
 // ============================================================
 function setupEvents() {
@@ -693,6 +960,10 @@ function setupEvents() {
     });
 
     $('#geo-btn').addEventListener('click', handleGeo);
+
+    // Day modal close
+    $('#day-modal-close').addEventListener('click', closeDayDetail);
+    $('.day-modal-backdrop').addEventListener('click', closeDayDetail);
 }
 
 function showSearchResults(items) {
@@ -724,9 +995,11 @@ async function handleGeo() {
     btn.disabled = true;
     try {
         const { lat, lon } = await getGeolocation();
-        loadWeather(lat, lon, 'My Location');
-    } catch {
-        showError('Could not determine your location.');
+        const name = await reverseGeocode(lat, lon);
+        loadWeather(lat, lon, name);
+    } catch (err) {
+        console.error('Geolocation error:', err);
+        showError('Could not determine your location. Please check location permissions.');
     } finally {
         btn.disabled = false;
     }
@@ -750,6 +1023,7 @@ async function loadWeather(lat, lon, name) {
             fetchEnsemble(lat, lon),
         ]);
         const result = processData(ensemble, forecast);
+        lastResult = result;
 
         hideLoading();
         $('#main-content').classList.remove('hidden');
@@ -792,7 +1066,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     try {
         const { lat, lon } = await getGeolocation();
-        loadWeather(lat, lon, 'My Location');
+        const name = await reverseGeocode(lat, lon);
+        loadWeather(lat, lon, name);
     } catch {
         loadWeather(46.2044, 6.1432, 'Geneva, Switzerland');
     }

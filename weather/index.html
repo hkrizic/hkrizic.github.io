@@ -97,8 +97,34 @@
         </main>
     </div>
 
+    <!-- Day Detail Modal -->
+    <div id="day-modal" class="day-modal hidden">
+        <div class="day-modal-backdrop"></div>
+        <div class="day-modal-sheet">
+            <div class="day-modal-handle"></div>
+            <div class="day-modal-header">
+                <h2 id="day-modal-title" class="day-modal-title"></h2>
+                <button id="day-modal-close" class="day-modal-close">&times;</button>
+            </div>
+            <div id="day-modal-stats" class="day-modal-stats"></div>
+            <div class="day-modal-chart-wrap">
+                <h3 class="day-modal-section-title">Temperature</h3>
+                <div class="day-modal-chart-container">
+                    <canvas id="day-temp-chart"></canvas>
+                </div>
+            </div>
+            <div class="day-modal-chart-wrap">
+                <h3 class="day-modal-section-title">Precipitation</h3>
+                <div class="day-modal-chart-container">
+                    <canvas id="day-precip-chart"></canvas>
+                </div>
+            </div>
+            <div id="day-modal-confidence" class="day-modal-confidence-wrap"></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
 </body>
 </html>
