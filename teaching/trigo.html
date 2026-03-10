@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Einheitskreis – Trigonometrie lernen</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
 :root {
   --bg: #faf8f4;
@@ -349,13 +350,13 @@ header p{color:var(--text-dim);margin-top:6px;font-size:0.95rem;}
 
 <header>
   <h1>Trigonometrie am <span>Einheitskreis</span></h1>
-  <p>Verschiebe, entdecke, übe – alles was du brauchst.</p>
+  <p>Verschiebe, entdecke, übe – mit 1000 Aufgaben.</p>
 </header>
 
 <div class="tabs">
   <button class="tab active" onclick="showPage('learn')">Einheitskreis</button>
   <button class="tab" onclick="showPage('cheat')">Kurzübersicht</button>
-  <button class="tab" onclick="showPage('quiz')">100 Aufgaben</button>
+  <button class="tab" onclick="showPage('quiz')">1000 Aufgaben</button>
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
@@ -546,15 +547,15 @@ header p{color:var(--text-dim);margin-top:6px;font-size:0.95rem;}
 <section>
 <div class="container">
 
-  <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;margin-bottom:16px;">Üben</h2>
+  <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;margin-bottom:16px;">1000 Aufgaben zum Üben</h2>
 
   <div class="q-filters" id="qFilters">
-    <button class="q-filter on" data-c="all" onclick="setFilter('all',this)">Alle 100</button>
-    <button class="q-filter" data-c="werte" onclick="setFilter('werte',this)">Werte (30)</button>
-    <button class="q-filter" data-c="gleich" onclick="setFilter('gleich',this)">Gleichungen (25)</button>
-    <button class="q-filter" data-c="vorz" onclick="setFilter('vorz',this)">Vorzeichen (15)</button>
-    <button class="q-filter" data-c="red" onclick="setFilter('red',this)">Reduktion (15)</button>
-    <button class="q-filter" data-c="id" onclick="setFilter('id',this)">Identitäten (15)</button>
+    <button class="q-filter on" data-c="all" onclick="setFilter('all',this)">Alle</button>
+    <button class="q-filter" data-c="werte" onclick="setFilter('werte',this)">Werte</button>
+    <button class="q-filter" data-c="gleich" onclick="setFilter('gleich',this)">Gleichungen</button>
+    <button class="q-filter" data-c="vorz" onclick="setFilter('vorz',this)">Vorzeichen</button>
+    <button class="q-filter" data-c="red" onclick="setFilter('red',this)">Reduktion</button>
+    <button class="q-filter" data-c="id" onclick="setFilter('id',this)">Identitäten</button>
   </div>
 
   <div class="quiz-top">
@@ -615,6 +616,7 @@ const PI_FRAC={0:'0',30:'π/6',45:'π/4',60:'π/3',90:'π/2',120:'2π/3',135:'3�
 function resize(){
   const r=cv.parentElement.getBoundingClientRect();
   const s=Math.min(r.width,r.height);
+  if(s<10)return;
   cv.style.width=s+'px';cv.style.height=s+'px';
   cv.width=s*DPR;cv.height=s*DPR;
   cx2d.setTransform(DPR,0,0,DPR,0,0);
@@ -773,11 +775,13 @@ function draw(){
   cx2d.fillStyle='var(--accent)';
   cx2d.beginPath();cx2d.arc(px,py,4,0,Math.PI*2);cx2d.fill();
 
-  // Coordinate label
+  // Coordinate label (exact fractions when possible)
+  const ev=EXACT[curDeg];
+  const coordLabel=ev?`(${ev.c}, ${ev.s})`:`(${cv2.toFixed(2)}, ${sv.toFixed(2)})`;
   cx2d.fillStyle='rgba(0,0,0,0.55)';cx2d.font='500 11px JetBrains Mono';
   const ox=cv2>=0?14:-14;const oy=sv>=0?-16:20;
   cx2d.textAlign=cv2>=0?'left':'right';cx2d.textBaseline='middle';
-  cx2d.fillText(`(${cv2.toFixed(2)}, ${sv.toFixed(2)})`,px+ox,py+oy);
+  cx2d.fillText(coordLabel,px+ox,py+oy);
 }
 
 function getAngle(ex,ey){
@@ -828,125 +832,353 @@ function doReduce(){
 function buildQuestions(){
   const Q=[];
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
-  const wrongs=(correct,pool,n=3)=>{const w=[];let tries=0;while(w.length<n&&tries<80){const c=pool[0|Math.random()*pool.length];if(c!==correct&&!w.includes(c))w.push(c);tries++;}return w;};
+  const pick=a=>a[0|Math.random()*a.length];
+  const wrongs=(correct,pool,n=3)=>{const w=[];let t=0;while(w.length<n&&t<80){const c=pick(pool);if(c!==correct&&!w.includes(c))w.push(c);t++;}return w;};
   const POOL=['0','½','−½','√2/2','−√2/2','√3/2','−√3/2','1','−1','1/√3','−1/√3','√3','−√3','—'];
+  const NPOOL=['0','½','−½','1','−1','√2','−√2','√3','−√3','√3/2','−√3/2','2','−2','−3','3'];
 
-  // ── 30x Werte bestimmen ──
-  const wData=[
-    ['sin',135,'√2/2'],['cos',240,'−½'],['tan',-30,'−1/√3'],['cos',765,'√2/2'],
-    ['tan',225,'1'],['sin',-120,'−√3/2'],['sin',270,'−1'],['tan',300,'−√3'],
-    ['cos',-120,'−½'],['tan',-405,'−1'],['sin',330,'−½'],['cos',135,'−√2/2'],
-    ['sin',150,'½'],['cos',210,'−√3/2'],['tan',315,'−1'],['sin',60,'√3/2'],
-    ['cos',0,'1'],['tan',180,'0'],['sin',45,'√2/2'],['cos',90,'0'],
-    ['tan',120,'−√3'],['sin',210,'−½'],['cos',300,'½'],['tan',30,'1/√3'],
-    ['sin',0,'0'],['cos',180,'−1'],['tan',240,'√3'],['sin',90,'1'],
-    ['cos',330,'√3/2'],['tan',150,'−1/√3']
-  ];
-  for(const[fn,a,cor]of wData){
+  // Lookup tables
+  const SPEC=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330];
+  const EX={
+    0:{s:'0',c:'1',t:'0'},30:{s:'½',c:'√3/2',t:'1/√3'},45:{s:'√2/2',c:'√2/2',t:'1'},
+    60:{s:'√3/2',c:'½',t:'√3'},90:{s:'1',c:'0',t:'—'},
+    120:{s:'√3/2',c:'−½',t:'−√3'},135:{s:'√2/2',c:'−√2/2',t:'−1'},
+    150:{s:'½',c:'−√3/2',t:'−1/√3'},180:{s:'0',c:'−1',t:'0'},
+    210:{s:'−½',c:'−√3/2',t:'1/√3'},225:{s:'−√2/2',c:'−√2/2',t:'1'},
+    240:{s:'−√3/2',c:'−½',t:'√3'},270:{s:'−1',c:'0',t:'—'},
+    300:{s:'−√3/2',c:'½',t:'−√3'},315:{s:'−√2/2',c:'√2/2',t:'−1'},
+    330:{s:'−½',c:'√3/2',t:'−1/√3'}
+  };
+  const fnKey={sin:'s',cos:'c',tan:'t'};
+  const FNS=['sin','cos','tan'];
+
+  // Solutions lookup for equations
+  const SOLS={};
+  for(const fn of FNS){
+    SOLS[fn]={};
+    for(const a of SPEC){
+      const v=EX[a][fnKey[fn]];
+      if(v==='—')continue;
+      if(!SOLS[fn][v])SOLS[fn][v]=[];
+      SOLS[fn][v].push(a);
+    }
+  }
+  const SOL_POOL=[];
+  for(const fn of FNS)for(const v in SOLS[fn])SOL_POOL.push(SOLS[fn][v].map(a=>a+'°').join(', '));
+  // dedupe
+  const SOL_SET=[...new Set(SOL_POOL)];
+
+  // Helper: random negative or large angle that reduces to a special angle
+  function randFancyAngle(){
+    const base=pick(SPEC);
+    const mult=1+Math.floor(Math.random()*4); // 1-4 full turns
+    const r=Math.random();
+    if(r<0.2)return -base;
+    if(r<0.4)return -(360-base);
+    if(r<0.6)return base+360*mult;
+    if(r<0.8)return -(base+360*mult);
+    return -(360*mult-base);
+  }
+
+  // ═══════════════════════════════════════
+  // TYPE 1: Werte bestimmen (300 questions)
+  // ═══════════════════════════════════════
+  const usedWerte=new Set();
+  // a) Direct special angles (3 fns × 16 angles = 48 combos)
+  for(const fn of FNS){
+    for(const a of SPEC){
+      const cor=EX[a][fnKey[fn]];
+      if(cor==='—'&&fn!=='tan')continue;
+      const key=fn+'/'+a;
+      if(usedWerte.has(key))continue;usedWerte.add(key);
+      const w=wrongs(cor,POOL);
+      Q.push({cat:'werte',q:`${fn}(${a}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+        expl:`Aus dem Einheitskreis: ${fn}(${a}°) = ${cor}`});
+    }
+  }
+  // b) Negative and large angles
+  let _w=0;
+  while(Q.filter(q=>q.cat==='werte').length<300&&_w<2000){_w++;
+    const fn=pick(FNS);
+    const fancy=randFancyAngle();
+    const red=((fancy%360)+360)%360;
+    if(!EX[red])continue;
+    const cor=EX[red][fnKey[fn]];
+    const key=fn+'/'+fancy;
+    if(usedWerte.has(key))continue;usedWerte.add(key);
     const w=wrongs(cor,POOL);
-    Q.push({cat:'werte',q:`${fn}(${a}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
-      expl:`${a<0||a>=360?a+'° reduziert auf '+((a%360+360)%360)+'°. ':''}Aus dem Einheitskreis: ${fn}(${((a%360)+360)%360}°) = ${cor}`});
+    const redNote=fancy!==red?`${fancy}° → ${red}°. `:'';
+    Q.push({cat:'werte',q:`${fn}(${fancy}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`${redNote}${fn}(${red}°) = ${cor}`});
   }
 
-  // ── 25x Gleichungen lösen ──
-  const SOL_POOL=['0°','30°','45°','60°','90°','120°','135°','150°','180°','210°','225°','240°','270°','300°','315°','330°',
-    '30°, 150°','45°, 135°','60°, 120°','210°, 330°','225°, 315°','240°, 300°',
-    '45°, 225°','135°, 315°','60°, 240°','120°, 300°','30°, 210°','150°, 330°',
-    '90°, 270°','0°, 180°','120°, 240°','150°, 210°'];
-  const gData=[
-    ['sin','−1','270°'],['cos','√2/2','45°, 315°'],['tan','0','0°, 180°'],
-    ['sin','½','30°, 150°'],['tan','−1','135°, 315°'],['cos','−√3/2','150°, 210°'],
-    ['sin','−√2/2','225°, 315°'],['cos','0','90°, 270°'],['tan','1','45°, 225°'],
-    ['sin','√3/2','60°, 120°'],['cos','−½','120°, 240°'],['tan','√3','60°, 240°'],
-    ['sin','1','90°'],['cos','1','0°'],['tan','−√3','120°, 300°'],
-    ['cos','−1','180°'],['sin','0','0°, 180°'],['cos','½','60°, 300°'],
-    ['tan','−1/√3','150°, 330°'],['sin','−½','210°, 330°'],
-    ['tan','1/√3','30°, 210°'],['sin','√2/2','45°, 135°'],
-    ['cos','−√2/2','135°, 225°'],['sin','−√3/2','240°, 300°'],['tan','−√3','120°, 300°']
-  ];
-  for(const[fn,val,cor]of gData){
-    const w=wrongs(cor,SOL_POOL);
-    Q.push({cat:'gleich',q:`Alle α∈[0°,360°[ mit ${fn}(α) = ${val}`,opts:shuffle([cor,...w]),ans:cor,
-      expl:`Referenzwinkel bestimmen → Vorzeichen → Quadranten wählen → ${cor}`});
+  // ═══════════════════════════════════════
+  // TYPE 2: Gleichungen lösen (250 questions)
+  // ═══════════════════════════════════════
+  const usedGleich=new Set();
+  // Generate all unique fn+value combos
+  for(const fn of FNS){
+    for(const val in SOLS[fn]){
+      const angles=SOLS[fn][val];
+      const cor=angles.map(a=>a+'°').join(', ');
+      const key=fn+'='+val;
+      if(usedGleich.has(key))continue;usedGleich.add(key);
+      const w=wrongs(cor,SOL_SET);
+      Q.push({cat:'gleich',q:`Alle α∈[0°,360°[ mit ${fn}(α) = ${val}`,opts:shuffle([cor,...w]),ans:cor,
+        expl:`Referenzwinkel → Vorzeichen → Quadranten → ${cor}`});
+    }
+  }
+  // Repeat with varied phrasing to get to 250
+  let _g=0;
+  while(Q.filter(q=>q.cat==='gleich').length<250&&_g<1000){_g++;
+    const fn=pick(FNS);
+    const vals=Object.keys(SOLS[fn]);
+    const val=pick(vals);
+    const angles=SOLS[fn][val];
+    const cor=angles.map(a=>a+'°').join(', ');
+    const w=wrongs(cor,SOL_SET);
+    const phrasings=[
+      `${fn}(α) = ${val}. Finde alle α∈[0°,360°[.`,
+      `Für welche α∈[0°,360°[ gilt ${fn}(α) = ${val}?`,
+      `Löse ${fn}(α) = ${val} in [0°,360°[.`,
+      `Bestimme alle Winkel α mit ${fn}(α) = ${val}.`
+    ];
+    Q.push({cat:'gleich',q:pick(phrasings),opts:shuffle([cor,...w]),ans:cor,
+      expl:`Referenzwinkel → Vorzeichen → Quadranten → ${cor}`});
   }
 
-  // ── 15x Vorzeichen ──
-  const vData=[
-    ['sin(60°) _ sin(50°)','≥','Sin steigt von 0°–90°, also sin(60°) > sin(50°).'],
-    ['sin(40°) _ tan(40°)','≤','Im Q1: tan = sin/cos, cos<1, also tan > sin.'],
-    ['tan(60°) _ 2·tan(30°)','≥','tan(60°)=√3≈1.73 vs 2·tan(30°)=2/√3≈1.15.'],
-    ['cos(110°)·cos(210°) _ 0','≥','Beide negativ (Q2, Q3), Produkt positiv.'],
-    ['sin(40°) _ 2·sin(20°)','≤','sin(40°)≈0.643, 2·sin(20°)≈0.684.'],
-    ['cos(160°) _ cos(130°)','≤','Beide in Q2 negativ, cos nimmt ab → cos(160°) < cos(130°).'],
-    ['tan(125°)·tan(225°) _ 0','≤','tan(125°)<0 (Q2), tan(225°)>0 (Q3). Produkt negativ.'],
-    ['tan(380°) _ tan(480°)','≥','tan(380°)=tan(20°)>0, tan(480°)=tan(120°)<0.'],
-    ['sin(200°) _ 0','<','200° in Q3 → sin negativ.'],
-    ['cos(350°) _ cos(10°)','=','cos(360°−α) = cos(α). Also cos(350°)=cos(10°).'],
-    ['tan(89°) _ tan(91°)','≥','tan(89°) gross positiv, tan(91°) gross negativ.'],
-    ['sin(150°) _ sin(30°)','=','sin(180°−α) = sin(α).'],
-    ['cos(45°) _ cos(315°)','=','cos(360°−α) = cos(α).'],
-    ['sin(100°) _ sin(80°)','=','sin(180°−α)=sin(α). 100°=180°−80°.'],
-    ['tan(45°) _ 1','=','sin(45°)/cos(45°) = 1. Exakt.']
-  ];
-  for(const[qText,cor,expl]of vData){
-    const syms=['<','≤','=','≥','>'];
-    const opts=cor==='≥'?shuffle(['<','=','≥','>']):cor==='≤'?shuffle(['<','≤','=','>']):cor==='='?shuffle(['<','=','>','≥']):cor==='<'?shuffle(['<','≤','=','>']):shuffle(['<','=','≥','>']);
-    // Make sure correct is in
-    if(!opts.includes(cor)){opts[0]=cor;shuffle(opts);}
-    Q.push({cat:'vorz',q:qText.replace('_','⬜'),opts,ans:cor,expl});
+  // ═══════════════════════════════════════
+  // TYPE 3: Vorzeichen / Vergleiche (150)
+  // ═══════════════════════════════════════
+  function signQ(qText,cor,expl){
+    const all=['<','≤','=','≥','>'];
+    let opts=[cor];
+    while(opts.length<4){const s=pick(all);if(!opts.includes(s))opts.push(s);}
+    Q.push({cat:'vorz',q:qText,opts:shuffle(opts),ans:cor,expl});
   }
 
-  // ── 15x Reduktion ──
-  const rData=[
-    ['sin(−120°)','−√3/2','sin(−α) = −sin(α). sin(120°) = √3/2.'],
-    ['cos(−30°)','√3/2','cos(−α) = cos(α). cos(30°) = √3/2.'],
-    ['tan(−405°)','−1','−405°+2·360° = 315°. tan(315°) = −1.'],
-    ['cos(765°)','√2/2','765°−2·360° = 45°. cos(45°) = √2/2.'],
-    ['sin(−30°)','−½','sin(−30°) = −sin(30°) = −½.'],
-    ['cos(−120°)','−½','cos(−120°) = cos(120°) = −½.'],
-    ['tan(540°)','0','540°−360° = 180°. tan(180°) = 0.'],
-    ['sin(390°)','½','390°−360° = 30°. sin(30°) = ½.'],
-    ['cos(−225°)','−√2/2','cos(−225°) = cos(225°) = −√2/2.'],
-    ['tan(−150°)','1/√3','tan(−150°) = −tan(150°) = −(−1/√3) = 1/√3.'],
-    ['sin(720°)','0','720°−2·360° = 0°. sin(0°) = 0.'],
-    ['cos(450°)','0','450°−360° = 90°. cos(90°) = 0.'],
-    ['tan(−90°)','—','tan(90°) ist nicht definiert → bleibt undefiniert.'],
-    ['sin(−330°)','½','sin(−330°) = −sin(330°) = −(−½) = ½.'],
-    ['cos(−315°)','√2/2','cos(−315°) = cos(315°) = √2/2.']
-  ];
-  for(const[qText,cor,expl]of rData){
+  // a) sin(a) vs 0 / cos(a) vs 0 for various quadrants
+  for(let i=0;i<40;i++){
+    const fn=pick(['sin','cos']);
+    const a=10+Math.floor(Math.random()*350);
+    const val=fn==='sin'?Math.sin(toRad(a)):Math.cos(toRad(a));
+    const cor=val>0.001?'>':val<-0.001?'<':'=';
+    signQ(`${fn}(${a}°) ⬜ 0`,cor,`${a}° liegt im ${a<90?'Q1':a<180?'Q2':a<270?'Q3':'Q4'}. Dort ist ${fn} ${cor==='>'?'positiv':cor==='<'?'negativ':'null'}.`);
+  }
+
+  // b) product of two trig values vs 0
+  for(let i=0;i<30;i++){
+    const fn1=pick(FNS),fn2=pick(FNS);
+    const a1=pick(SPEC.filter(a=>a>0&&a<360&&EX[a][fnKey[fn1]]!=='—'));
+    const a2=pick(SPEC.filter(a=>a>0&&a<360&&EX[a][fnKey[fn2]]!=='—'));
+    if(!a1||!a2)continue;
+    const v1Str=EX[a1][fnKey[fn1]],v2Str=EX[a2][fnKey[fn2]];
+    const v1=Math.sin(toRad(a1)),v2=Math.sin(toRad(a2)); // approximate
+    const realV1=fn1==='sin'?Math.sin(toRad(a1)):fn1==='cos'?Math.cos(toRad(a1)):Math.tan(toRad(a1));
+    const realV2=fn2==='sin'?Math.sin(toRad(a2)):fn2==='cos'?Math.cos(toRad(a2)):Math.tan(toRad(a2));
+    const prod=realV1*realV2;
+    const cor=prod>0.001?'>':prod<-0.001?'<':'=';
+    signQ(`${fn1}(${a1}°)·${fn2}(${a2}°) ⬜ 0`,cor,
+      `${fn1}(${a1}°)=${v1Str} und ${fn2}(${a2}°)=${v2Str}. Produkt ist ${cor==='>'?'positiv':cor==='<'?'negativ':'null'}.`);
+  }
+
+  // c) symmetry comparisons: sin(a) vs sin(180-a), cos(a) vs cos(360-a), etc.
+  for(let i=0;i<30;i++){
+    const a=pick([30,45,60,120,135,150,210,225,240,300,315,330]);
+    const sym180=180-a,sym360=360-a;
+    const templates=[
+      [`sin(${a}°) ⬜ sin(${((180-a)%360+360)%360}°)`,'=',`sin(180°−α) = sin(α).`],
+      [`cos(${a}°) ⬜ cos(${((360-a)%360+360)%360}°)`,'=',`cos(360°−α) = cos(α).`],
+      [`sin(${a}°) ⬜ sin(${360-a}°)`,(Math.sin(toRad(a))>Math.sin(toRad(360-a))+0.001?'>':Math.sin(toRad(a))<Math.sin(toRad(360-a))-0.001?'<':'='),
+        `Vergleiche die y-Koordinaten am Einheitskreis.`],
+      [`cos(${a}°) ⬜ cos(${180-a<0?180-a+360:180-a}°)`,(Math.cos(toRad(a))>Math.cos(toRad(180-a))+0.001?'>':Math.cos(toRad(a))<Math.cos(toRad(180-a))-0.001?'<':'='),
+        `cos(180°−α) = −cos(α). Vorzeichen vergleichen.`],
+    ];
+    const t=pick(templates);
+    signQ(t[0],t[1],t[2]);
+  }
+
+  // d) Monotonicity comparisons
+  for(let i=0;i<30;i++){
+    const a=5+Math.floor(Math.random()*80);
+    const b=a+5+Math.floor(Math.random()*30);
+    if(b>=90)continue;
+    const templates=[
+      [`sin(${a}°) ⬜ sin(${b}°)`,a<b?'<':'=',`sin steigt von 0° bis 90°, also sin(${a}°) < sin(${b}°).`],
+      [`cos(${a}°) ⬜ cos(${b}°)`,a<b?'>':'=',`cos fällt von 0° bis 90°, also cos(${a}°) > cos(${b}°).`],
+    ];
+    const t=pick(templates);
+    signQ(t[0],t[1],t[2]);
+  }
+
+  // pad to 150 with additional product/sum sign questions
+  let _v=0;
+  while(Q.filter(q=>q.cat==='vorz').length<150&&_v<500){_v++;
+    const a=pick(SPEC.filter(x=>x>0&&x<360));
+    const fn=pick(['sin','cos']);
+    const val=fn==='sin'?Math.sin(toRad(a)):Math.cos(toRad(a));
+    const cor=val>0.001?'>':val<-0.001?'<':'=';
+    signQ(`${fn}(${a}°) ⬜ 0`,cor,`${a}° → ${fn} ist dort ${cor==='>'?'positiv':cor==='<'?'negativ':'null'}.`);
+  }
+
+  // ═══════════════════════════════════════
+  // TYPE 4: Reduktion (150 questions)
+  // ═══════════════════════════════════════
+  const usedRed=new Set();
+  let _r=0;
+  while(Q.filter(q=>q.cat==='red').length<150&&_r<2000){_r++;
+    const fn=pick(FNS);
+    const fancy=randFancyAngle();
+    const red=((fancy%360)+360)%360;
+    if(!EX[red])continue;
+    const cor=EX[red][fnKey[fn]];
+    const key=fn+'/'+fancy;
+    if(usedRed.has(key))continue;usedRed.add(key);
+    if(fancy===red)continue; // must actually require reduction
     const w=wrongs(cor,POOL);
-    Q.push({cat:'red',q:qText+' = ?',opts:shuffle([cor,...w]),ans:cor,expl});
+    let steps='';
+    if(fancy<0){
+      const add=Math.ceil(-fancy/360)*360;
+      steps=`${fancy}° + ${add}° = ${red}°. `;
+    } else {
+      const sub=Math.floor(fancy/360)*360;
+      steps=`${fancy}° − ${sub}° = ${red}°. `;
+    }
+    Q.push({cat:'red',q:`${fn}(${fancy}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`${steps}${fn}(${red}°) = ${cor}`});
   }
 
-  // ── 15x Identitäten ──
-  const NPOOL=['0','½','−½','1','−1','√2','−√2','√3','−√3','√3/2','−√3/2','2','−2','−3'];
-  const iData=[
-    ['sin(120°) + sin(240°)','0','√3/2 + (−√3/2) = 0.'],
-    ['tan(140°) + tan(220°)','0','tan(220°)=tan(40°), tan(140°)=−tan(40°). Summe=0.'],
-    ['sin(585°) − cos(−315°)','−√2','sin(225°)=−√2/2, cos(315°)=√2/2. Differenz=−√2.'],
-    ['tan(120°) · tan(420°)','−3','tan(420°)=tan(60°)=√3, tan(120°)=−√3. Produkt=−3.'],
-    ['tan(150°) · tan(300°)','1','(−1/√3)·(−√3) = 1.'],
-    ['cos(135°) + cos(225°)','−√2','−√2/2 + (−√2/2) = −√2.'],
-    ['tan(240°) / tan(60°)','1','√3 / √3 = 1.'],
-    ['sin²(60°) + cos²(60°)','1','Immer 1! (Pythagoras)'],
-    ['tan(−75°) − tan(465°)','0','tan(465°)=tan(105°)=−tan(75°). Also 0.'],
-    ['sin(45°) · cos(45°)','½','(√2/2)·(√2/2) = ½.'],
-    ['sin(0°)+sin(90°)+sin(180°)+sin(270°)','0','0+1+0+(−1) = 0.'],
-    ['cos(60°) − cos(120°)','1','½−(−½) = 1.'],
-    ['tan(45°) + tan(135°)','0','1+(−1) = 0.'],
-    ['sin(30°)cos(60°) + cos(30°)sin(60°)','1','= sin(30°+60°) = sin(90°) = 1.'],
-    ['2·sin(30°)·cos(30°)','√3/2','= sin(2·30°) = sin(60°) = √3/2.']
-  ];
-  for(const[qText,cor,expl]of iData){
+  // ═══════════════════════════════════════
+  // TYPE 5: Identitäten / Rechnen (150)
+  // ═══════════════════════════════════════
+  const usedId=new Set();
+
+  // a) sum/difference of same function at supplementary/complementary angles → 0
+  for(const a of SPEC){
+    if(a===0||a===180||a>=360)continue;
+    const b=360-a;
+    if(b===a)continue;
+    // sin(a)+sin(360-a) = sin(a)+(-sin(a)) = 0 for a!=0,180
+    const cor='0';
+    const key='sin+'+a+'+'+b;
+    if(!usedId.has(key)){usedId.add(key);
+      const w=wrongs(cor,NPOOL);
+      Q.push({cat:'id',q:`sin(${a}°) + sin(${b}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+        expl:`sin(${b}°) = sin(360°−${a}°) = −sin(${a}°). Summe = 0.`});}
+  }
+  for(const a of SPEC.filter(x=>x>0&&x<180)){
+    const b=180-a;
+    // cos(a)+cos(180-a) = cos(a)+(-cos(a)) = 0
+    const key='cos+'+a+'+'+b;
+    if(!usedId.has(key)&&a!==b){usedId.add(key);
+      const w=wrongs('0',NPOOL);
+      Q.push({cat:'id',q:`cos(${a}°) + cos(${180-a}°) = ?`,opts:shuffle(['0',...w]),ans:'0',
+        expl:`cos(${180-a}°) = −cos(${a}°). Summe = 0.`});}
+  }
+
+  // b) sin²+cos²=1
+  for(const a of SPEC){
+    const key='pyth'+a;
+    if(usedId.has(key))continue;usedId.add(key);
+    const w=wrongs('1',NPOOL);
+    Q.push({cat:'id',q:`sin²(${a}°) + cos²(${a}°) = ?`,opts:shuffle(['1',...w]),ans:'1',
+      expl:`Immer 1 – pythagoräische Identität!`});
+  }
+
+  // c) Products: sin(a)·cos(a), tan(a)·cos(a)=sin(a), etc.
+  for(const a of SPEC.filter(x=>EX[x]&&EX[x].t!=='—'&&x>0)){
+    // sin·cos
+    const sv=Math.sin(toRad(a)),cv=Math.cos(toRad(a));
+    const prod=sv*cv;
+    // Find exact: 2sincos = sin(2a), so sincos = sin(2a)/2
+    const a2=2*a;const red2=((a2%360)+360)%360;
+    if(EX[red2]){
+      const sin2a=EX[red2].s;
+      // We need sin(2a)/2 in exact form
+      const halfMap={'0':'0','1':'½','−1':'−½','½':'¼','−½':'−¼','√3/2':'√3/4','−√3/2':'−√3/4','√2/2':'√2/4','−√2/2':'−√2/4'};
+      const cor=halfMap[sin2a];
+      if(cor){
+        const key='sincos'+a;
+        if(!usedId.has(key)){usedId.add(key);
+          const w=wrongs(cor,[...NPOOL,'√3/4','−√3/4','√2/4','−√2/4','¼','−¼']);
+          Q.push({cat:'id',q:`sin(${a}°)·cos(${a}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+            expl:`= sin(2·${a}°)/2 = ${sin2a}/2 = ${cor}`});}
+      }
+    }
+  }
+
+  // d) Sum/diff with large/negative angles requiring reduction first
+  function evalExact(fn,deg){
+    const r=((deg%360)+360)%360;
+    if(!EX[r])return null;
+    return EX[r][fnKey[fn]];
+  }
+  function numVal(exactStr){
+    const m={'0':0,'½':0.5,'−½':-0.5,'1':1,'−1':-1,'√2/2':Math.SQRT2/2,'−√2/2':-Math.SQRT2/2,
+      '√3/2':Math.sqrt(3)/2,'−√3/2':-Math.sqrt(3)/2,'1/√3':1/Math.sqrt(3),'−1/√3':-1/Math.sqrt(3),
+      '√3':Math.sqrt(3),'−√3':-Math.sqrt(3),'—':undefined};
+    return m[exactStr];
+  }
+  function findExact(num){
+    if(num===undefined)return null;
+    const map=[
+      [0,'0'],[0.5,'½'],[-0.5,'−½'],[1,'1'],[-1,'−1'],
+      [Math.SQRT2/2,'√2/2'],[-Math.SQRT2/2,'−√2/2'],
+      [Math.sqrt(3)/2,'√3/2'],[-Math.sqrt(3)/2,'−√3/2'],
+      [Math.SQRT2,'√2'],[-Math.SQRT2,'−√2'],
+      [Math.sqrt(3),'√3'],[-Math.sqrt(3),'−√3'],
+      [2,'2'],[-2,'−2'],[3,'3'],[-3,'−3'],
+      [1/Math.sqrt(3),'1/√3'],[-1/Math.sqrt(3),'−1/√3']
+    ];
+    for(const[n,s]of map)if(Math.abs(num-n)<0.0001)return s;
+    return null;
+  }
+
+  // Generate sum/difference/product combos
+  for(let i=0;i<200&&Q.filter(q=>q.cat==='id').length<150;i++){
+    const fn1=pick(FNS),fn2=pick(FNS);
+    const a1=pick(SPEC),a2=pick(SPEC);
+    const op=pick(['+','−','·']);
+    const v1s=evalExact(fn1,a1),v2s=evalExact(fn2,a2);
+    if(!v1s||!v2s)continue;
+    const v1n=numVal(v1s),v2n=numVal(v2s);
+    if(v1n===undefined||v2n===undefined)continue;
+    const result=op==='+'?v1n+v2n:op==='−'?v1n-v2n:v1n*v2n;
+    const cor=findExact(result);
+    if(!cor)continue;
+    const key=fn1+a1+op+fn2+a2;
+    if(usedId.has(key))continue;usedId.add(key);
     const w=wrongs(cor,NPOOL);
-    Q.push({cat:'id',q:qText+' = ?',opts:shuffle([cor,...w]),ans:cor,expl});
+    Q.push({cat:'id',q:`${fn1}(${a1}°) ${op} ${fn2}(${a2}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`${fn1}(${a1}°)=${v1s}, ${fn2}(${a2}°)=${v2s}. Ergebnis: ${v1s} ${op} ${v2s} = ${cor}`});
+  }
+
+  // e) Same with fancy angles
+  for(let i=0;i<300&&Q.filter(q=>q.cat==='id').length<150;i++){
+    const fn1=pick(FNS),fn2=pick(FNS);
+    const fancy1=randFancyAngle(),fancy2=randFancyAngle();
+    const op=pick(['+','−','·']);
+    const v1s=evalExact(fn1,fancy1),v2s=evalExact(fn2,fancy2);
+    if(!v1s||!v2s)continue;
+    const v1n=numVal(v1s),v2n=numVal(v2s);
+    if(v1n===undefined||v2n===undefined)continue;
+    const result=op==='+'?v1n+v2n:op==='−'?v1n-v2n:v1n*v2n;
+    const cor=findExact(result);
+    if(!cor)continue;
+    const key=fn1+fancy1+op+fn2+fancy2;
+    if(usedId.has(key))continue;usedId.add(key);
+    const r1=((fancy1%360)+360)%360,r2=((fancy2%360)+360)%360;
+    const w=wrongs(cor,NPOOL);
+    Q.push({cat:'id',q:`${fn1}(${fancy1}°) ${op} ${fn2}(${fancy2}°) = ?`,opts:shuffle([cor,...w]),ans:cor,
+      expl:`${fancy1}°→${r1}°, ${fancy2}°→${r2}°. ${v1s} ${op} ${v2s} = ${cor}`});
   }
 
   return Q;
 }
 
-let allQ=buildQuestions(), filtered=[...allQ], qi=0, sc=0, ans=0;
+let allQ=[], filtered=[], qi=0, sc=0, ans=0;
+
+function catCount(c){return c==='all'?allQ.length:allQ.filter(q=>q.cat===c).length;}
 
 function setFilter(c,btn){
   document.querySelectorAll('.q-filter').forEach(b=>b.classList.remove('on'));
@@ -965,6 +1197,16 @@ function restartQuiz(){
   shuffleArr(filtered);qi=0;sc=0;ans=0;
   document.getElementById('qSummary').style.display='none';
   renderQ();updateScore();
+  // Update filter counts
+  updateFilterLabels();
+}
+function updateFilterLabels(){
+  document.querySelectorAll('.q-filter').forEach(b=>{
+    const c=b.dataset.c;
+    const n=catCount(c);
+    const names={all:'Alle',werte:'Werte',gleich:'Gleichungen',vorz:'Vorzeichen',red:'Reduktion',id:'Identitäten'};
+    b.textContent=`${names[c]} (${n})`;
+  });
 }
 function updateScore(){
   document.getElementById('scoreDisp').textContent=`${sc} / ${ans} richtig`;
@@ -1020,8 +1262,10 @@ function nextQ(){qi++;renderQ();}
 // ── Init ──
 window.addEventListener('load',()=>{
   resize();setAngle(45);
+  allQ=buildQuestions();
+  filtered=[...allQ];
   shuffleArr(filtered);
-  renderQ();updateScore();
+  renderQ();updateScore();updateFilterLabels();
 });
 window.addEventListener('resize',resize);
 </script>
