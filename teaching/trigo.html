@@ -390,8 +390,8 @@ header p{color:var(--text-dim);margin-top:6px;font-size:0.95rem;}
   </div>
 
   <div class="circle-controls">
-    <button class="pill on" id="btnSnap" onclick="toggleSnap()">Einrasten 15°</button>
-    <button class="pill" id="btnExact" onclick="toggleExact()">Exakte Werte</button>
+    <button class="pill on" id="btnSnap" onclick="toggleSnap()">Einrasten</button>
+    <button class="pill on" id="btnExact" onclick="toggleExact()">Exakte Werte</button>
     <button class="pill" id="btnTan" onclick="toggleShowTan()">tan-Linie</button>
   </div>
 
@@ -594,7 +594,8 @@ function showPage(p){
 const cv=document.getElementById('uc');
 const cx2d=cv.getContext('2d');
 const DPR=window.devicePixelRatio||1;
-let curDeg=45, snap=true, exact=false, showTan=false, dragging=false;
+let curDeg=45, snap=true, exact=true, showTan=false, dragging=false;
+const SNAP_ANGLES=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330,360];
 
 const EXACT={
   0:{s:'0',c:'1',t:'0'},30:{s:'½',c:'√3/2',t:'1/√3'},45:{s:'√2/2',c:'√2/2',t:'1'},
@@ -621,7 +622,7 @@ function resize(){
 }
 
 function setAngle(d){
-  if(snap)d=Math.round(d/15)*15;
+  if(snap){let best=0,bestD=999;for(const a of SNAP_ANGLES){const diff=Math.min(Math.abs(d-a),Math.abs(d-a+360),Math.abs(d-a-360));if(diff<bestD){bestD=diff;best=a;}}d=best%360;}
   curDeg=((d%360)+360)%360;
   updateReadout();draw();updateTip();
 }
@@ -696,8 +697,9 @@ function draw(){
 
   // Special angle dots
   cx2d.fillStyle='rgba(0,0,0,0.08)';
-  for(let a=0;a<360;a+=15){
-    const ar=toRad(a);const r2=a%30===0?3.5:2;
+  for(const a of SNAP_ANGLES){
+    if(a>=360)continue;
+    const ar=toRad(a);const r2=a%90===0?4:a%30===0?3.5:2.5;
     cx2d.beginPath();cx2d.arc(cx+R*Math.cos(ar),cy-R*Math.sin(ar),r2,0,Math.PI*2);cx2d.fill();
   }
 
