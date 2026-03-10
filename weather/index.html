@@ -12,7 +12,6 @@
     <link rel="icon" type="image/png" href="apple-touch-icon.png">
     <title>WeatherConfidence</title>
     <link rel="stylesheet" href="style.css?v=3">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
     <div id="app">
@@ -73,17 +72,11 @@
                 </div>
             </section>
 
-            <section id="radar-section" class="radar-section hidden">
-                <h2 class="section-title">Precipitation Radar</h2>
+            <section id="radar-section" class="radar-section">
+                <h2 class="section-title">Rain Forecast Map</h2>
                 <div class="radar-map-container">
-                    <div id="radar-map"></div>
-                </div>
-                <div class="radar-controls">
-                    <button id="radar-play" class="radar-play-btn" title="Play/Pause">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon id="play-icon" points="6,4 20,12 6,20"/></svg>
-                    </button>
-                    <input type="range" id="radar-slider" class="radar-slider" min="0" max="0" value="0">
-                    <span id="radar-time" class="radar-time">--:--</span>
+                    <iframe id="windy-embed" class="windy-embed" frameborder="0"
+                        src="about:blank" loading="lazy" allowfullscreen></iframe>
                 </div>
             </section>
 
@@ -92,7 +85,7 @@
             <footer class="data-attribution">
                 Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> &middot;
                 Model: <a href="https://www.dwd.de/EN/research/weatherforecasting/num_modelling/01_num_weather_prediction_modells/icon_description.html" target="_blank" rel="noopener">DWD ICON</a> &middot;
-                Radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>
+                Map: <a href="https://www.windy.com/" target="_blank" rel="noopener">Windy</a>
             </footer>
         </main>
     </div>
@@ -124,7 +117,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>

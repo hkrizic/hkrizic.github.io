@@ -48,12 +48,6 @@ const CONF_PRECIP_WEIGHT = 0.4;
 // ============================================================
 let chart = null;
 let searchTimeout = null;
-let radarMap = null;
-let radarLayer = null;
-let radarFrames = [];
-let radarIdx = 0;
-let radarPlaying = false;
-let radarInterval = null;
 let currentLat = 46.2044;
 let currentLon = 6.1432;
 let lastResult = null;
@@ -572,123 +566,12 @@ function renderExplanation(memberCount) {
 }
 
 // ============================================================
-// Precipitation Radar (RainViewer)
+// Rain Forecast Map (Windy embed)
 // ============================================================
-async function initRadar(lat, lon) {
-    try {
-        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        radarFrames = [...(data.radar?.past || []), ...(data.radar?.nowcast || [])];
-        if (radarFrames.length === 0) return;
-
-        $('#radar-section').classList.remove('hidden');
-
-        // Init map if not yet created
-        if (!radarMap) {
-            radarMap = L.map('radar-map', {
-                zoomControl: false,
-                attributionControl: false,
-                minZoom: 3,
-                maxZoom: 12,
-            }).setView([lat, lon], 6);
-
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
-            }).addTo(radarMap);
-
-            L.control.zoom({ position: 'topright' }).addTo(radarMap);
-        } else {
-            radarMap.setView([lat, lon], 6);
-        }
-
-        // Stop animation if playing
-        if (radarPlaying) {
-            radarPlaying = false;
-            clearInterval(radarInterval);
-            const icon = $('#play-icon');
-            icon.setAttribute('points', '6,4 20,12 6,20');
-            const pause = $('#pause-icon');
-            if (pause) pause.remove();
-        }
-
-        // Remove current radar layer
-        if (radarLayer) {
-            radarMap.removeLayer(radarLayer);
-            radarLayer = null;
-        }
-
-        // Setup slider
-        const slider = $('#radar-slider');
-        slider.max = radarFrames.length - 1;
-        slider.value = radarFrames.length - 1;
-        radarIdx = radarFrames.length - 1;
-
-        showRadarFrame(radarIdx);
-
-        // Only bind events once
-        if (!slider.dataset.bound) {
-            slider.dataset.bound = '1';
-            slider.addEventListener('input', (e) => {
-                radarIdx = parseInt(e.target.value);
-                showRadarFrame(radarIdx);
-            });
-            $('#radar-play').addEventListener('click', toggleRadarPlay);
-        }
-
-        // Fix map rendering after container becomes visible
-        setTimeout(() => radarMap.invalidateSize(), 100);
-    } catch (err) {
-        console.error('Radar error:', err);
-    }
-}
-
-function showRadarFrame(idx) {
-    const frame = radarFrames[idx];
-    if (!frame || !radarMap) return;
-
-    if (radarLayer) radarMap.removeLayer(radarLayer);
-
-    radarLayer = L.tileLayer(
-        `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`,
-        { opacity: 0.7, zIndex: 400, tileSize: 256, maxNativeZoom: 7 }
-    );
-    radarLayer.addTo(radarMap);
-
-    const ts = frame.time;
-    if (ts) {
-        const dt = new Date(ts * 1000);
-        const h = dt.getHours().toString().padStart(2, '0');
-        const m = dt.getMinutes().toString().padStart(2, '0');
-        $('#radar-time').textContent = `${h}:${m}`;
-    }
-    $('#radar-slider').value = idx;
-}
-
-function toggleRadarPlay() {
-    radarPlaying = !radarPlaying;
-    const icon = $('#play-icon');
-    if (radarPlaying) {
-        icon.setAttribute('points', '6,4 10,4 10,20 6,20');
-        // Add pause second bar
-        if (!$('#pause-icon')) {
-            const pause = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            pause.id = 'pause-icon';
-            pause.setAttribute('points', '14,4 18,4 18,20 14,20');
-            pause.setAttribute('fill', 'currentColor');
-            icon.parentElement.appendChild(pause);
-        }
-        radarInterval = setInterval(() => {
-            radarIdx = (radarIdx + 1) % radarFrames.length;
-            showRadarFrame(radarIdx);
-        }, 800);
-    } else {
-        icon.setAttribute('points', '6,4 20,12 6,20');
-        const pause = $('#pause-icon');
-        if (pause) pause.remove();
-        clearInterval(radarInterval);
-    }
+function initWindyEmbed(lat, lon) {
+    const iframe = $('#windy-embed');
+    if (!iframe) return;
+    iframe.src = `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=7&overlay=rain&product=ecmwf&level=surface&lat=${lat}&lon=${lon}&calendar=now&message=true`;
 }
 
 // ============================================================
@@ -707,9 +590,20 @@ function openDayDetail(dayIndex) {
     const fullDay = DAY_NAMES_LONG[dt.getDay()];
     const dateStr = dt.toLocaleDateString('en', { month: 'short', day: 'numeric' });
 
-    // Filter hourly data for this day
-    const dayTemp = lastResult.tempStats.filter(s => s.time.startsWith(dayDate));
-    const dayPrecip = lastResult.precipStats.filter(s => s.time.startsWith(dayDate));
+    // Filter hourly data for this day (start from current hour if today)
+    const today = new Date().toISOString().split('T')[0];
+    const nowHour = new Date().getHours();
+    const isToday = dayDate === today;
+    const dayTemp = lastResult.tempStats.filter(s => {
+        if (!s.time.startsWith(dayDate)) return false;
+        if (isToday) return new Date(s.time).getHours() >= nowHour;
+        return true;
+    });
+    const dayPrecip = lastResult.precipStats.filter(s => {
+        if (!s.time.startsWith(dayDate)) return false;
+        if (isToday) return new Date(s.time).getHours() >= nowHour;
+        return true;
+    });
 
     // Calculate hourly confidence for this day
     const dayConf = dayTemp.map((ts, i) => {
@@ -1033,7 +927,7 @@ async function loadWeather(lat, lon, name) {
         renderDaily(result.days);
         renderChart(result.tempStats);
         renderPrecipChart(result.precipStats);
-        initRadar(lat, lon);
+        initWindyEmbed(lat, lon);
         renderExplanation(result.memberCount);
     } catch (err) {
         console.error(err);

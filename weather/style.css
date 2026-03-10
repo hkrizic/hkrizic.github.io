@@ -455,68 +455,13 @@ body {
     margin: 8px 0;
 }
 
-#radar-map {
-    height: 280px;
+.windy-embed {
     width: 100%;
-    background: var(--bg);
-}
-
-.radar-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 4px 0;
-}
-
-.radar-play-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
+    height: 320px;
     border: none;
-    background: var(--primary-light);
+    display: block;
+    background: var(--bg);
     border-radius: var(--radius-xs);
-    color: var(--primary);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s;
-}
-
-.radar-play-btn:active {
-    background: var(--primary);
-    color: white;
-    transform: scale(0.95);
-}
-
-.radar-slider {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    outline: none;
-}
-
-.radar-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--primary);
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: var(--shadow-sm);
-}
-
-.radar-time {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    min-width: 42px;
-    text-align: right;
-    flex-shrink: 0;
 }
 
 /* Data Attribution */
