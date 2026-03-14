@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallellinien-Abstand — Eingeschränkte lineare Regression</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+:root {
+  --bg: #0a0b0f;
+  --surface: #12141c;
+  --surface2: #1a1d28;
+  --border: #2a2d3a;
+  --text: #e0e2ec;
+  --text-dim: #8890a8;
+  --accent-a: #ff6b4a;
+  --accent-b: #4a9eff;
+  --accent-c: #50e89e;
+  --accent-d: #ffb84a;
+  --code-bg: #0e1018;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+.grain {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 9999; opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 60px 40px 120px; }
+
+header { margin-bottom: 80px; position: relative; }
+header::after {
+  content: ''; position: absolute; bottom: -40px; left: 0;
+  width: 60px; height: 2px; background: var(--accent-a);
+}
+
+h1 {
+  font-family: 'Fraunces', serif; font-weight: 700; font-size: 42px;
+  line-height: 1.15; letter-spacing: -0.02em; color: #fff; margin-bottom: 16px;
+}
+h1 span { color: var(--accent-a); }
+
+.subtitle { color: var(--text-dim); font-size: 13px; letter-spacing: 0.04em; }
+
+h2 {
+  font-family: 'Fraunces', serif; font-weight: 500; font-size: 26px;
+  color: #fff; margin-bottom: 24px; letter-spacing: -0.01em;
+}
+h3 {
+  font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px;
+  color: #fff; margin-bottom: 12px;
+}
+
+section { margin-bottom: 72px; }
+p { color: var(--text-dim); margin-bottom: 16px; max-width: 720px; }
+
+.math-block {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-a); padding: 24px 28px;
+  margin: 24px 0; border-radius: 0 8px 8px 0;
+  font-size: 15px; color: var(--text); overflow-x: auto;
+}
+.math-block .label {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--accent-a); margin-bottom: 12px;
+}
+
+.step-grid { display: grid; grid-template-columns: 40px 1fr; gap: 0 20px; margin: 28px 0; }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--accent-a);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.step-content {
+  padding-bottom: 28px; border-left: 1px dashed var(--border);
+  padding-left: 20px; margin-left: -26px;
+}
+.step-content:last-child { border-left: none; }
+
+.canvas-wrapper {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin: 28px 0; position: relative;
+}
+canvas { display: block; width: 100%; cursor: crosshair; }
+.canvas-controls {
+  display: flex; gap: 12px; padding: 16px 20px;
+  border-top: 1px solid var(--border); flex-wrap: wrap; align-items: center;
+}
+
+.btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 8px 18px; border-radius: 6px; font-family: 'DM Mono', monospace;
+  font-size: 12px; cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { background: var(--border); border-color: var(--text-dim); }
+.btn.primary { background: var(--accent-a); border-color: var(--accent-a); color: #fff; }
+.btn.primary:hover { background: #ff8266; }
+
+.result-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 28px; margin: 28px 0;
+}
+.result-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.result-row:last-child { border-bottom: none; }
+.result-label { color: var(--text-dim); font-size: 12px; }
+.result-value { font-weight: 500; font-size: 15px; }
+.result-value.a { color: var(--accent-a); }
+.result-value.b { color: var(--accent-b); }
+.result-value.c { color: var(--accent-c); }
+.result-value.d { color: var(--accent-d); }
+
+.slider-group { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
+.slider-group input[type="range"] {
+  -webkit-appearance: none; width: 140px; height: 4px;
+  background: var(--border); border-radius: 2px; outline: none;
+}
+.slider-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent-a); cursor: pointer;
+}
+
+.code-section { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.code-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.code-header .lang { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-d); }
+.code-body { padding: 20px; overflow-x: auto; max-height: 700px; overflow-y: auto; }
+.code-body pre {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  line-height: 1.7; color: var(--text-dim); tab-size: 4;
+}
+.code-body pre .kw { color: var(--accent-a); }
+.code-body pre .ty { color: var(--accent-b); }
+.code-body pre .cm { color: #555d75; font-style: italic; }
+.code-body pre .str { color: var(--accent-c); }
+.code-body pre .num { color: var(--accent-d); }
+.code-body pre .fn { color: #c792ea; }
+
+.tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 11px; letter-spacing: 0.05em; }
+.tag.set-a { background: rgba(255,107,74,0.15); color: var(--accent-a); }
+.tag.set-b { background: rgba(74,158,255,0.15); color: var(--accent-b); }
+
+.legend {
+  display: flex; gap: 24px; padding: 12px 20px;
+  font-size: 12px; color: var(--text-dim); border-bottom: 1px solid var(--border);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.perpendicular-note {
+  background: rgba(80, 232, 158, 0.06); border: 1px solid rgba(80, 232, 158, 0.2);
+  border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-size: 13px; color: var(--accent-c);
+}
+
+/* MathJax */
+mjx-container[jax="SVG"] { color: var(--text) !important; }
+mjx-container[jax="SVG"][display="true"] { margin: 16px 0 !important; display: block !important; text-align: center; }
+.math-block mjx-container[jax="SVG"] { color: #fff !important; }
+.perpendicular-note mjx-container[jax="SVG"] { color: var(--accent-c) !important; }
+
+@media (max-width: 768px) {
+  .container { padding: 32px 20px 80px; }
+  h1 { font-size: 28px; }
+  .canvas-controls { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="container">
+
+<header>
+  <h1>Parallellinien-<span>Abstand</span></h1>
+  <div class="subtitle">Eingeschränkte lineare Regression für nahezu vertikale, parallele Punktmengen</div>
+</header>
+
+<!-- ABSCHNITT 1: Problemstellung -->
+<section>
+  <h2>01 — Problemstellung</h2>
+  <p>Gegeben sind zwei Mengen von nahezu vertikalen Punkten — <span class="tag set-a">Menge A (10 Pkt.)</span> und <span class="tag set-b">Menge B (61 Pkt.)</span> — die zueinander parallel sein sollten. Gesucht ist der senkrechte Abstand zwischen den beiden Ausgleichsgeraden.</p>
+  <p>Da die Punkte nahezu vertikal liegen (grosses $\Delta y$, winziges $\Delta x$), vertauschen wir die Achsen: Wir regressieren $x = f(y)$ statt $y = f(x)$, um numerische Instabilität durch quasi-unendliche Steigungen zu vermeiden.</p>
+
+  <div class="math-block">
+    <span class="label">Schlüsselidee — Achsentausch</span>
+    Die Standardregression $y = mx + b$ versagt für nahezu vertikale Geraden ($m \to \infty$). Stattdessen fitten wir:
+    $$x = a\,y + b \qquad \text{wobei } a \approx 0 \text{ für nahezu vertikale Daten.}$$
+  </div>
+</section>
+
+<!-- ABSCHNITT 2: Algorithmus -->
+<section>
+  <h2>02 — Algorithmus</h2>
+
+  <div class="step-grid">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h3>Gerade A fitten (uneingeschränkt)</h3>
+      <p>Gewöhnliche Methode der kleinsten Quadrate (OLS) auf den 10 Referenzpunkten für das Modell $\;x = a\,y + b_1$:</p>
+      <div class="math-block">
+        <span class="label">OLS für Steigung $a$ und Achsenabschnitt $b_1$</span>
+        $$a = \frac{\displaystyle\sum_{i=1}^{N_A}\bigl(y_i - \bar{y}_A\bigr)\bigl(x_i - \bar{x}_A\bigr)}{\displaystyle\sum_{i=1}^{N_A}\bigl(y_i - \bar{y}_A\bigr)^2}$$
+        $$b_1 = \bar{x}_A - a\,\bar{y}_A$$
+      </div>
+    </div>
+
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h3>Gerade B fitten (Steigung eingeschränkt)</h3>
+      <p>Die gleiche Steigung $a$ aus Schritt 1 wird übernommen, und nur der Achsenabschnitt $b_2$ wird mit den 61 Punkten gefittet:</p>
+      <div class="math-block">
+        <span class="label">Eingeschränkter Achsenabschnitt $b_2$</span>
+        $$b_2 = \frac{1}{N_B}\sum_{i=1}^{N_B}\bigl(x_i - a\,y_i\bigr) = \bar{x}_B - a\,\bar{y}_B$$
+      </div>
+    </div>
+
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h3>Senkrechter Abstand</h3>
+      <p>Beide Geraden haben die gleiche Steigung $a$. In der Form $\;a\,y - x + b = 0\;$ geschrieben, beträgt der senkrechte Abstand zwischen $\;a\,y - x + b_1 = 0\;$ und $\;a\,y - x + b_2 = 0$:</p>
+      <div class="math-block">
+        <span class="label">Abstandsformel</span>
+        $$\boxed{\;d_\perp = \frac{|b_1 - b_2|}{\sqrt{a^2 + 1}}\;}$$
+      </div>
+      <div class="perpendicular-note">
+        Für nahezu vertikale Geraden gilt $a \approx 0$, also $\sqrt{a^2+1} \approx 1$ und somit $d_\perp \approx |b_1 - b_2|$. Der Abstand entspricht im Wesentlichen dem horizontalen Versatz.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABSCHNITT 3: Interaktive Visualisierung -->
+<section>
+  <h2>03 — Interaktive Visualisierung</h2>
+  <p>Verschiebe die Regler um Rauschen und Versatz anzupassen, oder klicke auf «Zufällig», um neue Punktmengen zu erzeugen. Der Algorithmus läuft in Echtzeit.</p>
+
+  <div class="canvas-wrapper">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-a)"></div> Menge A (10 Pkt.)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-b)"></div> Menge B (61 Pkt.)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-c)"></div> Abstand</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-d)"></div> Gemeinsame Steigung</div>
+    </div>
+    <canvas id="mainCanvas" width="1060" height="520"></canvas>
+    <div class="canvas-controls">
+      <div class="slider-group">
+        <label>Rauschen</label>
+        <input type="range" id="noiseSlider" min="0" max="50" value="8">
+        <span id="noiseVal">8</span>
+      </div>
+      <div class="slider-group">
+        <label>Versatz</label>
+        <input type="range" id="offsetSlider" min="30" max="300" value="120">
+        <span id="offsetVal">120</span>
+      </div>
+      <div class="slider-group">
+        <label>Neigung (δx)</label>
+        <input type="range" id="tiltSlider" min="0" max="40" value="5">
+        <span id="tiltVal">5</span>
+      </div>
+      <button class="btn primary" onclick="randomize()">Zufällig</button>
+      <button class="btn" onclick="resetDefaults()">Zurücksetzen</button>
+    </div>
+  </div>
+
+  <div class="result-panel" id="results">
+    <div class="result-row">
+      <span class="result-label">Steigung $a$ (gemeinsam)</span>
+      <span class="result-value d" id="resSlope">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Achsenabschnitt $b_1$ (Menge A)</span>
+      <span class="result-value a" id="resB1">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Achsenabschnitt $b_2$ (Menge B)</span>
+      <span class="result-value b" id="resB2">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">$|b_1 - b_2|$</span>
+      <span class="result-value" id="resDeltaB">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">$\sqrt{a^2 + 1}$</span>
+      <span class="result-value" id="resNorm">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Senkrechter Abstand $d_\perp$</span>
+      <span class="result-value c" id="resDist" style="font-size:20px;">—</span>
+    </div>
+  </div>
+</section>
+
+<!-- ABSCHNITT 4: TwinCAT-Code -->
+<section>
+  <h2>04 — TwinCAT 3 Strukturierter Text</h2>
+  <p>Fertiger Funktionsbaustein für Beckhoff TwinCAT. Einfach die beiden Punkt-Arrays übergeben — er berechnet den senkrechten Abstand mit der oben beschriebenen eingeschränkten Regressionsmethode.</p>
+
+  <div class="code-section">
+    <div class="code-header">
+      <span class="lang">IEC 61131-3 — Strukturierter Text</span>
+      <button class="btn" onclick="copyCode()">Kopieren</button>
+    </div>
+    <div class="code-body">
+      <pre id="tcCode"></pre>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ============================================================
+//  INTERAKTIVE VISUALISIERUNG
+// ============================================================
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+const noiseSlider = document.getElementById('noiseSlider');
+const offsetSlider = document.getElementById('offsetSlider');
+const tiltSlider = document.getElementById('tiltSlider');
+
+let setA = [], setB = [];
+let dpr = window.devicePixelRatio || 1;
+
+function initCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function randGauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function generatePoints() {
+  const noise = parseFloat(noiseSlider.value);
+  const offset = parseFloat(offsetSlider.value);
+  const tilt = parseFloat(tiltSlider.value);
+  document.getElementById('noiseVal').textContent = noise;
+  document.getElementById('offsetVal').textContent = offset;
+  document.getElementById('tiltVal').textContent = tilt;
+
+  const W = canvas.getBoundingClientRect().width;
+  const H = canvas.getBoundingClientRect().height;
+  const cx1 = W * 0.35, cx2 = cx1 + offset;
+  const yStart = 40, yEnd = H - 40;
+
+  setA = [];
+  for (let i = 0; i < 10; i++) {
+    const t = i / 9;
+    const y = yStart + t * (yEnd - yStart);
+    const x = cx1 + t * tilt + randGauss() * noise;
+    setA.push({ x, y });
+  }
+  setB = [];
+  for (let i = 0; i < 61; i++) {
+    const t = i / 60;
+    const y = yStart + t * (yEnd - yStart);
+    const x = cx2 + t * tilt + randGauss() * noise;
+    setB.push({ x, y });
+  }
+}
+
+function linRegSwapped(pts) {
+  let sy = 0, sx = 0, syy = 0, sxy = 0;
+  const n = pts.length;
+  for (const p of pts) { sy += p.y; sx += p.x; }
+  const my = sy / n, mx = sx / n;
+  for (const p of pts) {
+    syy += (p.y - my) * (p.y - my);
+    sxy += (p.y - my) * (p.x - mx);
+  }
+  return { a: sxy / syy, b: mx - (sxy / syy) * my };
+}
+
+function constrainedIntercept(pts, a) {
+  let sx = 0, sy = 0;
+  for (const p of pts) { sx += p.x; sy += p.y; }
+  return sx / pts.length - a * (sy / pts.length);
+}
+
+function compute() {
+  const regA = linRegSwapped(setA);
+  const a = regA.a, b1 = regA.b;
+  const b2 = constrainedIntercept(setB, a);
+  const norm = Math.sqrt(a * a + 1);
+  const dist = Math.abs(b1 - b2) / norm;
+
+  document.getElementById('resSlope').textContent = a.toFixed(6);
+  document.getElementById('resB1').textContent = b1.toFixed(3);
+  document.getElementById('resB2').textContent = b2.toFixed(3);
+  document.getElementById('resDeltaB').textContent = Math.abs(b1 - b2).toFixed(3);
+  document.getElementById('resNorm').textContent = norm.toFixed(6);
+  document.getElementById('resDist').textContent = dist.toFixed(4);
+  return { a, b1, b2, dist, norm };
+}
+
+function draw() {
+  const W = canvas.getBoundingClientRect().width;
+  const H = canvas.getBoundingClientRect().height;
+  ctx.clearRect(0, 0, W, H);
+  const { a, b1, b2, dist } = compute();
+
+  // Gitter
+  ctx.strokeStyle = 'rgba(42,45,58,0.5)'; ctx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // Ausgleichsgeraden: x = a*y + b
+  function drawLine(b, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(a * 0 + b, 0); ctx.lineTo(a * H + b, H); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  drawLine(b1, '#ff6b4a');
+  drawLine(b2, '#4a9eff');
+
+  // Senkrechter Abstand in der Mitte
+  const midY = H / 2;
+  const xA = a * midY + b1;
+  const tFoot = (midY + a * (xA - b2)) / (1 + a * a);
+  const footX = a * tFoot + b2, footY = tFoot;
+
+  ctx.strokeStyle = '#50e89e'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xA, midY); ctx.lineTo(footX, footY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Beschriftung
+  const lx = (xA + footX) / 2, ly = (midY + footY) / 2;
+  ctx.fillStyle = '#50e89e'; ctx.font = '13px "DM Mono", monospace';
+  ctx.fillText('d = ' + dist.toFixed(2), lx + 8, ly - 6);
+
+  // Punkte zeichnen
+  function drawPoints(pts, color) {
+    for (const p of pts) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.5; ctx.stroke();
+    }
+  }
+  drawPoints(setA, '#ff6b4a');
+  drawPoints(setB, '#4a9eff');
+
+  // Markierungen
+  ctx.beginPath(); ctx.arc(xA, midY, 5, 0, Math.PI * 2);
+  ctx.strokeStyle = '#ff6b4a'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(footX, footY, 5, 0, Math.PI * 2);
+  ctx.strokeStyle = '#4a9eff'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+function update() { generatePoints(); draw(); }
+function randomize() { update(); }
+function resetDefaults() {
+  noiseSlider.value = 8; offsetSlider.value = 120; tiltSlider.value = 5; update();
+}
+
+noiseSlider.addEventListener('input', update);
+offsetSlider.addEventListener('input', update);
+tiltSlider.addEventListener('input', update);
+window.addEventListener('resize', () => { initCanvas(); update(); });
+
+// ============================================================
+//  TWINCAT STRUKTURIERTER TEXT
+// ============================================================
+const tcSource = `(* ============================================================
+   FB_ParallelLinienAbstand
+   ============================================================
+   Eingeschränkte lineare Regression zur Bestimmung des
+   senkrechten Abstands zwischen zwei nahezu vertikalen,
+   parallelen Punktmengen.
+
+   Methode:
+     1) x = a*y + b1 auf Menge A fitten (volle OLS)
+     2) Gleiche Steigung a auf Menge B erzwingen, nur b2 fitten
+     3) d = |b1 - b2| / SQRT(a^2 + 1)
+
+   Die Achsen sind vertauscht (x auf y regressiert),
+   da die Punktmengen nahezu vertikal sind.
+   ============================================================ *)
+
+FUNCTION_BLOCK FB_ParallelLinienAbstand
+VAR_INPUT
+    aX       : ARRAY[0..9]  OF LREAL;  (* Menge A x-Koordinaten, 10 Punkte *)
+    aY       : ARRAY[0..9]  OF LREAL;  (* Menge A y-Koordinaten, 10 Punkte *)
+    nA       : INT := 10;               (* Anzahl Punkte in Menge A         *)
+
+    bX       : ARRAY[0..60] OF LREAL;  (* Menge B x-Koordinaten, 61 Punkte *)
+    bY       : ARRAY[0..60] OF LREAL;  (* Menge B y-Koordinaten, 61 Punkte *)
+    nB       : INT := 61;               (* Anzahl Punkte in Menge B         *)
+
+    bExecute : BOOL;                    (* Steigende Flanke loest Berechnung aus *)
+END_VAR
+
+VAR_OUTPUT
+    fSteigung       : LREAL;  (* Gemeinsame Steigung a               *)
+    fAchsenabschnA  : LREAL;  (* Achsenabschnitt b1 (Menge A)        *)
+    fAchsenabschnB  : LREAL;  (* Achsenabschnitt b2 (Menge B)        *)
+    fAbstand         : LREAL;  (* Senkrechter Abstand d               *)
+    bFertig          : BOOL;   (* TRUE wenn Berechnung abgeschlossen  *)
+    bFehler          : BOOL;   (* TRUE bei ungueltigen Eingaben       *)
+END_VAR
+
+VAR
+    (* Interne Arbeitsvariablen *)
+    i            : INT;
+    fSumY_A      : LREAL;
+    fSumX_A      : LREAL;
+    fMittelY_A   : LREAL;
+    fMittelX_A   : LREAL;
+    fSumYY_A     : LREAL;
+    fSumXY_A     : LREAL;
+    fSumY_B      : LREAL;
+    fSumX_B      : LREAL;
+    fMittelY_B   : LREAL;
+    fMittelX_B   : LREAL;
+    fNorm        : LREAL;
+    fDeltaY      : LREAL;
+    bExecVorher  : BOOL;
+END_VAR`;
+
+const tcSource2 = `
+(* ------------------------------------------------------------ *)
+(* Implementierung                                               *)
+(* ------------------------------------------------------------ *)
+
+(* Flankenauswertung *)
+IF bExecute AND NOT bExecVorher THEN
+
+    bFertig := FALSE;
+    bFehler := FALSE;
+
+    (* ---- Eingaben pruefen ---- *)
+    IF nA < 2 OR nB < 1 THEN
+        bFehler := TRUE;
+        bExecVorher := bExecute;
+        RETURN;
+    END_IF
+
+    (* ======================================================== *)
+    (* SCHRITT 1: OLS-Regression auf Menge A  —  x = a*y + b1  *)
+    (* ======================================================== *)
+    fSumY_A  := 0;
+    fSumX_A  := 0;
+    fSumYY_A := 0;
+    fSumXY_A := 0;
+
+    FOR i := 0 TO nA - 1 DO
+        fSumY_A := fSumY_A + aY[i];
+        fSumX_A := fSumX_A + aX[i];
+    END_FOR
+
+    fMittelY_A := fSumY_A / INT_TO_LREAL(nA);
+    fMittelX_A := fSumX_A / INT_TO_LREAL(nA);
+
+    FOR i := 0 TO nA - 1 DO
+        fDeltaY  := aY[i] - fMittelY_A;
+        fSumYY_A := fSumYY_A + fDeltaY * fDeltaY;
+        fSumXY_A := fSumXY_A + fDeltaY * (aX[i] - fMittelX_A);
+    END_FOR
+
+    (* Schutz gegen Varianz = 0 (alle y identisch) *)
+    IF ABS(fSumYY_A) < 1E-12 THEN
+        bFehler := TRUE;
+        bExecVorher := bExecute;
+        RETURN;
+    END_IF
+
+    fSteigung      := fSumXY_A / fSumYY_A;                  (* a  *)
+    fAchsenabschnA := fMittelX_A - fSteigung * fMittelY_A;   (* b1 *)
+
+    (* ======================================================== *)
+    (* SCHRITT 2: Eingeschraenkter Fit auf Menge B              *)
+    (*            Gleiche Steigung, nur b2 fitten                *)
+    (* ======================================================== *)
+    fSumY_B := 0;
+    fSumX_B := 0;
+
+    FOR i := 0 TO nB - 1 DO
+        fSumY_B := fSumY_B + bY[i];
+        fSumX_B := fSumX_B + bX[i];
+    END_FOR
+
+    fMittelY_B := fSumY_B / INT_TO_LREAL(nB);
+    fMittelX_B := fSumX_B / INT_TO_LREAL(nB);
+
+    fAchsenabschnB := fMittelX_B - fSteigung * fMittelY_B;   (* b2 *)
+
+    (* ======================================================== *)
+    (* SCHRITT 3: Senkrechter Abstand                           *)
+    (*   Geradenform: -x + a*y + b = 0                         *)
+    (*   d = |b1 - b2| / sqrt(a^2 + 1)                         *)
+    (* ======================================================== *)
+    fNorm    := SQRT(fSteigung * fSteigung + 1.0);
+    fAbstand := ABS(fAchsenabschnA - fAchsenabschnB) / fNorm;
+
+    bFertig := TRUE;
+
+END_IF
+
+bExecVorher := bExecute;`;
+
+// Syntax-Hervorhebung
+function highlight(src) {
+  let h = src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  h = h.replace(/\(\*[\s\S]*?\*\)/g, m => `<span class="cm">${m}</span>`);
+  const kws = ['FUNCTION_BLOCK','END_FUNCTION_BLOCK','VAR_INPUT','VAR_OUTPUT','VAR','END_VAR',
+    'IF','THEN','END_IF','FOR','TO','DO','END_FOR','AND','NOT','OR','RETURN','OF'];
+  for (const kw of kws) h = h.replace(new RegExp(`\\b${kw}\\b`, 'g'), `<span class="kw">${kw}</span>`);
+  const tys = ['LREAL','INT','BOOL','ARRAY','TRUE','FALSE','ABS','SQRT','INT_TO_LREAL'];
+  for (const ty of tys) h = h.replace(new RegExp(`\\b${ty}\\b`, 'g'), `<span class="ty">${ty}</span>`);
+  h = h.replace(/\b(\d+(\.\d+)?([eE][+-]?\d+)?)\b/g, '<span class="num">$1</span>');
+  return h;
+}
+
+document.getElementById('tcCode').innerHTML = highlight(tcSource + tcSource2);
+
+function copyCode() {
+  navigator.clipboard.writeText(tcSource + tcSource2).then(() => {
+    const btn = document.querySelector('.code-header .btn');
+    btn.textContent = 'Kopiert!';
+    setTimeout(() => btn.textContent = 'Kopieren', 1500);
+  });
+}
+
+initCanvas();
+update();
+</script>
+</body>
+</html>
