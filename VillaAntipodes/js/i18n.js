@@ -145,7 +145,55 @@ const i18n = {
           this.closeLanguageMenus();
         }
       });
+      window.addEventListener('resize', () => {
+        this.refreshOpenLanguageMenus();
+      });
+      window.addEventListener('scroll', () => {
+        this.refreshOpenLanguageMenus();
+      }, { passive: true });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          this.refreshOpenLanguageMenus();
+        });
+        window.visualViewport.addEventListener('scroll', () => {
+          this.refreshOpenLanguageMenus();
+        });
+      }
     }
+  },
+
+  isCompactViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  },
+
+  positionLanguageMenu(switcher) {
+    const trigger = switcher.querySelector('.lang-switcher-trigger');
+    const menu = switcher.querySelector('[data-lang-menu]');
+
+    if (!trigger || !menu) return;
+
+    if (!this.isCompactViewport()) {
+      menu.style.removeProperty('--lang-menu-top');
+      menu.style.removeProperty('--lang-menu-max-height');
+      return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const gap = 12;
+    const bottomInset = 16;
+    const top = Math.max(Math.round(triggerRect.bottom + gap), 16);
+    const maxHeight = Math.max(Math.floor(viewportHeight - top - bottomInset), 160);
+
+    menu.style.setProperty('--lang-menu-top', top + 'px');
+    menu.style.setProperty('--lang-menu-max-height', maxHeight + 'px');
+  },
+
+  refreshOpenLanguageMenus() {
+    document.querySelectorAll('[data-lang-switcher].open').forEach((switcher) => {
+      this.positionLanguageMenu(switcher);
+    });
   },
 
   setLanguageMenuOpen(switcher, isOpen) {
@@ -156,6 +204,9 @@ const i18n = {
       trigger.setAttribute('aria-expanded', String(isOpen));
     }
     if (menu) {
+      if (isOpen) {
+        this.positionLanguageMenu(switcher);
+      }
       menu.hidden = !isOpen;
     }
   },

@@ -210,6 +210,13 @@ h1, h2, h3, h4 {
   box-shadow: var(--shadow-sm);
 }
 
+.navbar.menu-open {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .navbar .container {
   display: flex;
   align-items: center;
@@ -228,6 +235,10 @@ h1, h2, h3, h4 {
 
 .navbar.scrolled .nav-logo {
   color: var(--navy);
+}
+
+.navbar.menu-open .nav-logo {
+  color: var(--white);
 }
 
 .nav-links {
@@ -346,6 +357,14 @@ h1, h2, h3, h4 {
 
 .navbar.scrolled .nav-toggle:hover {
   background: rgba(27, 42, 74, 0.08);
+}
+
+.navbar.menu-open .nav-toggle span {
+  background: var(--white);
+}
+
+.navbar.menu-open .nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Hero Section --- */
@@ -734,13 +753,14 @@ h1, h2, h3, h4 {
 
 .lang-switcher-code {
   flex-shrink: 0;
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 1.4px;
   text-transform: uppercase;
+  box-shadow: none;
 }
 
 .lang-switcher-chevron {
@@ -838,7 +858,23 @@ h1, h2, h3, h4 {
 }
 
 .navbar.scrolled .lang-switcher-code {
-  background: rgba(27, 42, 74, 0.08);
+  background: transparent;
+}
+
+.navbar.menu-open .lang-switcher-trigger {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(27, 42, 74, 0.18);
+}
+
+.navbar.menu-open .lang-switcher-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.navbar.menu-open .lang-switcher-code {
+  background: transparent;
 }
 
 .feature-card h3 {
@@ -1646,6 +1682,12 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 768px) {
+  .navbar,
+  .navbar.scrolled,
+  .navbar.menu-open {
+    transition: none;
+  }
+
   .navbar .container {
     gap: 12px;
   }
@@ -1736,12 +1778,13 @@ h1, h2, h3, h4 {
 
   .lang-switcher-menu {
     position: fixed;
-    top: 84px;
+    top: var(--lang-menu-top, 84px);
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: calc(100vh - 104px);
+    max-height: var(--lang-menu-max-height, calc(100dvh - var(--lang-menu-top, 84px) - 20px));
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 16px;
     border-radius: 20px;
   }

@@ -1,14 +1,26 @@
 (function() {
   function initNavigation() {
+    const navbar = document.getElementById('navbar');
     const navLinks = document.getElementById('navLinks');
     const navToggle = document.getElementById('navToggle');
+    let openFrame = 0;
 
-    if (!navLinks || !navToggle) return;
+    if (!navbar || !navLinks || !navToggle) return;
 
     function setMenuOpen(isOpen) {
-      navLinks.classList.toggle('open', isOpen);
+      window.cancelAnimationFrame(openFrame);
       navToggle.setAttribute('aria-expanded', String(isOpen));
       document.body.classList.toggle('nav-open', isOpen);
+      navbar.classList.toggle('menu-open', isOpen);
+
+      if (isOpen) {
+        openFrame = window.requestAnimationFrame(() => {
+          navLinks.classList.add('open');
+        });
+        return;
+      }
+
+      navLinks.classList.remove('open');
     }
 
     navToggle.addEventListener('click', (event) => {
