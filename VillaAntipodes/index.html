@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="meta_home_title">Villa Antipodes | Luxury Villa in Dubrovnik, Croatia</title>
+  <meta name="description" content="Villa Antipodes - A stunning 3-bedroom villa just 5 minutes from Dubrovnik's Old Town with breathtaking views of the Adriatic Sea and Lokrum Island." data-i18n-content="meta_home_description">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='18' fill='%231b2a4a'/%3E%3Ccircle cx='32' cy='20.5' r='7.5' fill='%23f4b4c9'/%3E%3Ccircle cx='43.5' cy='32' r='7.5' fill='%23f4b4c9'/%3E%3Ccircle cx='32' cy='43.5' r='7.5' fill='%23f4b4c9'/%3E%3Ccircle cx='20.5' cy='32' r='7.5' fill='%23f4b4c9'/%3E%3Ccircle cx='32' cy='32' r='5.5' fill='%23c67b5c'/%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#B05C7A">
+  <meta name="theme-color" content="#1B2A4A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-logo">Villa Antipodes</a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html" class="active" data-i18n="nav_home">Home</a>
+        <a href="accommodation.html" data-i18n="nav_accommodation">Accommodation</a>
+        <a href="gallery.html" data-i18n="nav_gallery">Gallery</a>
+        <a href="location.html" data-i18n="nav_location">Location</a>
+        <a href="contact.html" class="nav-cta" data-i18n="nav_book">Book Now</a>
+      </div>
+      <div class="lang-switcher">
+        <select id="langSelect" onchange="i18n.setLang(this.value)" aria-label="Language" data-i18n-aria-label="language_selector_label">
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+          <option value="fr">FR</option>
+          <option value="it">IT</option>
+          <option value="es">ES</option>
+          <option value="pt">PT</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="hr">HR</option>
+        </select>
+      </div>
+      <div class="nav-toggle" id="navToggle" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg" style="background-image: url('images/gallery-5.jpg')"></div>
+    <div class="hero-content">
+      <span class="hero-label" data-i18n="hero_label">Dubrovnik, Croatia</span>
+      <h1 class="hero-title" data-i18n-html="hero_title">Villa<br><em>Antipodes</em></h1>
+      <p class="hero-text" data-i18n="hero_subtitle">A luxury villa perched above Dubrovnik's Old Town, offering breathtaking views of the Adriatic Sea and the island of Lokrum.</p>
+      <div class="hero-actions">
+        <a href="contact.html" class="btn btn-primary" data-i18n="hero_cta_book">Reserve Your Stay</a>
+        <a href="gallery.html" class="btn btn-outline" data-i18n="hero_cta_gallery">View Gallery</a>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="mouse"></div>
+      <span data-i18n="hero_scroll">Scroll</span>
+    </div>
+  </section>
+
+  <!-- Intro Section -->
+  <section class="section intro">
+    <div class="container">
+      <div class="intro-grid">
+        <div class="intro-image fade-up">
+          <img src="images/exterior-flowers.jpg" alt="Villa Antipodes exterior with bougainvillea flowers" data-i18n-alt="alt_exterior_flowers">
+        </div>
+        <div class="fade-up">
+          <span class="section-label" data-i18n="welcome_label">Welcome</span>
+          <h2 class="section-title" data-i18n="welcome_title">Your Home in the Pearl of the Adriatic</h2>
+          <p class="section-subtitle" data-i18n="welcome_desc1">Villa Antipodes is a beautifully renovated Mediterranean villa nestled in the hillside above Dubrovnik's iconic Old Town. With its white stone walls, sun-drenched terraces, and panoramic sea views, it offers the perfect retreat for travelers seeking authentic Croatian charm with modern luxury.</p>
+          <div class="blossom-divider">
+            <span class="blossom-icon" aria-hidden="true"></span>
+          </div>
+          <p class="section-subtitle" data-i18n="welcome_desc2">Just a five-minute walk from the ancient city walls, the villa blends effortless elegance with an unbeatable location &mdash; your gateway to the wonders of Dubrovnik.</p>
+          <div class="intro-stats">
+            <div class="intro-stat">
+              <div class="intro-stat-number" data-i18n="stat_bedrooms_num">3</div>
+              <div class="intro-stat-label" data-i18n="stat_bedrooms">Bedrooms</div>
+            </div>
+            <div class="intro-stat">
+              <div class="intro-stat-number" data-i18n="stat_guests_num">6</div>
+              <div class="intro-stat-label" data-i18n="stat_guests">Guests</div>
+            </div>
+            <div class="intro-stat">
+              <div class="intro-stat-number" data-i18n="stat_rating_num">9.2</div>
+              <div class="intro-stat-label" data-i18n="stat_rating">Rating</div>
+            </div>
+            <div class="intro-stat">
+              <div class="intro-stat-number" data-i18n="stat_oldtown_num">5 min</div>
+              <div class="intro-stat-label" data-i18n="stat_oldtown">To Old Town</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section features">
+    <div class="container text-center">
+      <span class="section-label" data-i18n="features_label">Why Villa Antipodes</span>
+      <h2 class="section-title" data-i18n="features_title">An Unforgettable Experience</h2>
+      <p class="section-subtitle" data-i18n="features_subtitle">Every detail has been thoughtfully curated to make your stay extraordinary.</p>
+      <div class="features-grid">
+        <div class="feature-card fade-up">
+          <div class="feature-icon">01</div>
+          <h3 data-i18n="feat_views_title">Stunning Views</h3>
+          <p data-i18n="feat_views_desc">Wake up to panoramic vistas of the terracotta rooftops of Old Town, the crystal Adriatic Sea, and the lush island of Lokrum.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon">02</div>
+          <h3 data-i18n="feat_location_title">Prime Location</h3>
+          <p data-i18n="feat_location_desc">Just 550 meters from Dubrovnik's ancient city walls and a 5-minute walk to the UNESCO World Heritage Old Town.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon">03</div>
+          <h3 data-i18n="feat_comfort_title">Modern Comfort</h3>
+          <p data-i18n="feat_comfort_desc">Fully equipped designer kitchen, air conditioning, free Wi-Fi, and elegantly furnished interiors with a perfect blend of old and new.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon">04</div>
+          <h3 data-i18n="feat_terrace_title">Private Terrace</h3>
+          <p data-i18n="feat_terrace_desc">Enjoy alfresco dining on the sun-drenched terrace surrounded by Mediterranean plants and bougainvillea, complete with BBQ facilities.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon">05</div>
+          <h3 data-i18n="feat_beach_title">Beach Access</h3>
+          <p data-i18n="feat_beach_desc">The nearest beach is just a 5-minute walk away. Spend your days swimming in the pristine waters of the Adriatic.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon">06</div>
+          <h3 data-i18n="feat_service_title">Personal Service</h3>
+          <p data-i18n="feat_service_desc">Airport shuttle, grocery shopping assistance, tour booking, and housekeeping &mdash; we take care of everything for you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery Preview -->
+  <section class="section gallery-preview">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-label" data-i18n="gp_label">Gallery</span>
+        <h2 class="section-title" data-i18n="gp_title">A Glimpse of Paradise</h2>
+        <p class="section-subtitle" data-i18n="gp_subtitle">Explore the beauty of Villa Antipodes through our collection of photos.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="images/gallery-5.jpg" alt="Terrace with sea view and flowers" data-i18n-alt="alt_terrace_sea_view">
+          <span class="gallery-label" data-i18n="gp_img1">Sun-drenched Terrace</span>
+        </div>
+        <div class="gallery-item">
+          <img src="images/gallery-9.jpg" alt="Modern fully equipped kitchen" data-i18n-alt="alt_designer_kitchen">
+          <span class="gallery-label" data-i18n="gp_img2">Designer Kitchen</span>
+        </div>
+        <div class="gallery-item">
+          <img src="images/gallery-7.jpg" alt="Elegant master bedroom" data-i18n-alt="alt_master_bedroom">
+          <span class="gallery-label" data-i18n="gp_img3">Master Bedroom</span>
+        </div>
+        <div class="gallery-item">
+          <img src="images/gallery-8.jpg" alt="Comfortable living room" data-i18n-alt="alt_living_room">
+          <span class="gallery-label" data-i18n="gp_img4">Living Room</span>
+        </div>
+        <div class="gallery-item">
+          <img src="images/gallery-3.jpg" alt="Villa exterior at night" data-i18n-alt="alt_villa_night">
+          <span class="gallery-label" data-i18n="gp_img5">Evening Ambiance</span>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 48px;">
+        <a href="gallery.html" class="btn btn-blossom" data-i18n="gp_view_all">View Full Gallery</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Location Preview -->
+  <section class="section location">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-label" data-i18n="loc_home_label">Location</span>
+        <h2 class="section-title" data-i18n="loc_home_title">In the Heart of Dubrovnik</h2>
+        <p class="section-subtitle" data-i18n="loc_home_subtitle">Perfectly positioned between the historic Old Town and the Srd mountain, everything is at your doorstep.</p>
+      </div>
+      <div class="location-grid">
+        <div class="location-distances fade-up">
+          <div class="distance-item">
+            <div class="distance-icon" aria-hidden="true"></div>
+            <div class="distance-info">
+              <h4 data-i18n="dist_oldtown">Dubrovnik Old Town</h4>
+              <span data-i18n="dist_oldtown_detail">5-minute walk &bull; 450m</span>
+            </div>
+          </div>
+          <div class="distance-item">
+            <div class="distance-icon" aria-hidden="true"></div>
+            <div class="distance-info">
+              <h4 data-i18n="dist_walls">City Walls</h4>
+              <span data-i18n="dist_walls_detail">6-minute walk &bull; 550m</span>
+            </div>
+          </div>
+          <div class="distance-item">
+            <div class="distance-icon" aria-hidden="true"></div>
+            <div class="distance-info">
+              <h4 data-i18n="dist_beach">Nearest Beach</h4>
+              <span data-i18n="dist_beach_detail">5-minute walk</span>
+            </div>
+          </div>
+          <div class="distance-item">
+            <div class="distance-icon" aria-hidden="true"></div>
+            <div class="distance-info">
+              <h4 data-i18n="dist_cablecar">Srd Cable Car</h4>
+              <span data-i18n="dist_cablecar_detail">Walking distance</span>
+            </div>
+          </div>
+          <div class="distance-item">
+            <div class="distance-icon" aria-hidden="true"></div>
+            <div class="distance-info">
+              <h4 data-i18n="dist_airport">Dubrovnik Airport</h4>
+              <span data-i18n="dist_airport_detail">24-minute drive</span>
+            </div>
+          </div>
+        </div>
+        <div class="location-map fade-up">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2872.4!2d18.1078!3d42.6416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x134c0b28c83df843%3A0x4a38c6e3e5e0e3a0!2sOd%20Sr%C4%91a%2022%2C%2020000%2C%20Dubrovnik%2C%20Croatia!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
+            allowfullscreen=""
+            loading="lazy"
+            title="Villa Antipodes location on map" data-i18n-title="map_location_title">
+          </iframe>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 48px;">
+        <a href="location.html" class="btn btn-outline" data-i18n="loc_home_btn">Explore the Area</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial -->
+  <section class="section testimonial">
+    <div class="container">
+      <div class="testimonial-card fade-up">
+        <div class="rating-score" data-i18n="review_score">9.2</div>
+        <div class="rating-label" data-i18n="review_label">Superb</div>
+        <div class="rating-count" data-i18n="review_count">Based on 51 verified reviews</div>
+        <div class="rating-stars">&#9733; &#9733; &#9733; &#9733; &#9733;</div>
+        <p class="testimonial-quote" data-i18n="review_quote">&ldquo;The villa was spacious, beautifully furnished, and in a brilliant location. The views from the terrace over the Old Town rooftops and out to Lokrum are simply wonderful. We didn't want to leave.&rdquo;</p>
+        <span class="testimonial-author" data-i18n="review_author">Recent Guest</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner">
+    <div class="container">
+      <h2 class="section-title" data-i18n="home_cta_title">Ready for Your Dubrovnik Escape?</h2>
+      <p data-i18n="home_cta_text">Book Villa Antipodes and experience the magic of the Adriatic.</p>
+      <a href="contact.html" class="btn btn-primary" data-i18n="home_cta_btn">Inquire Now</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="nav-logo">Villa Antipodes</a>
+          <p data-i18n="footer_brand_desc">A luxury Mediterranean villa in the heart of Dubrovnik, offering panoramic views, modern comforts, and an unforgettable Croatian experience.</p>
+        </div>
+        <div>
+          <h4 data-i18n="footer_explore">Explore</h4>
+          <div class="footer-links">
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="accommodation.html" data-i18n="nav_accommodation">Accommodation</a>
+            <a href="gallery.html" data-i18n="nav_gallery">Gallery</a>
+            <a href="location.html" data-i18n="nav_location">Location</a>
+          </div>
+        </div>
+        <div>
+          <h4 data-i18n="footer_info">Information</h4>
+          <div class="footer-links">
+            <a href="contact.html" data-i18n="footer_contact_link">Contact</a>
+            <a href="contact.html" data-i18n="nav_book">Book Now</a>
+            <a href="accommodation.html#amenities" data-i18n="footer_amenities">Amenities</a>
+            <a href="accommodation.html#rules" data-i18n="footer_house_rules">House Rules</a>
+          </div>
+        </div>
+        <div>
+          <h4 data-i18n="footer_contact_title">Contact</h4>
+          <div class="footer-links">
+            <a>Od Srđa 22</a>
+            <a>20000 Dubrovnik</a>
+            <a data-i18n="footer_country">Croatia</a>
+            <a href="mailto:info@villa-antipodes.com">info@villa-antipodes.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span data-i18n="footer_rights">&copy; 2026 Villa Antipodes. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/translations.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // Mobile menu toggle
+    function toggleMenu() {
+      document.getElementById('navLinks').classList.toggle('open');
+    }
+
+    // Close mobile menu on link click
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('navLinks').classList.remove('open');
+      });
+    });
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
