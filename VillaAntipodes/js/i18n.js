@@ -1,5 +1,17 @@
 const i18n = {
   currentLang: 'en',
+  languages: [
+    { code: 'en', short: 'EN', name: 'English' },
+    { code: 'de', short: 'DE', name: 'Deutsch' },
+    { code: 'fr', short: 'FR', name: 'Français' },
+    { code: 'it', short: 'IT', name: 'Italiano' },
+    { code: 'es', short: 'ES', name: 'Español' },
+    { code: 'pt', short: 'PT', name: 'Português' },
+    { code: 'zh', short: 'ZH', name: '中文' },
+    { code: 'ja', short: 'JA', name: '日本語' },
+    { code: 'ko', short: 'KO', name: '한국어' },
+    { code: 'hr', short: 'HR', name: 'Hrvatski' }
+  ],
   supportedLangs: ['en','de','fr','it','es','pt','zh','ja','ko','hr'],
 
   init() {
@@ -7,6 +19,7 @@ const i18n = {
     const saved = this.getSavedLang();
     const lang = url || saved || navigator.language?.slice(0,2) || 'en';
     this.currentLang = this.supportedLangs.includes(lang) ? lang : 'en';
+    this.initLanguageSwitchers();
     this.apply();
     this.updateSelector();
   },
@@ -75,9 +88,96 @@ const i18n = {
     this.updateLinks();
   },
 
+  getLanguageConfig(lang) {
+    return this.languages.find((item) => item.code === lang) || this.languages[0];
+  },
+
+  initLanguageSwitchers() {
+    document.querySelectorAll('[data-lang-switcher]').forEach((switcher) => {
+      const trigger = switcher.querySelector('.lang-switcher-trigger');
+      const menu = switcher.querySelector('[data-lang-menu]');
+      const options = switcher.querySelector('[data-lang-options]');
+
+      if (options && !options.children.length) {
+        this.languages.forEach((language) => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'lang-option';
+          option.dataset.langCode = language.code;
+          option.setAttribute('aria-pressed', 'false');
+          option.innerHTML =
+            '<span class="lang-option-name">' + language.name + '</span>' +
+            '<span class="lang-option-code">' + language.short + '</span>';
+          options.appendChild(option);
+        });
+      }
+
+      if (trigger && !trigger.dataset.langBound) {
+        trigger.dataset.langBound = 'true';
+        trigger.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const shouldOpen = !switcher.classList.contains('open');
+          this.closeLanguageMenus();
+          this.setLanguageMenuOpen(switcher, shouldOpen);
+        });
+      }
+
+      if (menu && !menu.dataset.langBound) {
+        menu.dataset.langBound = 'true';
+        menu.addEventListener('click', (event) => {
+          const option = event.target.closest('[data-lang-code]');
+          if (!option) return;
+          this.setLang(option.dataset.langCode);
+          this.closeLanguageMenus();
+        });
+      }
+    });
+
+    if (!this.languageMenuEventsBound) {
+      this.languageMenuEventsBound = true;
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-lang-switcher]')) {
+          this.closeLanguageMenus();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          this.closeLanguageMenus();
+        }
+      });
+    }
+  },
+
+  setLanguageMenuOpen(switcher, isOpen) {
+    const trigger = switcher.querySelector('.lang-switcher-trigger');
+    const menu = switcher.querySelector('[data-lang-menu]');
+    switcher.classList.toggle('open', isOpen);
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', String(isOpen));
+    }
+    if (menu) {
+      menu.hidden = !isOpen;
+    }
+  },
+
+  closeLanguageMenus() {
+    document.querySelectorAll('[data-lang-switcher]').forEach((switcher) => {
+      this.setLanguageMenuOpen(switcher, false);
+    });
+  },
+
   updateSelector() {
-    document.querySelectorAll('#langSelect').forEach((sel) => {
-      sel.value = this.currentLang;
+    const activeLanguage = this.getLanguageConfig(this.currentLang);
+    document.querySelectorAll('[data-lang-current]').forEach((label) => {
+      label.textContent = activeLanguage.name;
+    });
+    document.querySelectorAll('[data-lang-current-code]').forEach((label) => {
+      label.textContent = activeLanguage.short;
+    });
+    document.querySelectorAll('.lang-option').forEach((option) => {
+      const isActive = option.dataset.langCode === this.currentLang;
+      option.classList.toggle('is-active', isActive);
+      option.setAttribute('aria-pressed', String(isActive));
     });
   },
 

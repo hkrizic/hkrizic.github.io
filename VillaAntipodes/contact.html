@@ -26,22 +26,24 @@
         <a href="location.html" data-i18n="nav_location">Location</a>
         <a href="contact.html" class="nav-cta active" data-i18n="nav_book">Book Now</a>
       </div>
-      <div class="lang-switcher">
-        <select id="langSelect" onchange="i18n.setLang(this.value)" aria-label="Language" data-i18n-aria-label="language_selector_label">
-          <option value="en">EN</option>
-          <option value="de">DE</option>
-          <option value="fr">FR</option>
-          <option value="it">IT</option>
-          <option value="es">ES</option>
-          <option value="pt">PT</option>
-          <option value="zh">中文</option>
-          <option value="ja">日本語</option>
-          <option value="ko">한국어</option>
-          <option value="hr">HR</option>
-        </select>
-      </div>
-      <div class="nav-toggle" id="navToggle" onclick="toggleMenu()">
-        <span></span><span></span><span></span>
+      <div class="nav-tools">
+        <div class="lang-switcher" data-lang-switcher>
+          <button class="lang-switcher-trigger" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Language" data-i18n-aria-label="language_selector_label">
+            <span class="lang-switcher-copy">
+              <span class="lang-switcher-label" data-i18n="language_selector_label">Language</span>
+              <span class="lang-switcher-current" data-lang-current>English</span>
+            </span>
+            <span class="lang-switcher-code" data-lang-current-code>EN</span>
+            <span class="lang-switcher-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="lang-switcher-menu" data-lang-menu hidden>
+            <p class="lang-switcher-menu-title" data-i18n="language_selector_label">Language</p>
+            <div class="lang-switcher-options" data-lang-options></div>
+          </div>
+        </div>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
@@ -228,16 +230,8 @@
 
   <script src="js/translations.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/site.js"></script>
   <script>
-    function toggleMenu() {
-      document.getElementById('navLinks').classList.toggle('open');
-    }
-    document.querySelectorAll('.nav-links a').forEach(link => {
-      link.addEventListener('click', () => {
-        document.getElementById('navLinks').classList.remove('open');
-      });
-    });
-
     function handleSubmit(e) {
       e.preventDefault();
       const form = e.target;
