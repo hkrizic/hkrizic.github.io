@@ -973,11 +973,12 @@ const F = {
   /*:model:*/
   "model.source_type":        { type:"picker",  default:"shapelets",
                                 options:[
-                                  { value:"shapelets",  title:"Shapelets",         desc:"Smooth basis-function expansion. Compact parameter count; good for relatively smooth sources." },
+                                  { value:"shapelets",  title:"Shapelets",         desc:"Sersic + shapelet basis-function expansion. Compact parameter count; good for relatively smooth sources." },
                                   { value:"corr_field", title:"Correlated field",  desc:"Pixelated source with a Gaussian-process prior (NIFTy). More flexible but heavier." },
+                                  { value:"sersic",     title:"Sersic only",       desc:"Single Sersic profile. Simplest, smoothest; good for quick tests or genuinely smooth sources." },
                                 ],
                                 label:"Source representation",
-                                tip:"Source light representation. Shapelets use a basis expansion; Correlated Fields use a pixelated GP-prior source." },
+                                tip:"Source light representation. Shapelets = Sersic + basis expansion; Correlated Fields = pixelated GP-prior source; Sersic = single Sersic profile." },
   "model.shapelets_n_max":    { type:"int",     default:6, label:"Shapelets n_max",
                                 tip:"Maximum shapelet order. Number of basis functions grows quadratically with n_max." },
   "model.corr_field_for_sampling_only":
@@ -1091,6 +1092,13 @@ const F = {
                                     tip:"Clip pixels below −clip · σ in the reconstructed PSF. Empty = no clipping." },
   "psf.parallelized":            { type:"bool", default:true, label:"Parallelised",
                                     tip:"Parallelise multi-start evaluations across available devices." },
+  "psf.use_psf_error_map_during_recon_only":
+                                 { type:"bool", default:false, label:"PSF error map during recon only",
+                                    tip:"Enable Herculens' PSF-shaped noise inflation (σ²_eff = σ² + b² · ps_image², b ~ Uniform(0, b_max)) only for the PSF reconstruction stage. Down-weights PS cores so GD can fit the extended light. Automatically reverts before multistart/sampling; independent of the global likelihood.noise_model.use_psf_error_map." },
+  "psf.psf_error_b_max_during_recon":
+                                 { type:"nullable_float", default:null, label:"psf_error_b upper bound (recon only)",
+                                    placeholder:"default 0.1",
+                                    tip:"Override the Uniform(0, b_max) prior ceiling on psf_error_b during the PSF reconstruction stage only. Raise (e.g. 0.3) when b pegs at 0.1 in the multistart summary. Empty = keep the default of 0.1." },
 
   /*:gd:*/
   "gd.n_starts_initial":         { type:"int", default:50, label:"Initial starts",
@@ -1383,6 +1391,10 @@ const STEPS = [
             { path: "psf.mask_radius_pix", showIf: s => s.psf.mask_other_peaks },
         ] },
         { title: "Augmentation & cleanup", fields: ["psf.rotation_mode", "psf.negative_sigma_clip", "psf.parallelized"] },
+        { title: "Error-map during reconstruction", fields: [
+            "psf.use_psf_error_map_during_recon_only",
+            { path: "psf.psf_error_b_max_during_recon", showIf: s => s.psf.use_psf_error_map_during_recon_only },
+        ] },
       ],
     },
   },
@@ -1540,9 +1552,9 @@ const PRESET = {
       fluctuations: [1.5, 1.0],
       arc_mask: {
         mode: "signal",
-        inner_radius: "auto",
+        inner_radius: 0.0,
         outer_radius: "auto",
-        signal_dilate_pix: 3,
+        signal_dilate_pix: 5,
       },
     },
   },
@@ -1550,8 +1562,8 @@ const PRESET = {
     use_time_delays: true,
     use_rayshoot_consistency: true,
     rayshoot_sigma: 0.001,
-    use_rayshoot_sys_error: true,
-    use_image_pos_offsets: true,
+    use_rayshoot_sys_error: false,
+    use_image_pos_offsets: false,
     image_pos_offset_sigma: 0.031,
     noise_model: {
       noise_boost: false,
@@ -1562,6 +1574,8 @@ const PRESET = {
     n_iterations: 2,
     n_starts_per_iteration: 20,
     negative_sigma_clip: 2.0,
+    use_psf_error_map_during_recon_only: false,
+    psf_error_b_max_during_recon: null,
   },
   gd: {
     n_starts_initial: 100,
