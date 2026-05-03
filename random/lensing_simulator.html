@@ -322,6 +322,17 @@
     </div>
 
     <div class="control-section">
+      <h3>Perturber (SIS satellite)</h3>
+      <div class="checkbox-row"><input type="checkbox" id="perturberOn"><label for="perturberOn">Enable perturber</label></div>
+      <div class="control-row"><label>Einstein radius θ<sub>E,p</sub></label><span class="val" id="val-pertThetaE">0.10″</span></div>
+      <input type="range" id="pertThetaE" min="0" max="0.5" step="0.005" value="0.1">
+      <div class="control-row"><label>Position</label><span class="val" id="val-pertPos">(0.80, 0.80)″</span></div>
+      <div class="info-box">
+        <p>Drag the orange dot on the <span class="hl2">image plane</span> to move the perturber. Shift-click anywhere on the image plane to drop it there. Place near a critical curve to see image splitting.</p>
+      </div>
+    </div>
+
+    <div class="control-section">
       <h3>Source — Quasar</h3>
       <div class="control-row"><label>QSO flux (relative)</label><span class="val" id="val-qsoFlux">1.00</span></div>
       <input type="range" id="qsoFlux" min="0" max="3.0" step="0.05" value="1.0">
@@ -351,8 +362,11 @@
       <div class="checkbox-row"><input type="checkbox" id="showGrid" checked><label for="showGrid">Grid</label></div>
       <div class="checkbox-row"><input type="checkbox" id="showExtended" checked><label for="showExtended">Ray-traced host</label></div>
       <div class="checkbox-row"><input type="checkbox" id="showPointImages" checked><label for="showPointImages">Point-source images</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="showLensLabels" checked><label for="showLensLabels">Lens labels (G, G1)</label></div>
       <div class="control-row"><label>Ray-trace resolution</label><span class="val" id="val-rtRes">200</span></div>
       <input type="range" id="rtRes" min="80" max="400" step="10" value="200">
+      <div class="control-row"><label>Caustic resolution</label><span class="val" id="val-causticRes">500</span></div>
+      <input type="range" id="causticRes" min="120" max="1500" step="20" value="500">
     </div>
 
     <div class="control-section">
@@ -361,7 +375,6 @@
       <button class="preset-btn" onclick="setPreset('cusp')">Cusp triple</button>
       <button class="preset-btn" onclick="setPreset('fold')">Fold double</button>
       <button class="preset-btn" onclick="setPreset('einstein')">Einstein ring</button>
-      <button class="preset-btn" onclick="setPreset('jwst')">JWST-like</button>
     </div>
 
     <div class="control-section">
@@ -390,8 +403,11 @@
     <canvas id="imagePlane" width="550" height="550"></canvas>
     <div class="legend">
       <div class="legend-item"><div class="legend-line" style="background:var(--critical);"></div> Critical curves</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--image-color);"></div> QSO images</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(120,180,255,0.6);"></div> Lensed host</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff4466;"></div> QSO image — minimum (+ parity)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#64a0ff;"></div> QSO image — saddle (− parity)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(140,200,255,0.45);"></div> Lensed host (extended)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,235,180,0.95);"></div> G — main lens</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,180,80,0.95);"></div> G1 — perturber</div>
     </div>
     <div class="coords-display" id="imgCoords">θ = (0.00, 0.00)</div>
     <div class="perf-display" id="perfDisplay"></div>
@@ -412,6 +428,7 @@ const imgCtx = imgCanvas.getContext('2d');
 let params = {
   thetaE: 1.2, gamma: 2.0, q: 0.7, phi: 0, cx: 0, cy: 0,
   shear: 0.0, shearAngle: 0,
+  perturberOn: false, pertThetaE: 0.1, pertX: 0.8, pertY: 0.8,
   qsoFlux: 1.0,
   galReff: 0.15, galN: 1.0, galQ: 0.7, galPA: 30, galFlux: 0.5,
 };
@@ -419,7 +436,9 @@ let params = {
 let sourcePos = { x: 0.1, y: -0.1 };
 let showCaustics = true, showCritical = true, showGrid = true;
 let showExtended = true, showPointImages = true;
+let showLensLabels = true;
 let rtRes = 200;
+let causticRes = 500;
 
 const fieldOfView = 3.0;
 let dragging = false;
@@ -473,7 +492,10 @@ function sourceBrightness(sx, sy) {
   return gal + qso;
 }
 
-// --- EPL deflection (Tessore & Metcalf 2015) ---
+// --- EPL deflection (Tessore & Metcalf 2015, exact hypergeometric form) ---
+// κ(R) = (3-γ)/2 · (b/R)^(γ-1),  R = √(q²x² + y²),  major axis along x
+// α(R, φ) = 2b/(1+q) · (b/R)^(t-1) · e^{iφ} · ₂F₁(1, t/2; 2-t/2; -((1-q)/(1+q)) e^{2iφ})
+// where t = γ - 1 and φ = atan2(y, q·x).  Curl-free; convergence matches κ exactly.
 function eplDeflection(theta_x, theta_y) {
   const { thetaE, gamma, q, phi: phiDeg, cx, cy } = params;
   const phiRad = phiDeg * Math.PI / 180;
@@ -483,35 +505,66 @@ function eplDeflection(theta_x, theta_y) {
   let y = -sinP*dx + cosP*dy;
 
   const t = gamma - 1;
-  const qfac = Math.sqrt(Math.max(1 - q*q, 0));
-  const psi = Math.sqrt(q*q*x*x + y*y);
-  if (psi < 1e-12) return { ax: 0, ay: 0 };
-
   const b = thetaE;
   let alpha_x, alpha_y;
 
-  if (qfac < 1e-6) {
+  if (Math.abs(1 - q) < 1e-6) {
+    // Circular EPL — exact closed form
     const r = Math.sqrt(x*x + y*y);
-    if (r < 1e-12) return { ax: 0, ay: 0 };
-    const dm = thetaE * Math.pow(thetaE / r, t - 1);
-    alpha_x = dm * x / r;
-    alpha_y = dm * y / r;
+    if (r < 1e-12) { alpha_x = 0; alpha_y = 0; }
+    else {
+      const dm = Math.pow(b, t) / Math.pow(r, t - 1);
+      alpha_x = dm * x / r;
+      alpha_y = dm * y / r;
+    }
   } else {
-    const norm = (2*q * Math.pow(b, t)) / ((1+q) * Math.pow(psi, t-1));
-    alpha_x = (norm / qfac) * Math.atan(qfac * x / (psi + 1e-30));
-    alpha_y = (norm / qfac) * Math.atanh(qfac * y / (psi + 1e-30));
+    // Elliptical EPL — Tessore & Metcalf (2015) hypergeometric series
+    const R = Math.sqrt(q*q*x*x + y*y);
+    if (R < 1e-12) { alpha_x = 0; alpha_y = 0; }
+    else {
+      const phiE = Math.atan2(y, q*x);
+      const e = (1 - q)/(1 + q);
+      const c2 = Math.cos(2*phiE), s2 = Math.sin(2*phiE);
+      const zRe = -e*c2, zIm = -e*s2;
+      // F = ₂F₁(1, t/2; 2-t/2; z) by series; |z| = e < 1 so it converges
+      const aH = 1.0, bH = t/2, cH = 2 - t/2;
+      let termRe = 1, termIm = 0, sumRe = 1, sumIm = 0;
+      for (let n = 0; n < 80; n++) {
+        const fac = (aH + n)*(bH + n)/((cH + n)*(n + 1));
+        const trNew = fac*(termRe*zRe - termIm*zIm);
+        const tiNew = fac*(termRe*zIm + termIm*zRe);
+        termRe = trNew; termIm = tiNew;
+        sumRe += termRe; sumIm += termIm;
+        if (Math.hypot(termRe, termIm) < 1e-12) break;
+      }
+      const radial = (2*b/(1 + q)) * Math.pow(b/R, t - 1);
+      const cE = Math.cos(phiE), sE = Math.sin(phiE);
+      alpha_x = radial * (cE*sumRe - sE*sumIm);
+      alpha_y = radial * (cE*sumIm + sE*sumRe);
+    }
   }
 
   // Rotate back to sky frame
   let ax_sky = cosP*alpha_x - sinP*alpha_y;
   let ay_sky = sinP*alpha_x + cosP*alpha_y;
 
-  // External shear
+  // External shear (centred at lens position; constant offset is degenerate)
   const shRad = params.shearAngle * Math.PI / 180;
   const g1 = params.shear * Math.cos(2*shRad);
   const g2 = params.shear * Math.sin(2*shRad);
   ax_sky += g1*dx + g2*dy;
   ay_sky += g2*dx - g1*dy;
+
+  // Perturber: softened isothermal sphere — α = θ_E,p · (θ−θ_p) / √(|θ−θ_p|² + r_c²)
+  // Deflections add linearly, so dropping a satellite at θ_p just sums into α.
+  if (params.perturberOn && params.pertThetaE > 0) {
+    const px = theta_x - params.pertX;
+    const py = theta_y - params.pertY;
+    const rc2 = 1e-4; // small core to avoid singularity at the perturber centre
+    const pr = Math.sqrt(px*px + py*py + rc2);
+    ax_sky += params.pertThetaE * px / pr;
+    ay_sky += params.pertThetaE * py / pr;
+  }
 
   return { ax: ax_sky, ay: ay_sky };
 }
@@ -575,7 +628,7 @@ function findImages(bx, by) {
 // --- Critical curves & caustics ---
 function computeCurves() {
   const cc = [], ca = [];
-  const nPts = 500;
+  const nPts = causticRes;
   for (let k = 0; k < nPts; k++) {
     const ang = 2*Math.PI*k/nPts;
     let prevDet = null;
@@ -779,10 +832,44 @@ function _render() {
     }
   }
 
-  // Lens center
+  // Main lens "G"
   const lc = a2p(params.cx, params.cy, imgCanvas);
-  imgCtx.strokeStyle = 'rgba(255,255,255,0.3)'; imgCtx.lineWidth = 1;
-  imgCtx.beginPath(); imgCtx.arc(lc.px,lc.py,5,0,2*Math.PI); imgCtx.stroke();
+  if (showLensLabels) {
+    imgCtx.fillStyle = 'rgba(255,235,180,0.95)';
+    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.fill();
+    imgCtx.strokeStyle = 'rgba(0,0,0,0.6)'; imgCtx.lineWidth = 1;
+    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.stroke();
+    imgCtx.font = 'bold 13px JetBrains Mono';
+    imgCtx.fillStyle = 'rgba(255,235,180,0.95)';
+    imgCtx.textAlign = 'left';
+    imgCtx.fillText('G', lc.px + 8, lc.py - 6);
+  } else {
+    imgCtx.strokeStyle = 'rgba(255,255,255,0.3)'; imgCtx.lineWidth = 1;
+    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.stroke();
+  }
+
+  // Perturber "G1"
+  if (params.perturberOn && params.pertThetaE > 0) {
+    const pp = a2p(params.pertX, params.pertY, imgCanvas);
+    // Influence radius ~ θ_E,p, faint dashed circle showing reach
+    const s = imgCanvas.width / (2 * fieldOfView);
+    imgCtx.strokeStyle = 'rgba(255,200,100,0.35)';
+    imgCtx.setLineDash([3, 3]);
+    imgCtx.lineWidth = 1;
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, params.pertThetaE * s, 0, 2*Math.PI); imgCtx.stroke();
+    imgCtx.setLineDash([]);
+    // Solid centre dot
+    imgCtx.fillStyle = 'rgba(255,180,80,0.95)';
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI); imgCtx.fill();
+    imgCtx.strokeStyle = 'rgba(0,0,0,0.6)'; imgCtx.lineWidth = 1;
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI); imgCtx.stroke();
+    if (showLensLabels) {
+      imgCtx.font = 'bold 12px JetBrains Mono';
+      imgCtx.fillStyle = 'rgba(255,180,80,0.95)';
+      imgCtx.textAlign = 'left';
+      imgCtx.fillText('G1', pp.px + 7, pp.py - 5);
+    }
+  }
 
   // Point-source images
   const images = findImages(sourcePos.x, sourcePos.y);
@@ -848,6 +935,7 @@ const allSliders = {
   cy:        { key:'cy',        fmt: v=>v.toFixed(2)+'″' },
   shear:     { key:'shear',     fmt: v=>v.toFixed(3) },
   shearAngle:{ key:'shearAngle',fmt: v=>v.toFixed(0)+'°' },
+  pertThetaE:{ key:'pertThetaE',fmt: v=>v.toFixed(2)+'″' },
   qsoFlux:   { key:'qsoFlux',   fmt: v=>v.toFixed(2) },
   galReff:   { key:'galReff',   fmt: v=>v.toFixed(3)+'″' },
   galN:      { key:'galN',      fmt: v=>v.toFixed(1) },
@@ -856,7 +944,7 @@ const allSliders = {
   galFlux:   { key:'galFlux',   fmt: v=>v.toFixed(2) },
 };
 
-const lensParams = new Set(['thetaE','gamma','q','phi','cx','cy','shear','shearAngle']);
+const lensParams = new Set(['thetaE','gamma','q','phi','cx','cy','shear','shearAngle','pertThetaE']);
 
 for (const [id, cfg] of Object.entries(allSliders)) {
   const el = document.getElementById(id);
@@ -877,6 +965,14 @@ document.getElementById('rtRes').addEventListener('input', (e) => {
   render();
 });
 
+// Caustic / critical-curve resolution slider
+document.getElementById('causticRes').addEventListener('input', (e) => {
+  causticRes = parseInt(e.target.value);
+  document.getElementById('val-causticRes').textContent = causticRes;
+  curvesDirty = true;
+  render();
+});
+
 // Checkboxes
 for (const [id, setter] of [
   ['showCaustics', v => showCaustics=v],
@@ -884,9 +980,17 @@ for (const [id, setter] of [
   ['showGrid', v => showGrid=v],
   ['showExtended', v => showExtended=v],
   ['showPointImages', v => showPointImages=v],
+  ['showLensLabels', v => showLensLabels=v],
 ]) {
   document.getElementById(id).addEventListener('change', e => { setter(e.target.checked); render(); });
 }
+
+// Perturber toggle (affects critical curves, so mark them dirty)
+document.getElementById('perturberOn').addEventListener('change', e => {
+  params.perturberOn = e.target.checked;
+  curvesDirty = true;
+  render();
+});
 
 // Source dragging on source plane
 srcCanvas.addEventListener('mousedown', e => {
@@ -926,12 +1030,90 @@ srcCanvas.addEventListener('touchmove', e => {
 }, {passive:false});
 srcCanvas.addEventListener('touchend', () => dragging=false);
 
-imgCanvas.addEventListener('mousemove', e => {
+// --- Image plane: cursor tracking + perturber drag/shift-click ---
+let perturberDragging = false;
+
+function imgPlanePos(e) {
   const rect = imgCanvas.getBoundingClientRect();
   const sx = imgCanvas.width/rect.width, sy = imgCanvas.height/rect.height;
-  const pos = p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, imgCanvas);
+  return p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, imgCanvas);
+}
+
+function setPerturberPos(x, y) {
+  params.pertX = x;
+  params.pertY = y;
+  document.getElementById('val-pertPos').textContent = `(${x.toFixed(2)}, ${y.toFixed(2)})″`;
+  curvesDirty = true;
+}
+
+function nearPerturber(pos) {
+  if (!params.perturberOn) return false;
+  const tolPx = 12; // hit radius in pixels
+  const sPxPerArcsec = imgCanvas.width / (2 * fieldOfView);
+  const tolArcsec = tolPx / sPxPerArcsec;
+  return Math.hypot(pos.x - params.pertX, pos.y - params.pertY) < tolArcsec;
+}
+
+imgCanvas.addEventListener('mousemove', e => {
+  const pos = imgPlanePos(e);
   document.getElementById('imgCoords').textContent = `θ = (${pos.x.toFixed(3)}, ${pos.y.toFixed(3)})`;
+  if (perturberDragging) {
+    setPerturberPos(pos.x, pos.y);
+    render();
+  } else {
+    imgCanvas.style.cursor = nearPerturber(pos) ? 'grab' : 'crosshair';
+  }
 });
+
+imgCanvas.addEventListener('mousedown', e => {
+  const pos = imgPlanePos(e);
+  if (e.shiftKey) {
+    // Shift-click drops (and enables) perturber here
+    params.perturberOn = true;
+    document.getElementById('perturberOn').checked = true;
+    setPerturberPos(pos.x, pos.y);
+    perturberDragging = true;
+    imgCanvas.style.cursor = 'grabbing';
+    render();
+  } else if (nearPerturber(pos)) {
+    perturberDragging = true;
+    imgCanvas.style.cursor = 'grabbing';
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (perturberDragging) {
+    perturberDragging = false;
+    imgCanvas.style.cursor = 'crosshair';
+  }
+});
+
+// Touch support for the perturber on the image plane
+imgCanvas.addEventListener('touchstart', e => {
+  if (!e.touches.length) return;
+  const t = e.touches[0];
+  const fakeEvt = { clientX: t.clientX, clientY: t.clientY };
+  const pos = imgPlanePos(fakeEvt);
+  if (nearPerturber(pos) || e.shiftKey) {
+    e.preventDefault();
+    if (!nearPerturber(pos)) {
+      params.perturberOn = true;
+      document.getElementById('perturberOn').checked = true;
+    }
+    setPerturberPos(pos.x, pos.y);
+    perturberDragging = true;
+    render();
+  }
+}, {passive:false});
+imgCanvas.addEventListener('touchmove', e => {
+  if (!perturberDragging || !e.touches.length) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const pos = imgPlanePos({ clientX: t.clientX, clientY: t.clientY });
+  setPerturberPos(pos.x, pos.y);
+  render();
+}, {passive:false});
+imgCanvas.addEventListener('touchend', () => { perturberDragging = false; });
 
 // --- Presets ---
 function setPreset(name) {
@@ -940,7 +1122,6 @@ function setPreset(name) {
     cusp:     { thetaE:1.2, gamma:2.0, q:0.55, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.12, galN:1.5, galQ:0.6, galPA:45, galFlux:0.6, sx:0.0, sy:0.22 },
     fold:     { thetaE:1.0, gamma:2.0, q:0.8, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.18, galN:1.0, galQ:0.8, galPA:0, galFlux:0.4, sx:0.4, sy:0.3 },
     einstein: { thetaE:1.2, gamma:2.0, q:0.95, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:0.5, galReff:0.08, galN:1.0, galQ:0.9, galPA:0, galFlux:1.0, sx:0.0, sy:0.0 },
-    jwst:     { thetaE:1.3, gamma:2.05, q:0.6, phi:15, cx:0.1, cy:0.15, shear:0.06, shearAngle:-20, qsoFlux:1.2, galReff:0.2, galN:1.5, galQ:0.5, galPA:40, galFlux:0.7, sx:0.08, sy:-0.05 },
   };
   const p = P[name]; if (!p) return;
 
