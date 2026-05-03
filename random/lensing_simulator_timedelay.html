@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Strong Lensing Simulator — EPL Model</title>
+<title>Strong Lensing Simulator — Time Delay Mode</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
@@ -76,17 +76,123 @@
     white-space: nowrap;
   }
   .mode-switch-btn:hover {
-    background: var(--accent);
+    background: var(--accent2);
     color: #fff;
-    border-color: var(--accent);
+    border-color: var(--accent2);
   }
   .mode-switch-btn .arrow { font-size: 13px; }
 
   .main-layout {
     display: grid;
     grid-template-columns: 310px 1fr 1fr;
+    grid-template-rows: minmax(0, 1fr) 290px;
     height: calc(100vh - 57px);
   }
+
+  .lightcurve-panel {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .lightcurve-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(68,170,255,0.04) 0%, transparent 100%);
+  }
+
+  .lightcurve-header h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin: 0;
+  }
+
+  .lightcurve-controls {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .lc-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lc-btn:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .lc-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+  .lightcurve-controls select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+  }
+
+  .lightcurve-body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  #lcCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .td-table {
+    border-left: 1px solid var(--border);
+    padding: 10px 14px;
+    overflow-y: auto;
+    background: var(--surface2);
+  }
+
+  .td-table h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .td-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .td-row .lbl { font-weight: 600; }
+  .td-row .val-num { color: var(--accent2); }
 
   .controls-panel {
     background: var(--surface);
@@ -314,11 +420,11 @@
 
 <div class="app-header">
   <div>
-    <h1><span>◈</span> Strong Lensing Simulator</h1>
-    <div class="subtitle">EPL lens · Sérsic host galaxy + quasar point source · ray-traced extended images</div>
+    <h1><span>◈</span> Strong Lensing Simulator — Time Delay</h1>
+    <div class="subtitle">EPL lens · variable quasar · Fermat potential · multi-image light curves with relative delays</div>
   </div>
-  <a href="lensing_simulator_timedelay.html" class="mode-switch-btn" title="Open the time-delay version">
-    Time Delay Mode <span class="arrow">→</span>
+  <a href="lensing_simulator.html" class="mode-switch-btn" title="Open the imaging-only version">
+    <span class="arrow">←</span> Imaging Mode
   </a>
 </div>
 
@@ -399,6 +505,35 @@
     </div>
 
     <div class="control-section">
+      <h3>Cosmology (sets Δt scale)</h3>
+      <div class="control-row"><label>Hubble H<sub>0</sub></label><span class="val" id="val-H0">70.0 km/s/Mpc</span></div>
+      <input type="range" id="H0" min="50" max="100" step="0.5" value="70">
+      <div class="control-row"><label>Lens redshift z<sub>lens</sub></label><span class="val" id="val-zLens">0.50</span></div>
+      <input type="range" id="zLens" min="0.05" max="1.5" step="0.01" value="0.5">
+      <div class="control-row"><label>Source redshift z<sub>src</sub></label><span class="val" id="val-zSrc">2.00</span></div>
+      <input type="range" id="zSrc" min="0.5" max="5.0" step="0.05" value="2.0">
+      <div class="control-row">
+        <label style="font-size:11px;color:var(--text-dim);">↳ Δt scale</label>
+        <span class="val" id="val-tdScaleDerived" style="color:var(--text-dim);">— d/″²</span>
+      </div>
+      <div class="info-box">
+        <p>Δt = (D<sub>Δt</sub>/c) · Δτ where τ(θ) = ½|θ−β|² − ψ(θ) is the Fermat potential. D<sub>Δt</sub>(H<sub>0</sub>, z<sub>l</sub>, z<sub>s</sub>) is computed for flat ΛCDM (Ω<sub>m</sub>=0.3). Slide H<sub>0</sub> to see how a measured Δt would constrain it.</p>
+      </div>
+    </div>
+
+    <div class="control-section">
+      <h3>Variability</h3>
+      <div id="lcPeriodGroup">
+        <div class="control-row"><label>Period (sine)</label><span class="val" id="val-lcPeriod">100 d</span></div>
+        <input type="range" id="lcPeriod" min="20" max="500" step="10" value="100">
+      </div>
+      <div class="control-row"><label>Amplitude</label><span class="val" id="val-lcAmp">0.40</span></div>
+      <input type="range" id="lcAmp" min="0" max="1.0" step="0.02" value="0.4">
+      <div class="control-row"><label>Total duration</label><span class="val" id="val-lcDuration">800 d</span></div>
+      <input type="range" id="lcDuration" min="100" max="2500" step="50" value="800">
+    </div>
+
+    <div class="control-section">
       <h3>Presets</h3>
       <button class="preset-btn" onclick="setPreset('quad')">Quad (cross)</button>
       <button class="preset-btn" onclick="setPreset('cusp')">Cusp triple</button>
@@ -432,14 +567,50 @@
     <canvas id="imagePlane" width="550" height="550"></canvas>
     <div class="legend">
       <div class="legend-item"><div class="legend-line" style="background:var(--critical);"></div> Critical curves</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff4466;"></div> QSO image — minimum (+ parity)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#64a0ff;"></div> QSO image — saddle (− parity)</div>
+      <div class="legend-item">
+        <span style="display:inline-flex;gap:3px;align-items:center;">
+          <span style="background:#ff5e5e;width:8px;height:8px;border-radius:50%;"></span>
+          <span style="background:#4ecdc4;width:8px;height:8px;border-radius:50%;"></span>
+          <span style="background:#ffd166;width:8px;height:8px;border-radius:50%;"></span>
+          <span style="background:#a78bfa;width:8px;height:8px;border-radius:50%;"></span>
+        </span>
+        Images A → D (by arrival)
+      </div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(140,200,255,0.45);"></div> Lensed host (extended)</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(255,235,180,0.95);"></div> G — main lens</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(255,180,80,0.95);"></div> G1 — perturber</div>
     </div>
     <div class="coords-display" id="imgCoords">θ = (0.00, 0.00)</div>
     <div class="perf-display" id="perfDisplay"></div>
+  </div>
+
+  <!-- Light Curve Panel -->
+  <div class="lightcurve-panel">
+    <div class="lightcurve-header">
+      <h3>◊ Quasar Light Curves &amp; Time Delays</h3>
+      <div class="lightcurve-controls">
+        <label style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">curve:</label>
+        <select id="lcType">
+          <option value="drw" selected>Damped random walk</option>
+          <option value="sine">Sinusoidal</option>
+          <option value="pulse">Gaussian pulse</option>
+        </select>
+        <label style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-left:6px;">speed:</label>
+        <input type="range" id="lcSpeed" min="0.1" max="3" step="0.05" value="1" style="width:80px;">
+        <span class="val" id="val-lcSpeed" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2);min-width:32px;">1.0×</span>
+        <button class="lc-btn" id="lcPlayPause">▶ Play</button>
+        <button class="lc-btn" id="lcReset">⟳ Reset</button>
+      </div>
+    </div>
+    <div class="lightcurve-body">
+      <canvas id="lcCanvas"></canvas>
+      <div class="td-table">
+        <h4>Relative Time Delays</h4>
+        <div id="tdList">
+          <p style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">Move the source to see images and delays.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -927,6 +1098,7 @@ function _render() {
 
   // Point-source images
   const images = findImages(sourcePos.x, sourcePos.y);
+  window.__lastImages = images; // reused by time-delay wrapper
   const labels = ['A','B','C','D','E','F'];
   let infoHTML = '';
 
@@ -934,41 +1106,40 @@ function _render() {
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
       const {px,py} = a2p(img.x, img.y, imgCanvas);
-      const colFull = img.parity>0 ? '#ff4466' : '#64a0ff';
-      const col = img.parity>0 ? 'rgba(255,68,102,0.8)' : 'rgba(100,160,255,0.8)';
+      const c = imageColor(i);
 
       // Size ~ sqrt(mu)
       const r = 3 * Math.sqrt(Math.min(img.mu, 50));
 
       const glow = imgCtx.createRadialGradient(px,py,0,px,py,r*2);
-      glow.addColorStop(0, img.parity>0 ? 'rgba(255,68,102,0.5)' : 'rgba(100,160,255,0.5)');
+      glow.addColorStop(0, c.a05);
       glow.addColorStop(1, 'rgba(0,0,0,0)');
       imgCtx.fillStyle = glow;
       imgCtx.beginPath(); imgCtx.arc(px,py,r*2,0,2*Math.PI); imgCtx.fill();
 
-      imgCtx.fillStyle = col;
+      imgCtx.fillStyle = c.a08;
       imgCtx.beginPath(); imgCtx.arc(px,py,r,0,2*Math.PI); imgCtx.fill();
 
       const label = labels[i]||''+(i+1);
       imgCtx.font = 'bold 12px JetBrains Mono';
-      imgCtx.fillStyle = colFull;
+      imgCtx.fillStyle = c.full;
       imgCtx.textAlign = 'left';
       imgCtx.fillText(label, px+r+4, py-4);
 
-      imgCtx.strokeStyle = colFull; imgCtx.lineWidth = 1.5;
+      imgCtx.strokeStyle = c.full; imgCtx.lineWidth = 1.5;
       imgCtx.beginPath(); imgCtx.moveTo(px-5,py); imgCtx.lineTo(px+5,py); imgCtx.stroke();
       imgCtx.beginPath(); imgCtx.moveTo(px,py-5); imgCtx.lineTo(px,py+5); imgCtx.stroke();
 
-      const ps = img.parity>0 ? '<span style="color:#ff4466">+</span>' : '<span style="color:#64a0ff">−</span>';
-      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${colFull}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
+      const ps = `<span style="color:var(--text-dim)">${img.parity>0?'+':'−'}</span>`;
+      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${c.full}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
     }
   } else {
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
-      const colFull = img.parity>0 ? '#ff4466' : '#64a0ff';
+      const c = imageColor(i);
       const label = labels[i]||''+(i+1);
-      const ps = img.parity>0 ? '<span style="color:#ff4466">+</span>' : '<span style="color:#64a0ff">−</span>';
-      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${colFull}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
+      const ps = `<span style="color:var(--text-dim)">${img.parity>0?'+':'−'}</span>`;
+      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${c.full}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
     }
   }
 
@@ -1215,19 +1386,465 @@ function setPreset(name) {
   render();
 }
 
+// =====================================================
+// TIME DELAY MODE
+// =====================================================
+// Per-image palette — colours are by arrival order (A first), not by parity.
+const IMAGE_COLORS = [
+  { full:'#ff5e5e', a08:'rgba(255, 94, 94,0.85)', a05:'rgba(255, 94, 94,0.50)' }, // A red
+  { full:'#4ecdc4', a08:'rgba( 78,205,196,0.85)', a05:'rgba( 78,205,196,0.50)' }, // B teal
+  { full:'#ffd166', a08:'rgba(255,209,102,0.85)', a05:'rgba(255,209,102,0.50)' }, // C gold
+  { full:'#a78bfa', a08:'rgba(167,139,250,0.85)', a05:'rgba(167,139,250,0.50)' }, // D purple
+  { full:'#fb7185', a08:'rgba(251,113,133,0.85)', a05:'rgba(251,113,133,0.50)' }, // E pink
+  { full:'#34d399', a08:'rgba( 52,211,153,0.85)', a05:'rgba( 52,211,153,0.50)' }, // F green
+];
+function imageColor(i) { return IMAGE_COLORS[i % IMAGE_COLORS.length]; }
+// Fermat potential τ(θ; β) = ½|θ−β|² − ψ(θ)
+// where ψ(θ) is the lensing potential, computed by line-integrating α
+// from the origin to θ along a straight line (Simpson's rule).
+// Since α is curl-free, the line integral is path-independent.
+// Relative time delay between images i, j:
+//   Δt_ij = (D_Δt/c) · [τ(θ_i;β) − τ(θ_j;β)]
+// We expose D_Δt/c as the user-adjustable "tdScale" in days/arcsec².
+
+function lensingPotential(tx, ty) {
+  // ψ(θ) = ∫₀^1 α(s·θ) · θ ds, midpoint rule.
+  // Midpoint avoids sampling s=0 where α(0,0) is artificially zero (limit is profile-dependent).
+  // For SIS, the integrand is constant so midpoint gives the exact answer at any N.
+  const N = 80;
+  let sum = 0;
+  for (let k = 0; k < N; k++) {
+    const s = (k + 0.5) / N;
+    const a = eplDeflection(s*tx, s*ty);
+    sum += a.ax*tx + a.ay*ty;
+  }
+  return sum / N;
+}
+
+function fermatPotential(theta_x, theta_y, beta_x, beta_y) {
+  const dx = theta_x - beta_x, dy = theta_y - beta_y;
+  return 0.5*(dx*dx + dy*dy) - lensingPotential(theta_x, theta_y);
+}
+
+// --- Light curve state ---
+let lcTime = 0;            // current observation time (days)
+let lcPlaying = false;
+let lcType = 'drw';
+let lcAmp = 0.4;
+let lcPeriod = 100;
+let lcDuration = 800;
+let tdScale = 30;          // days per arcsec² (computed from cosmology below)
+let H0 = 70;               // km/s/Mpc
+let zLens = 0.5;
+let zSource = 2.0;
+const Om = 0.3;            // flat ΛCDM matter density (held fixed)
+const C_KM_S = 299792.458; // speed of light, km/s
+const MPC_TO_KM = 3.0857e19;
+const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
+const SEC_PER_DAY = 86400;
+
+function comovingDistance(z) {
+  // Returns line-of-sight comoving distance in Mpc, flat ΛCDM.
+  const cH0 = C_KM_S / H0; // Hubble distance in Mpc
+  const Olam = 1 - Om;
+  const N = 200;
+  let sum = 0;
+  for (let k = 0; k < N; k++) {
+    const zi = (k + 0.5) * z / N;
+    sum += 1 / Math.sqrt(Om * Math.pow(1 + zi, 3) + Olam);
+  }
+  return cH0 * sum * z / N;
+}
+
+function computeTdScale() {
+  // D_Δt = (1+z_l) · D_A(z_l)·D_A(z_s) / D_A(z_l, z_s)  (flat universe)
+  // tdScale = (D_Δt/c) converted from arcsec² to days.
+  if (zSource <= zLens + 0.01) { tdScale = 0; return; }
+  const Dl_C = comovingDistance(zLens);
+  const Ds_C = comovingDistance(zSource);
+  const Dls_C = Ds_C - Dl_C;
+  const Dl_A  = Dl_C / (1 + zLens);
+  const Ds_A  = Ds_C / (1 + zSource);
+  const Dls_A = Dls_C / (1 + zSource);
+  const D_dt_Mpc = (1 + zLens) * Dl_A * Ds_A / Dls_A;
+  const T_sec = D_dt_Mpc * MPC_TO_KM / C_KM_S;
+  tdScale = T_sec * ARCSEC_TO_RAD * ARCSEC_TO_RAD / SEC_PER_DAY;
+}
+
+function syncCosmologyDisplay() {
+  document.getElementById('val-H0').textContent = H0.toFixed(1) + ' km/s/Mpc';
+  document.getElementById('val-zLens').textContent = zLens.toFixed(2);
+  document.getElementById('val-zSrc').textContent  = zSource.toFixed(2);
+  const tag = (zSource <= zLens + 0.01)
+    ? 'z<sub>src</sub> ≤ z<sub>lens</sub>!'
+    : `${tdScale.toFixed(1)} d/″²`;
+  document.getElementById('val-tdScaleDerived').innerHTML = tag;
+}
+
+function applyCosmologyChange() {
+  computeTdScale();
+  syncCosmologyDisplay();
+  for (const d of cachedTimeDelays) d.deltaT = d.deltaTau * tdScale;
+  renderTimeDelayList();
+  drawLightCurves();
+}
+
+function updatePeriodVisibility() {
+  document.getElementById('lcPeriodGroup').style.display = (lcType === 'sine') ? '' : 'none';
+}
+let lcSpeedMul = 1.0;      // 1× ≈ traverse the whole duration in 15 s of real time
+let lcLastTimestamp = null;
+let drwSamples = null;     // pre-computed DRW for current duration
+let drwSeed = 12345;
+
+function rng(seed) {
+  // Simple deterministic RNG so DRW is reproducible across redraws
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+function generateDRW(durationDays) {
+  // Damped random walk (Kelly+2009): the standard quasar variability model.
+  // dF = -(F - μ)/τ dt + σ_drw √(dt) ξ.  Stationary σ = σ_drw √(τ/2).
+  // Tuned so the visible swing is ~ ±1 even before lcAmp scales it.
+  const nSamples = 800;
+  const dt = durationDays / nSamples;
+  const tau = 80;       // damping time (days) — shorter ⇒ faster wiggles
+  const sigma_drw = 0.12; // step size; stationary RMS ≈ σ_drw·√(τ/2) ≈ 0.76
+  const arr = new Float32Array(nSamples + 1);
+  arr[0] = 0;
+  const r = rng(drwSeed);
+  for (let i = 1; i <= nSamples; i++) {
+    const u1 = Math.max(r(), 1e-9), u2 = r();
+    const g = Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2);
+    arr[i] = arr[i-1] * Math.exp(-dt/tau) + sigma_drw * Math.sqrt(tau/2 * (1 - Math.exp(-2*dt/tau))) * g;
+  }
+  // Normalize to peak amplitude ≈ 1 so the lcAmp slider behaves like for sine/pulse.
+  let peak = 0;
+  for (let i = 0; i <= nSamples; i++) peak = Math.max(peak, Math.abs(arr[i]));
+  if (peak > 1e-9) for (let i = 0; i <= nSamples; i++) arr[i] /= peak;
+  drwSamples = { arr, dt };
+}
+
+function intrinsicFlux(t) {
+  // Returns the unmagnified source flux at time t (arbitrary units, baseline ≈ 1)
+  if (lcType === 'sine') {
+    return 1 + lcAmp * Math.sin(2*Math.PI * t / lcPeriod);
+  }
+  if (lcType === 'pulse') {
+    const t0 = lcDuration * 0.3;
+    const sigma = lcDuration * 0.04;
+    const x = (t - t0)/sigma;
+    return 1 + lcAmp * 4 * Math.exp(-0.5*x*x);
+  }
+  if (lcType === 'drw') {
+    if (!drwSamples) generateDRW(lcDuration);
+    const a = drwSamples.arr;
+    const idxF = Math.max(0, Math.min(a.length - 1.001, t / drwSamples.dt));
+    const i0 = Math.floor(idxF), i1 = i0 + 1, frac = idxF - i0;
+    return 1 + lcAmp * (a[i0]*(1-frac) + a[i1]*frac);
+  }
+  return 1;
+}
+
+// Cached image-time-delay table (recomputed each main render)
+let cachedTimeDelays = []; // [{label, x, y, mu, parity, color, deltaT_days, tau_arcsec2}]
+
+function recomputeTimeDelays(images, beta_x, beta_y) {
+  if (!images.length) { cachedTimeDelays = []; return; }
+  const labels = ['A','B','C','D','E','F'];
+  // Compute Fermat potential at each image (already sorted by τ by findImages override)
+  const taus = images.map(im => fermatPotential(im.x, im.y, beta_x, beta_y));
+  const tauMin = Math.min(...taus);
+  cachedTimeDelays = images.map((im, i) => ({
+    label: labels[i] || ('I'+(i+1)),
+    x: im.x, y: im.y, mu: im.mu, parity: im.parity,
+    color: imageColor(i).full,
+    tau: taus[i],
+    deltaTau: taus[i] - tauMin,        // arcsec²
+    deltaT: (taus[i] - tauMin) * tdScale, // days
+  }));
+}
+
+// Image labels follow the standard observational convention:
+// A = brightest, B = second brightest, etc. (sorted by magnification, descending).
+// This matches every published lens table — "image A" is the most prominent dot,
+// regardless of when its photons happened to arrive.
+// findImages already does this sort internally, so no override is needed here.
+
+function renderTimeDelayList() {
+  const html = cachedTimeDelays.length === 0
+    ? '<p style="font-size:11px;color:var(--text-dim);font-family:JetBrains Mono,monospace;">No images.</p>'
+    : cachedTimeDelays.map(d =>
+        `<div class="td-row"><span class="lbl" style="color:${d.color}">${d.label}</span>` +
+        `<span class="val-num">Δt = ${d.deltaT.toFixed(1)} d</span>` +
+        `<span style="color:var(--text-dim);font-size:10px">μ=${d.mu.toFixed(1)}</span></div>`
+      ).join('');
+  document.getElementById('tdList').innerHTML = html;
+}
+
+// --- Light curve canvas drawing ---
+const lcCanvas = document.getElementById('lcCanvas');
+const lcCtx = lcCanvas.getContext('2d');
+
+function drawLightCurves() {
+  const W = lcCanvas.width, H = lcCanvas.height;
+  lcCtx.fillStyle = '#08080d';
+  lcCtx.fillRect(0, 0, W, H);
+
+  // Margins
+  const ml = 50, mr = 16, mt = 14, mb = 26;
+  const plotW = W - ml - mr, plotH = H - mt - mb;
+  if (plotW < 50 || plotH < 30) return;
+
+  // Determine flux range across all displayed curves (intrinsic + each image observed)
+  // Sample on a grid
+  const Nt = 240;
+  const t0 = 0, t1 = lcDuration;
+  const tArr = new Float32Array(Nt);
+  for (let i = 0; i < Nt; i++) tArr[i] = t0 + (t1-t0)*i/(Nt-1);
+
+  const intrinsic = new Float32Array(Nt);
+  for (let i = 0; i < Nt; i++) intrinsic[i] = intrinsicFlux(tArr[i]);
+
+  const imgCurves = cachedTimeDelays.map(d => {
+    const c = new Float32Array(Nt);
+    for (let i = 0; i < Nt; i++) c[i] = d.mu * intrinsicFlux(tArr[i] - d.deltaT);
+    return { d, c };
+  });
+
+  // y-axis range
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i < Nt; i++) { if (intrinsic[i] < yMin) yMin = intrinsic[i]; if (intrinsic[i] > yMax) yMax = intrinsic[i]; }
+  for (const ic of imgCurves) for (let i = 0; i < Nt; i++) { if (ic.c[i] < yMin) yMin = ic.c[i]; if (ic.c[i] > yMax) yMax = ic.c[i]; }
+  if (yMax - yMin < 1e-6) { yMax = yMin + 1; }
+  const pad = (yMax - yMin) * 0.08;
+  yMin -= pad; yMax += pad;
+
+  // axes
+  lcCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+  lcCtx.lineWidth = 1;
+  lcCtx.beginPath();
+  lcCtx.moveTo(ml, mt); lcCtx.lineTo(ml, mt+plotH); lcCtx.lineTo(ml+plotW, mt+plotH);
+  lcCtx.stroke();
+
+  // gridlines and labels
+  lcCtx.font = '10px JetBrains Mono';
+  lcCtx.fillStyle = 'rgba(255,255,255,0.45)';
+  lcCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+  // x ticks
+  const nXTicks = 6;
+  lcCtx.textAlign = 'center';
+  for (let k = 0; k <= nXTicks; k++) {
+    const x = ml + plotW * k/nXTicks;
+    const tVal = t0 + (t1-t0)*k/nXTicks;
+    lcCtx.beginPath(); lcCtx.moveTo(x, mt); lcCtx.lineTo(x, mt+plotH); lcCtx.stroke();
+    lcCtx.fillText(`${tVal.toFixed(0)}d`, x, mt+plotH+14);
+  }
+  // y ticks
+  const nYTicks = 4;
+  lcCtx.textAlign = 'right';
+  for (let k = 0; k <= nYTicks; k++) {
+    const y = mt + plotH * (1 - k/nYTicks);
+    const yVal = yMin + (yMax-yMin)*k/nYTicks;
+    lcCtx.beginPath(); lcCtx.moveTo(ml, y); lcCtx.lineTo(ml+plotW, y); lcCtx.stroke();
+    lcCtx.fillText(yVal.toFixed(1), ml-5, y+3);
+  }
+  // axis labels
+  lcCtx.textAlign = 'center';
+  lcCtx.fillStyle = 'rgba(255,255,255,0.55)';
+  lcCtx.fillText('time (days)', ml+plotW/2, mt+plotH+22);
+  lcCtx.save();
+  lcCtx.translate(14, mt+plotH/2);
+  lcCtx.rotate(-Math.PI/2);
+  lcCtx.fillText('flux (relative)', 0, 0);
+  lcCtx.restore();
+
+  // Plot intrinsic light curve (dim white)
+  const plot = (arr, color, lineWidth, dashed) => {
+    lcCtx.strokeStyle = color;
+    lcCtx.lineWidth = lineWidth;
+    if (dashed) lcCtx.setLineDash([4, 4]); else lcCtx.setLineDash([]);
+    lcCtx.beginPath();
+    for (let i = 0; i < Nt; i++) {
+      const x = ml + plotW * i/(Nt-1);
+      const y = mt + plotH * (1 - (arr[i] - yMin)/(yMax - yMin));
+      if (i === 0) lcCtx.moveTo(x, y); else lcCtx.lineTo(x, y);
+    }
+    lcCtx.stroke();
+    lcCtx.setLineDash([]);
+  };
+
+  plot(intrinsic, 'rgba(255,255,255,0.35)', 1.2, true);
+  for (const ic of imgCurves) plot(ic.c, ic.d.color, 1.6, false);
+
+  // Current-time vertical cursor
+  const cursorX = ml + plotW * (lcTime - t0)/(t1 - t0);
+  if (cursorX >= ml && cursorX <= ml+plotW) {
+    lcCtx.strokeStyle = 'rgba(255,204,0,0.7)';
+    lcCtx.lineWidth = 1.2;
+    lcCtx.setLineDash([2, 3]);
+    lcCtx.beginPath(); lcCtx.moveTo(cursorX, mt); lcCtx.lineTo(cursorX, mt+plotH); lcCtx.stroke();
+    lcCtx.setLineDash([]);
+    lcCtx.fillStyle = 'rgba(255,204,0,0.95)';
+    lcCtx.font = 'bold 10px JetBrains Mono';
+    lcCtx.textAlign = 'left';
+    lcCtx.fillText(`t = ${lcTime.toFixed(0)} d`, cursorX + 4, mt + 11);
+  }
+
+  // Legend (top-right of plot)
+  lcCtx.font = '10px JetBrains Mono';
+  lcCtx.textAlign = 'left';
+  let lx = ml + plotW - 130, ly = mt + 14;
+  lcCtx.fillStyle = 'rgba(255,255,255,0.6)';
+  lcCtx.fillText('— intrinsic', lx, ly);
+  ly += 12;
+  for (const ic of imgCurves) {
+    lcCtx.fillStyle = ic.d.color;
+    lcCtx.fillText(`— ${ic.d.label} (Δt=${ic.d.deltaT.toFixed(1)}d)`, lx, ly);
+    ly += 11;
+  }
+}
+
+// --- Animation loop ---
+function lcStep(timestamp) {
+  if (!lcPlaying) return;
+  if (lcLastTimestamp === null) lcLastTimestamp = timestamp;
+  const realDt = (timestamp - lcLastTimestamp) / 1000; // seconds
+  lcLastTimestamp = timestamp;
+  // Default 1× ≈ traverse the whole duration in 15 s of real time.
+  // The speed slider lets the user slow it right down to ~0.1× (1/150 d/s of duration)
+  // or speed up to 3×.
+  const speed = (lcDuration / 15) * lcSpeedMul;
+  lcTime += realDt * speed;
+  if (lcTime > lcDuration) lcTime = 0;
+  drawLightCurves();
+  // Also update image-plane brightness cues by re-rendering main canvas
+  render();
+  requestAnimationFrame(lcStep);
+}
+
+document.getElementById('lcPlayPause').addEventListener('click', e => {
+  lcPlaying = !lcPlaying;
+  e.target.textContent = lcPlaying ? '❚❚ Pause' : '▶ Play';
+  e.target.classList.toggle('active', lcPlaying);
+  if (lcPlaying) { lcLastTimestamp = null; requestAnimationFrame(lcStep); }
+});
+document.getElementById('lcReset').addEventListener('click', () => {
+  lcTime = 0;
+  drawLightCurves();
+  render();
+});
+document.getElementById('lcType').addEventListener('change', e => {
+  lcType = e.target.value;
+  if (lcType === 'drw') { drwSeed = (drwSeed*1103515245 + 12345) >>> 0; generateDRW(lcDuration); }
+  updatePeriodVisibility();
+  drawLightCurves();
+});
+document.getElementById('lcSpeed').addEventListener('input', e => {
+  lcSpeedMul = parseFloat(e.target.value);
+  document.getElementById('val-lcSpeed').textContent = lcSpeedMul.toFixed(2) + '×';
+});
+
+document.getElementById('H0').addEventListener('input', e => {
+  H0 = parseFloat(e.target.value); applyCosmologyChange();
+});
+document.getElementById('zLens').addEventListener('input', e => {
+  zLens = parseFloat(e.target.value); applyCosmologyChange();
+});
+document.getElementById('zSrc').addEventListener('input', e => {
+  zSource = parseFloat(e.target.value); applyCosmologyChange();
+});
+document.getElementById('lcPeriod').addEventListener('input', e => {
+  lcPeriod = parseInt(e.target.value);
+  document.getElementById('val-lcPeriod').textContent = lcPeriod + ' d';
+  drawLightCurves();
+});
+document.getElementById('lcAmp').addEventListener('input', e => {
+  lcAmp = parseFloat(e.target.value);
+  document.getElementById('val-lcAmp').textContent = lcAmp.toFixed(2);
+  drawLightCurves();
+});
+document.getElementById('lcDuration').addEventListener('input', e => {
+  lcDuration = parseInt(e.target.value);
+  document.getElementById('val-lcDuration').textContent = lcDuration + ' d';
+  if (lcType === 'drw') generateDRW(lcDuration);
+  if (lcTime > lcDuration) lcTime = 0;
+  drawLightCurves();
+});
+
+// --- Hook into the main render() to refresh delays + light curves whenever images change ---
+const _origRender = _render;
+_render = function() {
+  _origRender.apply(this, arguments);
+  const images = window.__lastImages || [];
+  recomputeTimeDelays(images, sourcePos.x, sourcePos.y);
+  renderTimeDelayList();
+  // Big pulsing halo per image — scales dramatically with current observed flux.
+  // Additive ('lighter') compositing makes multiple bright images really pop.
+  if (showPointImages && cachedTimeDelays.length) {
+    imgCtx.save();
+    imgCtx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < cachedTimeDelays.length; i++) {
+      const d = cachedTimeDelays[i];
+      const c = imageColor(i);
+      // intrinsicFlux is ≈ 1 at baseline, ranges roughly 1±lcAmp for sine/DRW,
+      // up to 1+5·lcAmp at a Gaussian pulse peak.
+      const intrinsic = intrinsicFlux(lcTime - d.deltaT);
+      const b = Math.max(0, Math.min(4, intrinsic));   // brightness factor
+
+      const {px, py} = a2p(d.x, d.y, imgCanvas);
+      const baseR = 3 * Math.sqrt(Math.min(d.mu, 50));
+
+      // Outer halo — big, soft, scales strongly with brightness
+      const haloR = baseR + 8 + 35 * b;
+      const grad = imgCtx.createRadialGradient(px, py, 0, px, py, haloR);
+      const r = parseInt(c.full.slice(1,3),16);
+      const g = parseInt(c.full.slice(3,5),16);
+      const bl = parseInt(c.full.slice(5,7),16);
+      grad.addColorStop(0,    `rgba(${r},${g},${bl},${Math.min(0.95, 0.30*b).toFixed(3)})`);
+      grad.addColorStop(0.35, `rgba(${r},${g},${bl},${Math.min(0.55, 0.16*b).toFixed(3)})`);
+      grad.addColorStop(1,    `rgba(${r},${g},${bl},0)`);
+      imgCtx.fillStyle = grad;
+      imgCtx.beginPath(); imgCtx.arc(px, py, haloR, 0, 2*Math.PI); imgCtx.fill();
+
+      // Inner solid disc — also scales, adds an obvious "pulse" core
+      const coreR = baseR * (0.4 + 0.9 * b);
+      imgCtx.fillStyle = `rgba(${r},${g},${bl},${Math.min(1, 0.55*b).toFixed(3)})`;
+      imgCtx.beginPath(); imgCtx.arc(px, py, coreR, 0, 2*Math.PI); imgCtx.fill();
+    }
+    imgCtx.restore();
+  }
+  drawLightCurves();
+};
+
 // --- Resize ---
 function resizeCanvases() {
+  const lcPanelHeight = 290;
   const avail = (window.innerWidth - 310) / 2;
-  const size = Math.min(avail, window.innerHeight - 57, 700);
-  const px = Math.floor(Math.max(size, 300));
+  const size = Math.min(avail, window.innerHeight - 57 - lcPanelHeight, 700);
+  const px = Math.floor(Math.max(size, 280));
   srcCanvas.width = px; srcCanvas.height = px;
   imgCanvas.width = px; imgCanvas.height = px;
-  srcCanvas.style.width = '100%'; srcCanvas.style.height = '100%';
-  imgCanvas.style.width = '100%'; imgCanvas.style.height = '100%';
+  // Force a square displayed size — otherwise the canvas-container's grid cell aspect
+  // ratio stretches the canvas and the arcsec grid stops being square.
+  srcCanvas.style.width = px + 'px';
+  srcCanvas.style.height = px + 'px';
+  imgCanvas.style.width = px + 'px';
+  imgCanvas.style.height = px + 'px';
+
+  // Light curve canvas: fills its grid cell (left of the 320px td-table)
+  const lcRect = lcCanvas.getBoundingClientRect();
+  lcCanvas.width = Math.max(200, Math.floor(lcRect.width));
+  lcCanvas.height = Math.max(120, Math.floor(lcRect.height));
+
   render();
 }
 
 window.addEventListener('resize', resizeCanvases);
+computeTdScale();
+syncCosmologyDisplay();
+updatePeriodVisibility();
 resizeCanvases();
 setPreset('quad');
 </script>
