@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Hrvoje Krizic - Physicist & Cellist. ETH Zurich, Cosmology, Gravitational Waves, String Theory.">
-    <title>Hrvoje Krizic</title>
+    <meta name="description"
+          content="Hrvoje Krizic - Physicist & Cellist. ETH Zurich, Cosmology, Gravitational Waves, String Theory."
+          data-en="Hrvoje Krizic - Physicist & Cellist. ETH Zurich, Cosmology, Gravitational Waves, String Theory."
+          data-de="Hrvoje Krizic – Physiker & Cellist. ETH Zürich, Kosmologie, Gravitationswellen, Stringtheorie.">
+    <title data-en="Hrvoje Krizic" data-de="Hrvoje Krizic">Hrvoje Krizic</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
@@ -29,10 +32,15 @@
                 <a href="index.html" class="nav__logo">HK</a>
 
                 <ul class="nav__links" id="navLinks">
-                    <li><a href="index.html" class="nav__link">Home</a></li>
-                    <li><a href="research.html" class="nav__link">Research</a></li>
-                    <li><a href="cellist.html" class="nav__link">Concerts & Media</a></li>
-                    <li><a href="teaching/" class="nav__link">Teaching</a></li>
+                    <li><a href="index.html" class="nav__link" data-en="Home" data-de="Startseite">Home</a></li>
+                    <li><a href="research.html" class="nav__link" data-en="Research" data-de="Forschung">Research</a></li>
+                    <li><a href="cellist.html" class="nav__link" data-en="Concerts &amp; Media" data-de="Konzerte &amp; Medien">Concerts &amp; Media</a></li>
+                    <li><a href="teaching/" class="nav__link" data-en="Teaching" data-de="Lehre">Teaching</a></li>
+                    <li class="nav__lang">
+                        <button type="button" class="nav__lang-btn" data-lang="en" aria-label="English">EN</button>
+                        <span class="nav__lang-sep" aria-hidden="true">|</span>
+                        <button type="button" class="nav__lang-btn" data-lang="de" aria-label="Deutsch">DE</button>
+                    </li>
                 </ul>
 
                 <div class="nav__toggle" id="navToggle">
@@ -50,14 +58,18 @@
         <div class="container">
             <div class="hero__content">
                 <h1 class="hero__title fade-in">Hrvoje Krizic</h1>
-                <p class="hero__subtitle fade-in fade-in-delay-1">Physicist & Cellist</p>
-                <p class="hero__description fade-in fade-in-delay-2">
+                <p class="hero__subtitle fade-in fade-in-delay-1"
+                   data-en="Physicist &amp; Cellist"
+                   data-de="Physiker &amp; Cellist">Physicist &amp; Cellist</p>
+                <p class="hero__description fade-in fade-in-delay-2"
+                   data-en="PhD student in Cosmology at the University of Geneva.&lt;br&gt;Research in strong gravitational lensing and time-delay cosmography."
+                   data-de="Doktorand in Kosmologie an der Universität Genf.&lt;br&gt;Forschung im Bereich starker Gravitationslinsen und Time-Delay-Kosmographie.">
                     PhD student in Cosmology at the University of Geneva.<br>
                     Research in strong gravitational lensing and time-delay cosmography.
                 </p>
             </div>
         </div>
-        <div class="hero__scroll">scroll</div>
+        <div class="hero__scroll" data-en="scroll" data-de="scrollen">scroll</div>
     </section>
 
     <!-- About Preview -->
@@ -68,22 +80,32 @@
                     <img src="assets/images/portrait.jpg" alt="Hrvoje Krizic">
                 </div>
                 <div class="about__content">
-                    <h2>About</h2>
-                    <p class="about__text">
+                    <h2 data-en="About" data-de="Über mich">About</h2>
+                    <p class="about__text"
+                       data-en="I am a PhD student at the Department of Theoretical Physics, University of Geneva, working on strong gravitational lens modeling in the context of time-delay cosmography. My research aims to constrain the Hubble constant through advanced modeling techniques for high-resolution imaging data within the TDCOSMO collaboration."
+                       data-de="Ich bin Doktorand am Departement für Theoretische Physik der Universität Genf und arbeite an der Modellierung starker Gravitationslinsen im Kontext der Time-Delay-Kosmographie. Im Rahmen der TDCOSMO-Kollaboration entwickle ich fortschrittliche Modellierungstechniken für hochaufgelöste Bilddaten, um die Hubble-Konstante präziser einzugrenzen.">
                         I am a PhD student at the Department of Theoretical Physics, University of Geneva, working on strong gravitational lens modeling in the context of time-delay cosmography. My research aims to constrain the Hubble constant through advanced modeling techniques for high-resolution imaging data within the TDCOSMO collaboration.
                     </p>
-                    <p class="about__text">
+                    <p class="about__text"
+                       data-en='I completed my Bachelor&#39;s and Master&#39;s degrees in Physics at ETH Zurich. During my time there, I served as a teaching assistant since 2021 and authored the textbook &lt;em&gt;"Tutorium Mathematik fur Naturwissenschaften"&lt;/em&gt;, published by Springer Verlag in 2024.'
+                       data-de='Mein Bachelor- und Masterstudium in Physik habe ich an der ETH Zürich abgeschlossen. Dort war ich seit 2021 als Teaching Assistant tätig und verfasste das Lehrbuch &lt;em&gt;«Tutorium Mathematik für Naturwissenschaften»&lt;/em&gt;, das 2024 im Springer Verlag erschienen ist.'>
                         I completed my Bachelor's and Master's degrees in Physics at ETH Zurich. During my time there, I served as a teaching assistant since 2021 and authored the textbook <em>"Tutorium Mathematik fur Naturwissenschaften"</em>, published by Springer Verlag in 2024.
                     </p>
-                    <p class="about__text">
+                    <p class="about__text"
+                       data-en="Beyond physics, I am a passionate cellist. I have performed as a soloist with various orchestras across Switzerland, Germany, Croatia, and the Netherlands, and currently play in various formations across Switzerland."
+                       data-de="Neben der Physik bin ich begeisterter Cellist. Als Solist trat ich mit verschiedenen Orchestern in der Schweiz, Deutschland, Kroatien und den Niederlanden auf und spiele heute in unterschiedlichen Formationen in der ganzen Schweiz.">
                         Beyond physics, I am a passionate cellist. I have performed as a soloist with various orchestras across Switzerland, Germany, Croatia, and the Netherlands, and currently play in various formations across Switzerland.
                     </p>
 
                     <div class="about__links">
-                        <a href="research.html" class="about__link">Research Projects</a>
-                        <a href="cellist.html" class="about__link">Concerts & Media</a>
-                        <a href="https://link.springer.com/book/10.1007/978-3-662-69221-9" class="about__link" target="_blank">Springer Book</a>
-                        <a href="teaching/" class="about__link">Teaching Portal</a>
+                        <a href="research.html" class="about__link"
+                           data-en="Research Projects" data-de="Forschungsprojekte">Research Projects</a>
+                        <a href="cellist.html" class="about__link"
+                           data-en="Concerts &amp; Media" data-de="Konzerte &amp; Medien">Concerts &amp; Media</a>
+                        <a href="https://link.springer.com/book/10.1007/978-3-662-69221-9" class="about__link" target="_blank"
+                           data-en="Springer Book" data-de="Springer-Buch">Springer Book</a>
+                        <a href="teaching/" class="about__link"
+                           data-en="Teaching Portal" data-de="Lehrportal">Teaching Portal</a>
                     </div>
                 </div>
             </div>
@@ -94,11 +116,11 @@
     <section class="section section--tight" id="contact">
         <div class="container">
             <div class="contact">
-                <h2>Contact</h2>
+                <h2 data-en="Contact" data-de="Kontakt">Contact</h2>
                 <div class="contact__info">
                     <p class="contact__item"><a href="mailto:Hrvoje.Krizic@unige.ch">hrvoje.krizic@unige.ch</a></p>
-                    <p class="contact__item"><a href="mailto:krizic.hrvoje@outlook.com">krizic.hrvoje@outlook.com</a> <span class="text-muted">— Cello inquiries</span></p>
-                    <p class="contact__item text-muted">Geneva, Switzerland</p>
+                    <p class="contact__item"><a href="mailto:krizic.hrvoje@outlook.com">krizic.hrvoje@outlook.com</a> <span class="text-muted" data-en="— Cello inquiries" data-de="— Cello-Anfragen">— Cello inquiries</span></p>
+                    <p class="contact__item text-muted" data-en="Geneva, Switzerland" data-de="Genf, Schweiz">Geneva, Switzerland</p>
                 </div>
                 <div class="contact__social">
                     <a href="https://www.linkedin.com/in/hrvoje-krizic/" target="_blank" title="LinkedIn">
@@ -125,6 +147,7 @@
         </div>
     </footer>
 
+    <script src="assets/i18n.js"></script>
     <script>
         // Navbar scroll effect
         const nav = document.getElementById('nav');

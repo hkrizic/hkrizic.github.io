@@ -330,6 +330,82 @@ a {
     }
 }
 
+/* --- Language Switcher --- */
+.nav__lang {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.nav__lang-btn {
+    background: none;
+    border: none;
+    padding: 0.25rem 0;
+    margin: 0;
+    font: inherit;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+    cursor: pointer;
+    opacity: 0.55;
+    transition: var(--transition);
+}
+
+.nav__lang-btn:hover {
+    color: var(--text);
+    opacity: 1;
+}
+
+.nav__lang-btn.is-active {
+    opacity: 1;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.nav__lang-sep {
+    opacity: 0.35;
+    font-size: 0.8rem;
+    user-select: none;
+}
+
+.nav--light .nav__lang-btn {
+    color: var(--white);
+}
+
+.nav--light .nav__lang-btn:hover,
+.nav--light .nav__lang-btn.is-active {
+    color: var(--white);
+    opacity: 1;
+}
+
+.nav--light .nav__lang-sep {
+    color: var(--white);
+}
+
+.nav--light.scrolled .nav__lang-btn {
+    color: var(--text-light);
+}
+
+.nav--light.scrolled .nav__lang-btn:hover,
+.nav--light.scrolled .nav__lang-btn.is-active {
+    color: var(--text);
+}
+
+.nav--light.scrolled .nav__lang-sep {
+    color: var(--text-light);
+}
+
+@media (max-width: 768px) {
+    .nav__links.active .nav__lang-btn {
+        color: var(--text);
+        font-size: 1.2rem;
+    }
+    .nav__links.active .nav__lang-sep {
+        color: var(--text);
+        font-size: 1.2rem;
+    }
+}
+
 /* --- Hero --- */
 .hero {
     min-height: 100vh;
