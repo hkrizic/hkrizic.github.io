@@ -812,6 +812,134 @@ a {
     flex-wrap: wrap;
 }
 
+/* --- Past Concerts Archive --- */
+.archive-section {
+    padding-top: 0;
+}
+
+.archive {
+    text-align: center;
+}
+
+/* Trigger pill */
+.archive__summary {
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.95rem 2.2rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    user-select: none;
+    transition: color var(--transition), border-color var(--transition),
+                background var(--transition), box-shadow var(--transition),
+                transform var(--transition);
+}
+
+.archive__summary::-webkit-details-marker { display: none; }
+.archive__summary::marker { content: ''; }
+
+.archive__summary:hover {
+    color: var(--text);
+    border-color: var(--text);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.archive__summary:focus-visible {
+    outline: none;
+    border-color: var(--text);
+    box-shadow: 0 0 0 3px rgba(45, 52, 54, 0.12);
+}
+
+.archive__label {
+    line-height: 1;
+}
+
+.archive__chevron {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform var(--transition);
+}
+
+.archive[open] .archive__chevron {
+    transform: translateY(2px) rotate(-135deg);
+}
+
+.archive[open] .archive__summary {
+    color: var(--text);
+    border-color: var(--text);
+}
+
+/* Expanded content */
+.archive__content {
+    text-align: left;
+    margin-top: 3.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    animation: archiveFadeIn 0.4s ease both;
+}
+
+@keyframes archiveFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.archive__heading {
+    text-align: center;
+    color: var(--text);
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+.archive__heading::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+    margin: 1rem auto 0;
+}
+
+.archive__year {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-top: 2.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.archive .concerts {
+    opacity: 0.92;
+}
+
+.archive .concert {
+    padding: 1.5rem 0;
+}
+
+.archive .concert:hover {
+    background: transparent;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .btn {
     display: inline-block;
     padding: 0.5rem 1rem;
