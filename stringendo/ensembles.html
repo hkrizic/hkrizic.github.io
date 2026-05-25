@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ensembles & Musiker:innen — Stringendo</title>
+    <meta name="description" content="Vier Ensembles, vier Generationen: Stringendo4Kids, Stringendo14, Stringendo2.0 und StringendoZürich — mit allen Musiker:innen.">
+    <link rel="icon" href="assets/brand/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="stage" aria-hidden="true">
+      <img class="orb orb-1" src="assets/brand/kreis_verlauf_1.png" alt="">
+      <img class="orb orb-2" src="assets/brand/kreis_verlauf_2.png" alt="">
+      <img class="orb orb-4" src="assets/brand/kreis_verlauf_4.png" alt="">
+      <img class="orb orb-6" src="assets/brand/kreis_verlauf_6.png" alt="">
+    </div>
+
+    <header class="site-header has-logo">
+      <a class="logo-link" href="index.html" aria-label="Stringendo Start">
+        <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Hauptnavigation">
+        <a href="index.html"><span class="nav-dot" data-color="green"></span><span class="nav-label">Start</span></a>
+        <a href="ensembles.html"><span class="nav-dot" data-color="blue"></span><span class="nav-label">Ensembles</span></a>
+        <a href="konzerte.html"><span class="nav-dot" data-color="red"></span><span class="nav-label">Konzerte</span></a>
+        <a href="musik.html"><span class="nav-dot" data-color="yellow"></span><span class="nav-label">Musik</span></a>
+        <a href="kontakt.html"><span class="nav-dot" data-color="violet"></span><span class="nav-label">Kontakt</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Ensembles & Musiker:innen</p>
+        <h1>Vier Welten, eine Familie.</h1>
+        <p class="lead">Jedes Ensemble hat seinen eigenen Klang, seine eigenen Menschen, sein eigenes Alter. Unten findest du sie alle — vom ersten Bogenstrich bei 4Kids bis zu den Profis von Stringendo Zürich.</p>
+        <div class="hero-v2-meta" style="margin-top:18px">
+          <a class="button orb-btn" data-orb="1" href="#kids">4Kids</a>
+          <a class="button orb-btn" data-orb="2" href="#teens">14</a>
+          <a class="button orb-btn" data-orb="3" href="#twenty">2.0</a>
+          <a class="button orb-btn" data-orb="4" href="#zurich">Zürich</a>
+        </div>
+      </section>
+
+      <div data-ensemble-blocks></div>
+    </main>
+
+    <footer class="site-footer">
+      <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      <nav aria-label="Footer">
+        <a href="index.html">Start</a>
+        <a href="konzerte.html">Konzerte</a>
+        <a href="musik.html">Musik</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">Instagram</a>
+      </nav>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

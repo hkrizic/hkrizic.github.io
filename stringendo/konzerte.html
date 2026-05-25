@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Konzerte — Stringendo</title>
+    <meta name="description" content="Nächste und vergangene Konzerte von Stringendo Zürich. Tickets, Daten, Programme.">
+    <link rel="icon" href="assets/brand/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="stage" aria-hidden="true">
+      <img class="orb orb-2" src="assets/brand/kreis_verlauf_2.png" alt="">
+      <img class="orb orb-3" src="assets/brand/kreis_verlauf_3.png" alt="">
+      <img class="orb orb-5" src="assets/brand/kreis_verlauf_5.png" alt="">
+    </div>
+
+    <header class="site-header has-logo">
+      <a class="logo-link" href="index.html" aria-label="Stringendo Start">
+        <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Hauptnavigation">
+        <a href="index.html"><span class="nav-dot" data-color="green"></span><span class="nav-label">Start</span></a>
+        <a href="ensembles.html"><span class="nav-dot" data-color="blue"></span><span class="nav-label">Ensembles</span></a>
+        <a href="konzerte.html"><span class="nav-dot" data-color="red"></span><span class="nav-label">Konzerte</span></a>
+        <a href="musik.html"><span class="nav-dot" data-color="yellow"></span><span class="nav-label">Musik</span></a>
+        <a href="kontakt.html"><span class="nav-dot" data-color="violet"></span><span class="nav-label">Kontakt</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Konzerte</p>
+        <h1>Komm uns live hören.</h1>
+        <p class="lead">Unsere Konzerte sind keine Konzerte. Sie sind Begegnungen — komm vorbei und bring jemand:e:n mit.</p>
+      </section>
+
+      <!-- MEGA NEXT CONCERT -->
+      <article class="mega-concert" data-mega-concert></article>
+
+      <!-- ARCHIVE 2026 -->
+      <section class="section events">
+        <div class="section-head">
+          <p class="eyebrow">Archiv 2026</p>
+          <h2>Was wir kürzlich gespielt haben.</h2>
+        </div>
+        <div class="konzerte-archive" data-archive></div>
+      </section>
+
+      <!-- SAISONAL -->
+      <section class="section">
+        <div class="section-head">
+          <p class="eyebrow">Saisonal</p>
+          <h2>Wiederkehrende Klassiker.</h2>
+          <p class="lead">Manche Termine wiederholen sich Jahr für Jahr — und genau das macht sie zu Highlights.</p>
+        </div>
+        <div class="seasonal-grid" data-seasonal></div>
+      </section>
+
+      <!-- CTA -->
+      <section class="quote-block">
+        <h2 class="big-quote">Bleib im <em>Klang</em>.</h2>
+        <p class="lead" style="max-width:50ch;margin:14px auto 0;text-align:center">
+          Wir versenden keinen Newsletter. Aber wir freuen uns, wenn du @stringendozurich folgst — alles Wichtige passiert dort.
+        </p>
+        <div class="quote-cta">
+          <a class="button orb-btn" data-orb="2" href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">Instagram folgen</a>
+          <a class="button orb-btn" data-orb="5" href="mailto:info@stringendo.ch">info@stringendo.ch</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      <nav aria-label="Footer">
+        <a href="index.html">Start</a>
+        <a href="ensembles.html">Ensembles</a>
+        <a href="musik.html">Musik</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">Instagram</a>
+      </nav>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

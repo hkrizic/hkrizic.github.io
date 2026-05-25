@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kontakt & Förderverein — Stringendo</title>
+    <meta name="description" content="Kontakt, künstlerische Leitung, Förderverein und Bankverbindung von Stringendo Zürich.">
+    <link rel="icon" href="assets/brand/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="stage" aria-hidden="true">
+      <img class="orb orb-2" src="assets/brand/kreis_verlauf_2.png" alt="">
+      <img class="orb orb-4" src="assets/brand/kreis_verlauf_4.png" alt="">
+      <img class="orb orb-6" src="assets/brand/kreis_verlauf_6.png" alt="">
+    </div>
+
+    <header class="site-header has-logo">
+      <a class="logo-link" href="index.html" aria-label="Stringendo Start">
+        <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Hauptnavigation">
+        <a href="index.html"><span class="nav-dot" data-color="green"></span><span class="nav-label">Start</span></a>
+        <a href="ensembles.html"><span class="nav-dot" data-color="blue"></span><span class="nav-label">Ensembles</span></a>
+        <a href="konzerte.html"><span class="nav-dot" data-color="red"></span><span class="nav-label">Konzerte</span></a>
+        <a href="musik.html"><span class="nav-dot" data-color="yellow"></span><span class="nav-label">Musik</span></a>
+        <a href="kontakt.html"><span class="nav-dot" data-color="violet"></span><span class="nav-label">Kontakt</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Kontakt &amp; Förderverein</p>
+        <h1>Schreib uns einfach.</h1>
+        <p class="lead">Egal ob du vorspielen, mitspielen, einladen, fördern oder einfach Hallo sagen möchtest — wir freuen uns.</p>
+      </section>
+
+      <!-- FÖRDERVEREIN — jetzt zuoberst -->
+      <section id="foerderverein" class="section foerder-block">
+        <div class="foerder-grid">
+          <div class="foerder-intro reveal">
+            <p class="eyebrow">Förderverein</p>
+            <h2>Unterstützen Sie junge Talente.</h2>
+            <p class="lead">Stringendo ist ein gemeinnütziger Verein. Mitglieder unterstützen engagierte Nachwuchstalente in ihrer musikalischen Entwicklung auf höchstem Niveau.</p>
+            <ul class="fees">
+              <li><span>Einzelmitglieder</span><strong>70 CHF</strong></li>
+              <li><span>Paarmitglieder</span><strong>100 CHF</strong></li>
+              <li><span>Jugend / Alumni</span><strong>20 CHF</strong></li>
+              <li><span>Familienmitglieder</span><strong>120 CHF</strong></li>
+              <li><span>Gönner / Firmen</span><strong>ab 400 CHF</strong></li>
+            </ul>
+          </div>
+
+          <form class="support-form reveal" novalidate>
+            <p class="form-eyebrow">Mitglied werden</p>
+
+            <div class="field">
+              <input id="f-firstname" type="text" name="first-name" autocomplete="given-name" placeholder=" " required>
+              <label for="f-firstname">Vorname</label>
+            </div>
+            <div class="field">
+              <input id="f-lastname" type="text" name="last-name" autocomplete="family-name" placeholder=" " required>
+              <label for="f-lastname">Nachname</label>
+            </div>
+
+            <div class="field wide">
+              <input id="f-email" type="email" name="email" autocomplete="email" placeholder=" " required>
+              <label for="f-email">E-Mail-Adresse</label>
+            </div>
+
+            <div class="field wide select-field">
+              <select id="f-membership" name="membership" required>
+                <option value="Einzelmitglied">Einzelmitglied — 70 CHF</option>
+                <option value="Paarmitglied">Paarmitglied — 100 CHF</option>
+                <option value="Jugendmitglied / Alumni">Jugendmitglied / Alumni — 20 CHF</option>
+                <option value="Familienmitglied">Familienmitglied — 120 CHF</option>
+                <option value="Gönner / Firma">Gönner / Firma — ab 400 CHF</option>
+              </select>
+              <label for="f-membership">Beitragsart</label>
+              <span class="select-chevron" aria-hidden="true">▾</span>
+            </div>
+
+            <div class="field wide">
+              <textarea id="f-message" name="message" rows="4" placeholder=" "></textarea>
+              <label for="f-message">Anmerkungen (optional)</label>
+            </div>
+
+            <button type="submit" class="button orb-btn submit-btn" data-orb="5">Anfrage vorbereiten →</button>
+            <p class="form-note">Wir öffnen damit deine Mail-App mit einer fertigen Nachricht an <strong>kontakt@stringendo.ch</strong>. Keine Daten verlassen den Browser.</p>
+          </form>
+        </div>
+      </section>
+
+      <!-- ZWEI KONTAKT KARTEN -->
+      <section class="section">
+        <div class="section-head">
+          <p class="eyebrow">Direkter Kontakt</p>
+          <h2>Schreib direkt.</h2>
+        </div>
+        <div class="contact-cards">
+          <article class="contact-card reveal">
+            <p class="eyebrow">Künstlerische Leitung</p>
+            <h2>Jens Lohmann</h2>
+            <p class="contact-meta">Streulistrasse 12<br>8032 Zürich</p>
+            <p class="contact-links">
+              <a class="button orb-btn" data-orb="1" href="mailto:info@stringendo.ch">info@stringendo.ch</a>
+            </p>
+            <div class="pulse-row" style="margin-top:18px">
+              <span>Vorspielen</span>
+              <span>Künstlerisches</span>
+            </div>
+          </article>
+
+          <article class="contact-card reveal">
+            <p class="eyebrow">Verein &amp; Organisation</p>
+            <h2>Pierina Däppen</h2>
+            <p class="contact-meta">Rütistrasse 28<br>8032 Zürich</p>
+            <p class="contact-links">
+              <a class="button orb-btn" data-orb="3" href="mailto:kontakt@stringendo.ch">kontakt@stringendo.ch</a>
+              <a class="button orb-btn" data-orb="5" href="tel:+41787680422">+41 78 768 04 22</a>
+            </p>
+            <div class="pulse-row" style="margin-top:18px">
+              <span>Organisatorisches</span>
+              <span>Förderverein</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- BANK -->
+      <section class="section bank-block">
+        <div class="bank-card reveal">
+          <p class="eyebrow">Bankverbindung</p>
+          <h3 class="bank-name">Zürcher Kantonalbank</h3>
+          <p class="bank-addr">Bahnhofstrasse 9, 8001 Zürich</p>
+          <p class="bank-iban">CH37 0070 0110 0066 3969 2</p>
+          <p class="bank-holder">Konto Verein Stringendo</p>
+        </div>
+        <div class="reveal">
+          <p class="eyebrow">Impressum</p>
+          <h3 style="font-size:22px">Verein Stringendo</h3>
+          <p>Streulistrasse 12 · 8032 Zürich · Schweiz</p>
+          <p>info@stringendo.ch</p>
+          <p style="margin-top:18px"><a class="button orb-btn" data-orb="2" href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">@stringendozurich ↗</a></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      <nav aria-label="Footer">
+        <a href="index.html">Start</a>
+        <a href="ensembles.html">Ensembles</a>
+        <a href="konzerte.html">Konzerte</a>
+        <a href="musik.html">Musik</a>
+        <a href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">Instagram</a>
+      </nav>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

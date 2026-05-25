@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unsere Musik — Stringendo</title>
+    <meta name="description" content="Alben und Videos von Stringendo Zürich — Vivaldi, Piazzolla, Respighi, Villa-Lobos.">
+    <link rel="icon" href="assets/brand/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="stage" aria-hidden="true">
+      <img class="orb orb-1" src="assets/brand/kreis_verlauf_1.png" alt="">
+      <img class="orb orb-3" src="assets/brand/kreis_verlauf_3.png" alt="">
+      <img class="orb orb-6" src="assets/brand/kreis_verlauf_6.png" alt="">
+    </div>
+
+    <header class="site-header has-logo">
+      <a class="logo-link" href="index.html" aria-label="Stringendo Start">
+        <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Hauptnavigation">
+        <a href="index.html"><span class="nav-dot" data-color="green"></span><span class="nav-label">Start</span></a>
+        <a href="ensembles.html"><span class="nav-dot" data-color="blue"></span><span class="nav-label">Ensembles</span></a>
+        <a href="konzerte.html"><span class="nav-dot" data-color="red"></span><span class="nav-label">Konzerte</span></a>
+        <a href="musik.html"><span class="nav-dot" data-color="yellow"></span><span class="nav-label">Musik</span></a>
+        <a href="kontakt.html"><span class="nav-dot" data-color="violet"></span><span class="nav-label">Kontakt</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Unsere Musik</p>
+        <h1>Hören, schauen, wiederhören.</h1>
+        <p class="lead">Videos, Studioaufnahmen und Konzertmitschnitte aus über zwei Jahrzehnten Stringendo.</p>
+      </section>
+
+      <!-- 1 — NEUSTE VIDEOS (featured big) -->
+      <section class="section music-featured">
+        <div class="section-head">
+          <p class="eyebrow">Neuste Aufnahmen</p>
+          <h2>Frisch eingespielt.</h2>
+        </div>
+        <div class="featured-videos" data-videos-featured></div>
+      </section>
+
+      <!-- 2 — ÄLTERE VIDEOS -->
+      <section class="section music-archive">
+        <div class="section-head">
+          <p class="eyebrow">Ältere Aufnahmen</p>
+          <h2>Aus dem Archiv.</h2>
+          <p class="lead">Mitschnitte von Konzerten, Festivals und Begegnungen — manche schon ein paar Jahre alt, aber immer noch hörenswert.</p>
+        </div>
+        <div class="video-strip" data-videos></div>
+      </section>
+
+      <!-- 3 — AUDIO (Spotify featured + SoundCloud Archiv) -->
+      <section class="section music-audio">
+        <div class="section-head">
+          <p class="eyebrow">Zum Anhören</p>
+          <h2>Hör rein.</h2>
+          <p class="lead">Aktuelle Studioalben und ältere SoundCloud-Aufnahmen — ein Klangarchiv, das mit jeder neuen Saison wächst.</p>
+        </div>
+
+        <!-- Featured Spotify -->
+        <div class="spotify-featured" data-spotify-featured></div>
+
+        <!-- SoundCloud-Alben darunter -->
+        <div class="section-head" style="margin-top:48px">
+          <p class="eyebrow">SoundCloud-Archiv</p>
+          <h3 style="margin:0;font-size:clamp(24px,2.4vw,36px)">Frühere Alben.</h3>
+        </div>
+        <div class="music-layout">
+          <div class="album-list" data-albums></div>
+          <div class="player-shell">
+            <iframe id="soundcloud-player" title="Stringendo SoundCloud Playlist" src="https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Fplaylists%2F321442421&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&color=000000"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <section class="quote-block">
+        <h2 class="big-quote">Our music is <em>different</em>.</h2>
+        <div class="quote-cta">
+          <a class="button orb-btn" data-orb="1" href="konzerte.html">Live erleben</a>
+          <a class="button orb-btn" data-orb="3" href="https://www.youtube.com/results?search_query=stringendo+zurich" target="_blank" rel="noreferrer">YouTube ↗</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <img src="assets/brand/logo_stringendo.svg" alt="Stringendo">
+      <nav aria-label="Footer">
+        <a href="index.html">Start</a>
+        <a href="ensembles.html">Ensembles</a>
+        <a href="konzerte.html">Konzerte</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="https://www.instagram.com/stringendozurich/" target="_blank" rel="noreferrer">Instagram</a>
+      </nav>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
