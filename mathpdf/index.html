@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MathPDF — a PDF reader for mathematicians</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="logo">∫</span>
+    <div>
+      <h1>MathPDF</h1>
+      <p>Hover refs · zoom · LaTeX notes</p>
+    </div>
+  </div>
+
+  <div class="toolbar" id="toolbar" hidden>
+    <button class="tb-btn" id="prevPage" title="Previous page (←)">‹</button>
+    <input class="tb-input" id="pageInput" type="number" min="1" value="1">
+    <span class="tb-sep-text">/ <span id="pageCount">–</span></span>
+    <button class="tb-btn" id="nextPage" title="Next page (→)">›</button>
+
+    <span class="tb-divider"></span>
+
+    <button class="tb-btn" id="zoomOut" title="Zoom out">−</button>
+    <span class="tb-zoom" id="zoomLevel">1.5×</span>
+    <button class="tb-btn" id="zoomIn" title="Zoom in">+</button>
+    <button class="tb-btn tb-text" id="zoomFit" title="Fit to width">Fit</button>
+
+    <span class="tb-divider"></span>
+
+    <button class="tb-btn tb-text tb-toggle" id="noteBtn"
+            title="Drop a note (click then click anywhere on a page)">
+      + Note
+    </button>
+
+    <button class="tb-btn tb-text" id="downloadBtn"
+            title="Download a copy with your notes baked in">
+      Download
+    </button>
+  </div>
+
+  <label class="file-btn">
+    <input type="file" id="fileInput" accept="application/pdf" hidden>
+    Open PDF…
+  </label>
+  <span id="status"></span>
+</header>
+
+<main id="viewer">
+  <div class="empty">
+    <h2>Open a math or physics PDF to begin.</h2>
+    <p>
+      <b>Hover</b> over equation references like <code>(3.1)</code> or theorem
+      references like <code>Theorem 5.1</code> to peek at the source — pulled
+      straight from the page so the math typography is preserved exactly.
+      <b>Click</b> a reference to jump to it.
+    </p>
+    <p>
+      Once a PDF is open, the toolbar above gives you zoom, page navigation,
+      and a <b>Note</b> tool: click <code>+ Note</code> then click anywhere on a
+      page to drop a sticky note. Notes accept inline math with
+      <code>$x^2$</code> and display math with <code>$$\int_0^1 x\,dx$$</code>
+      — rendered live by KaTeX. Notes are saved locally per file.
+    </p>
+    <p class="tip">
+      Works best on hyperref'd LaTeX PDFs. Scanned PDFs have no text/links to
+      detect.
+    </p>
+  </div>
+</main>
+
+<div id="loading" class="loading-screen" hidden>
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Loading…</div>
+  <div class="loading-file" id="loadingFile"></div>
+</div>
+
+<div id="tooltip" class="tooltip" hidden></div>
+
+<div id="noteEditor" class="note-editor" hidden>
+  <div class="ne-bar">
+    <span class="ne-title">Note</span>
+    <button class="ne-btn ne-del" id="noteDelete" title="Delete note">Delete</button>
+    <button class="ne-btn ne-close" id="noteClose" title="Close (Esc)">×</button>
+  </div>
+  <textarea id="noteText"
+            placeholder="Write notes here.&#10;Use $x^2 + y^2 = r^2$ for inline math, $$\int_0^1 x\,dx = \tfrac12$$ for display math."></textarea>
+  <div class="ne-preview-label">Preview</div>
+  <div id="notePreview" class="ne-preview"></div>
+</div>
+
+</body>
+</html>
