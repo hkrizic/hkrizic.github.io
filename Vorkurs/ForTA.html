@@ -138,6 +138,14 @@
 			background-color: #3275d9;
 			transform: translateY(-2px);
 		}
+
+		.whatsapp-link.disabled,
+		.whatsapp-link.disabled:hover {
+			background-color: #b9c4d0;
+			cursor: not-allowed;
+			box-shadow: none;
+			transform: none;
+		}
 	</style>
 </head>
 <body>
@@ -151,32 +159,131 @@
 	Die Gestaltung eurer Tutorien liegt vollständig in euren Händen – orientiert euch dabei gerne daran, wie ihr es als TAs bei einer „richtigen“ ETH-Vorlesung machen würdet.
 	Ihr könnt zum Beispiel eine Stunde für das Besprechen von Aufgaben und eine weitere Stunde für die Zusammenfassung der Vorlesung nutzen, oder auch die gesamte Zeit für weiterführende, eigene Aufgaben einsetzen.
 	Es gibt keine festen Vorgaben – wichtig ist nur, dass eure Teilnehmenden profitieren und motiviert bleiben.
-	Infos zum <strong>sozialen Nachmittag</strong> erhaltet ihr in Kürze direkt von Jan zugeschickt.
+	Infos zum <strong>sozialen Nachmittag</strong> erhaltet ihr in Kürze direkt von der Kursleitung zugeschickt.
 </p>
 
 <br>
 <br>
 <h1>TA Whatsapp Gruppe</h1>
 <div style="text-align:center;">
-	<a href="https://chat.whatsapp.com/IUlOvIJW6sF6GMEAAVkOFt" class="whatsapp-link">Hier beitreten!</a>
+	<span class="whatsapp-link disabled" title="Link wird vor Kursbeginn aufgeschaltet">Link folgt</span>
 </div>
 <br>
 <br>
 <h1>Stundenplan</h1>
-<div style="text-align:center;">
-	<img style="width: 70%" src="2025/Stundenplan_Vorkurs_TA.png">
+<p>
+	<strong>Eure Einsatzzeiten sind blau umrandet:</strong> die <strong>Aufgabensessionen (11–13 Uhr)</strong> – jede:r TA an <strong>3 von 4 Tagen</strong> – sowie die <strong>Tutorien (14–16 Uhr)</strong> und das <strong>Soziale Event</strong> am Mittwoch. Das <strong>Mittagessen (13–14 Uhr)</strong> ist für euch inbegriffen (grün umrandet). <strong>Vorlesung</strong> und <strong>Q&amp;A-Session</strong> sind keine TA-Einsätze.
+</p>
+<style>
+	.sp-wrap { font-family: 'Poppins', sans-serif; max-width: 1120px; margin: 0 auto; }
+	.sp-grid { display: grid; grid-template-columns: 96px repeat(5, 1fr); gap: 6px; }
+	.c1{grid-column:1}.c2{grid-column:2}.c3{grid-column:3}.c4{grid-column:4}.c5{grid-column:5}.c6{grid-column:6}
+	.r1{grid-row:1}.r2{grid-row:2}.r3{grid-row:3}.r4{grid-row:4}.r5{grid-row:5}
+	.sp-corner { background: transparent; }
+	.sp-time { display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.88rem; color:#444; background:#eef1f6; border-radius:10px; padding:6px 4px; text-align:center; }
+	.sp-dayhead { display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; padding:10px 6px; color:#fff; background:#3a4a63; border-radius:10px; text-align:center; line-height:1.2; }
+	.sp-dayhead small { font-weight:500; opacity:.85; font-size:.8rem; margin-top:3px; }
+	.sp-cell { position:relative; display:flex; flex-direction:column; text-align:center; border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,0.06); font-size:0.95rem; }
+	.sp-mobtime { display:none; }
+	.sp-title { font-weight:700; padding:8px 6px 7px; }
+	.sp-extra { display:block; font-weight:600; font-size:0.76rem; opacity:0.8; margin-top:2px; }
+	.sp-line { display:flex; flex:1; }
+	.sp-act, .sp-room { flex:1; padding:7px 5px; display:flex; align-items:center; justify-content:center; }
+	.sp-act { border-right:1px solid rgba(255,255,255,0.7); }
+	.c-vorlesung .sp-title{background:#9fbbdd}.c-vorlesung .sp-line{background:#c8ddf2}
+	.c-aufgaben  .sp-title{background:#a9dcef}.c-aufgaben  .sp-line{background:#cdeaf7}
+	.c-qa        .sp-title{background:#ecbfe0}.c-qa        .sp-line{background:#f5d6ec}
+	.c-mittag    .sp-title{background:#b2e0b6}.c-mittag    .sp-line{background:#d2efd4}
+	.c-tutorium  .sp-title{background:#f3c39a}.c-tutorium  .sp-line{background:#f8dcc3}
+	.c-sozial    .sp-title{background:#ddbce8}.c-sozial    .sp-line{background:#ecd9f2}
+	.sp-empty { background:transparent; border:1px dashed rgba(0,0,0,0.08); min-height:56px; }
+	/* TA-Markierungen */
+	.sp-ta { border:3px solid #2f6df0; box-shadow:0 0 0 2px rgba(47,109,240,0.18); }
+	.sp-ta-lunch { border:3px solid #2e9e5b; box-shadow:0 0 0 2px rgba(46,158,91,0.18); }
+	.sp-dim { opacity:0.5; }
+	.sp-extra.ta { color:#1b4fcf; opacity:1; font-weight:700; }
+	.sp-extra.lunch { color:#1e7a45; opacity:1; font-weight:700; }
+	.sp-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:12px 22px; margin:20px auto 4px; max-width:960px; font-size:0.9rem; font-weight:600; color:#444; }
+	.sp-legend .lg { display:flex; align-items:center; gap:8px; }
+	.sp-legend .sw { width:16px; height:16px; border-radius:5px; background:#fff; flex:0 0 auto; }
+	.sp-legend .sw.ta { border:3px solid #2f6df0; }
+	.sp-legend .sw.lunch { border:3px solid #2e9e5b; }
+	.sp-legend .sw.none { border:1px solid rgba(0,0,0,0.2); opacity:0.5; }
+	.sp-note { text-align:center; font-weight:700; color:#333; margin:14px auto 0; font-size:0.92rem; }
+	@media (max-width: 820px) {
+		.sp-grid { display:block; }
+		.sp-grid > * { grid-column:auto !important; grid-row:auto !important; }
+		.sp-corner, .sp-time { display:none; }
+		.sp-empty { display:none; }
+		.sp-dayhead { margin-top:16px; margin-bottom:6px; flex-direction:row; gap:8px; justify-content:center; font-size:1.05rem; border-radius:12px; }
+		.sp-dayhead small { margin-top:0; }
+		.sp-cell { margin-bottom:6px; }
+		.sp-mobtime { display:block; font-size:0.78rem; font-weight:700; color:#555; background:rgba(255,255,255,0.55); padding:4px 0; }
+	}
+</style>
+<div class="sp-wrap">
+	<div class="sp-grid">
+		<!-- corner + time labels (left column) -->
+		<div class="sp-corner c1 r1"></div>
+		<div class="sp-time c1 r2">09:00–11:00</div>
+		<div class="sp-time c1 r3">11:00–13:00</div>
+		<div class="sp-time c1 r4">13:00–14:00</div>
+		<div class="sp-time c1 r5">14:00–16:00</div>
+
+		<!-- Montag -->
+		<div class="sp-dayhead c2 r1">Montag<small>07.09.2026</small></div>
+		<div class="sp-cell c-vorlesung sp-dim c2 r2"><span class="sp-mobtime">09:00–11:00</span><span class="sp-title">Mathematik</span><div class="sp-line"><span class="sp-act">Vorlesung</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-aufgaben sp-ta c2 r3"><span class="sp-mobtime">11:00–13:00</span><span class="sp-title">Mathematik<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">Aufgaben</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-mittag sp-ta-lunch c2 r4"><span class="sp-mobtime">13:00–14:00</span><span class="sp-title">Mittagessen<small class="sp-extra lunch">für TAs inkl.</small></span><div class="sp-line"><span class="sp-act">FUSION meal</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-tutorium sp-ta c2 r5"><span class="sp-mobtime">14:00–16:00</span><span class="sp-title">Tutorium<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">in Gruppen</span><span class="sp-room">TBA</span></div></div>
+
+		<!-- Dienstag -->
+		<div class="sp-dayhead c3 r1">Dienstag<small>08.09.2026</small></div>
+		<div class="sp-cell c-vorlesung sp-dim c3 r2"><span class="sp-mobtime">09:00–11:00</span><span class="sp-title">Mathematik</span><div class="sp-line"><span class="sp-act">Vorlesung</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-aufgaben sp-ta c3 r3"><span class="sp-mobtime">11:00–13:00</span><span class="sp-title">Mathematik<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">Aufgaben</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-mittag sp-ta-lunch c3 r4"><span class="sp-mobtime">13:00–14:00</span><span class="sp-title">Mittagessen<small class="sp-extra lunch">für TAs inkl.</small></span><div class="sp-line"><span class="sp-act">FUSION meal</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-tutorium sp-ta c3 r5"><span class="sp-mobtime">14:00–16:00</span><span class="sp-title">Tutorium<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">in Gruppen</span><span class="sp-room">TBA</span></div></div>
+
+		<!-- Mittwoch -->
+		<div class="sp-dayhead c4 r1">Mittwoch<small>09.09.2026</small></div>
+		<div class="sp-cell c-vorlesung sp-dim c4 r2"><span class="sp-mobtime">09:00–11:00</span><span class="sp-title">Mathematik</span><div class="sp-line"><span class="sp-act">Vorlesung</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-aufgaben sp-ta c4 r3"><span class="sp-mobtime">11:00–13:00</span><span class="sp-title">Mathematik<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">Aufgaben</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-mittag sp-ta-lunch c4 r4"><span class="sp-mobtime">13:00–14:00</span><span class="sp-title">Mittagessen<small class="sp-extra lunch">für TAs inkl.</small></span><div class="sp-line"><span class="sp-act">FUSION meal</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-sozial sp-ta c4 r5"><span class="sp-mobtime">14:00–17:00</span><span class="sp-title">Soziales Event<small class="sp-extra">bis 17:00 Uhr</small><small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">Campus</span><span class="sp-room">TBA</span></div></div>
+
+		<!-- Donnerstag -->
+		<div class="sp-dayhead c5 r1">Donnerstag<small>10.09.2026</small></div>
+		<div class="sp-cell c-vorlesung sp-dim c5 r2"><span class="sp-mobtime">09:00–11:00</span><span class="sp-title">Mathematik</span><div class="sp-line"><span class="sp-act">Vorlesung</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-aufgaben sp-ta c5 r3"><span class="sp-mobtime">11:00–13:00</span><span class="sp-title">Mathematik<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">Aufgaben</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-mittag sp-ta-lunch c5 r4"><span class="sp-mobtime">13:00–14:00</span><span class="sp-title">Mittagessen<small class="sp-extra lunch">für TAs inkl.</small></span><div class="sp-line"><span class="sp-act">FUSION meal</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-tutorium sp-ta c5 r5"><span class="sp-mobtime">14:00–16:00</span><span class="sp-title">Tutorium<small class="sp-extra ta">TA-Einsatz</small></span><div class="sp-line"><span class="sp-act">in Gruppen</span><span class="sp-room">TBA</span></div></div>
+
+		<!-- Freitag -->
+		<div class="sp-dayhead c6 r1">Freitag<small>11.09.2026</small></div>
+		<div class="sp-cell c-vorlesung sp-dim c6 r2"><span class="sp-mobtime">09:00–11:00</span><span class="sp-title">Mathematik</span><div class="sp-line"><span class="sp-act">Vorlesung</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-cell c-qa sp-dim c6 r3"><span class="sp-mobtime">11:00–13:00</span><span class="sp-title">Q&amp;A-Session</span><div class="sp-line"><span class="sp-act">Aufgaben</span><span class="sp-room">TBA</span></div></div>
+		<div class="sp-empty c6 r4"></div>
+		<div class="sp-empty c6 r5"></div>
+	</div>
+
+	<div class="sp-legend">
+		<span class="lg"><span class="sw ta"></span>TA-Einsatz: Aufgaben (11–13) · Tutorium (14–16) · Soziales Event</span>
+		<span class="lg"><span class="sw lunch"></span>Mittagessen – für TAs inbegriffen</span>
+		<span class="lg"><span class="sw none"></span>kein TA-Einsatz</span>
+	</div>
+	<p class="sp-note">Hinweis: Zeiten im Stundenplan entsprechen den Hönggerbergzeiten (z.&nbsp;B. 09:00–11:00 = 08:45–10:30)</p>
 </div>
 <br>
 <br>
 <h1>TA-Liste</h1>
 <ul>
-	<li><b>Derk Steffens</b> – dsteffens@student.ethz.ch</li>
-	<li><b>Elias Krainer</b> – ekrainer@student.ethz.ch</li>
-	<li><b>Damien Lagler</b> – dlagler@student.ethz.ch</li>
-	<li><b>Tobias Robert Eeksman</b> – torobert@student.ethz.ch</li>
-	<li><b>Ruben Grosspietsch</b> – rgrosspietsc@ethz.ch</li>
-	<li><b>Alesch Bättig</b> – albaettig@student.ethz.ch</li>
-	<li><b>Yuma Stäubli</b> – ystaeubli@student.ethz.ch</li>
+	<li><b>TA1</b> – TBA</li>
+	<li><b>TA2</b> – TBA</li>
+	<li><b>TA3</b> – TBA</li>
+	<li><b>TA4</b> – TBA</li>
+	<li><b>TA5</b> – TBA</li>
+	<li><b>TA6</b> – TBA</li>
+	<li><b>TA7</b> – TBA</li>
 </ul>
 <br>
 <br>
@@ -184,21 +291,21 @@
 <br>
 <div class="download-section">
 	<!-- Reihe 1: Skript & Serien -->
-	<a href="2025/ETH_Vorkurs_25_Skript_bis_Donnerstag.pdf" class="download-link">📘 Skript (bis Donnerstag)</a>
+	<a href="2026/ETH_Vorkurs_Skript.pdf" class="download-link">📘 Skript</a>
 </div>
 <br>
 <div class="download-section">
-	<a href="2025/Serien/ETH_Vorkurs_Aufgaben_Montag.pdf" class="download-link">📝 Serie Montag (PDF)</a>
-	<a href="2025/Serien/ETH_Vorkurs_Aufgaben_Dienstag.pdf" class="download-link">📝 Serie Dienstag (PDF)</a>
-	<a href="2025/Serien/ETH_Vorkurs_Aufgaben_Mittwoch.pdf" class="download-link">📝 Serie Mittwoch (PDF)</a>
-	<a href="2025/Serien/ETH_Vorkurs_Aufgaben_Donnerstag.pdf" class="download-link">📝 Serie Donnerstag (PDF)</a>
+	<a href="2026/Aufgaben/ETH_Vorkurs_Aufgaben_Montag.pdf" class="download-link">📝 Serie Montag (PDF)</a>
+	<a href="2026/Aufgaben/ETH_Vorkurs_Aufgaben_Dienstag.pdf" class="download-link">📝 Serie Dienstag (PDF)</a>
+	<a href="2026/Aufgaben/ETH_Vorkurs_Aufgaben_Mittwoch.pdf" class="download-link">📝 Serie Mittwoch (PDF)</a>
+	<a href="2026/Aufgaben/ETH_Vorkurs_Aufgaben_Donnerstag.pdf" class="download-link">📝 Serie Donnerstag (PDF)</a>
 </div>
 <div class="download-section">
 	<!-- Reihe 2: Lösungen -->
-	<a href="2025/Solutions/ETH_Vorkurs_Solutions_Montag.pdf" class="download-link">✅ Lösungen Montag (PDF)</a>
-	<a href="2025/Solutions/ETH_Vorkurs_Solutions_Dienstag.pdf" class="download-link">✅ Lösungen Dienstag (PDF)</a>
-	<a href="2025/Solutions/ETH_Vorkurs_Solutions_Mittwoch.pdf" class="download-link">✅ Lösungen Mittwoch (PDF)</a>
-	<a href="2025/Solutions/ETH_Vorkurs_Solutions_Donnerstag.pdf" class="download-link">✅ Lösungen Donnerstag (PDF)</a>
+	<a href="2026/Loesungen/ETH_Vorkurs_Solutions_Montag.pdf" class="download-link">✅ Lösungen Montag (PDF)</a>
+	<a href="2026/Loesungen/ETH_Vorkurs_Solutions_Dienstag.pdf" class="download-link">✅ Lösungen Dienstag (PDF)</a>
+	<a href="2026/Loesungen/ETH_Vorkurs_Solutions_Mittwoch.pdf" class="download-link">✅ Lösungen Mittwoch (PDF)</a>
+	<a href="2026/Loesungen/ETH_Vorkurs_Solutions_Donnerstag.pdf" class="download-link">✅ Lösungen Donnerstag (PDF)</a>
 </div>
 
 <br>
@@ -237,53 +344,53 @@
 		</thead>
 		<tbody>
 		<tr>
-			<td>Derk</td>
-			<td>HIT J51</td>
-			<td>HIT J51</td>
-			<td>HIT J51</td>
-			<td>HIT J51</td>
+			<td>TA1</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Elias</td>
-			<td>HIT J52</td>
-			<td>HIT J52</td>
-			<td>HIT J52</td>
-			<td>HIT J52</td>
+			<td>TA2</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Damien</td>
-			<td>HIT F32</td>
-			<td>HIT F32</td>
-			<td>HIT F32</td>
-			<td>HIT F32</td>
+			<td>TA3</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Tobias</td>
-			<td>HIT J53</td>
-			<td>HIT F31.2</td>
-			<td>HIT F11.1</td>
-			<td>HIT F31.2</td>
+			<td>TA4</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Ruben</td>
-			<td>HIT H51</td>
-			<td>HIT H51</td>
-			<td>HCP E47.3</td>
-			<td>HIT H51</td>
+			<td>TA5</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Alesch</td>
-			<td>HIT K51</td>
-			<td>HIT F31.1</td>
-			<td>HIT F31.1</td>
-			<td>HIT F31.1</td>
+			<td>TA6</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		<tr>
-			<td>Yuma</td>
-			<td>HIT K52</td>
-			<td>HIT F12</td>
-			<td>HIT F12</td>
-			<td>HIT F12</td>
+			<td>TA7</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
+			<td>TBA</td>
 		</tr>
 		</tbody>
 	</table>
@@ -296,17 +403,17 @@
 		<th>TA</th>
 		<th>Montag</th>
 		<th>Dienstag</th>
-		<th>Mittwoch</th>
+		<th>Donnerstag</th>
 	</tr>
 	</thead>
 	<tbody>
-	<tr><td>Derk Steffens<br><small>dsteffens@student.ethz.ch</small></td><td>Einstein</td><td>Curie</td><td>Feynman</td></tr>
-	<tr><td>Elias Krainer<br><small>ekrainer@student.ethz.ch</small></td><td>Curie</td><td>Feynman</td><td>Newton</td></tr>
-	<tr><td>Damien Lagler<br><small>dlagler@student.ethz.ch</small></td><td>Feynman</td><td>Newton</td><td>Bohr</td></tr>
-	<tr><td>Tobias Robert Eeksman<br><small>torobert@student.ethz.ch</small></td><td>Newton</td><td>Bohr</td><td>Hawking</td></tr>
-	<tr><td>Ruben Grosspietsch<br><small>rgrosspietsc@ethz.ch</small></td><td>Bohr</td><td>Hawking</td><td>Noether</td></tr>
-	<tr><td>Alesch Bättig<br><small>albaettig@student.ethz.ch</small></td><td>Hawking</td><td>Noether</td><td>Einstein</td></tr>
-	<tr><td>Yuma Stäubli<br><small>ystaeubli@student.ethz.ch</small></td><td>Noether</td><td>Einstein</td><td>Curie</td></tr>
+	<tr><td>TA1</td><td>Einstein</td><td>Curie</td><td>Feynman</td></tr>
+	<tr><td>TA2</td><td>Curie</td><td>Feynman</td><td>Newton</td></tr>
+	<tr><td>TA3</td><td>Feynman</td><td>Newton</td><td>Bohr</td></tr>
+	<tr><td>TA4</td><td>Newton</td><td>Bohr</td><td>Hawking</td></tr>
+	<tr><td>TA5</td><td>Bohr</td><td>Hawking</td><td>Noether</td></tr>
+	<tr><td>TA6</td><td>Hawking</td><td>Noether</td><td>Einstein</td></tr>
+	<tr><td>TA7</td><td>Noether</td><td>Einstein</td><td>Curie</td></tr>
 	</tbody>
 </table>
 <br>
@@ -322,13 +429,13 @@
 	</tr>
 	</thead>
 	<tbody>
-	<tr><td>Derk Steffens<br><small>dsteffens@student.ethz.ch</small></td><td>Montag, Dienstag, Mittwoch</td></tr>
-	<tr><td>Elias Krainer<br><small>ekrainer@student.ethz.ch</small></td><td>Montag, Mittwoch, Donnerstag</td></tr>
-	<tr><td>Damien Lagler<br><small>dlagler@student.ethz.ch</small></td><td>Montag, Dienstag, Donnerstag</td></tr>
-	<tr><td>Tobias Robert Eeksman<br><small>torobert@student.ethz.ch</small></td><td>Dienstag, Mittwoch, Donnerstag</td></tr>
-	<tr><td>Ruben Grosspietsch<br><small>rgrosspietsc@ethz.ch</small></td><td>Montag, Dienstag, Donnerstag</td></tr>
-	<tr><td>Alesch Bättig<br><small>albaettig@student.ethz.ch</small></td><td>Montag, Mittwoch, Donnerstag</td></tr>
-	<tr><td>Yuma Stäubli<br><small>ystaeubli@student.ethz.ch</small></td><td>Dienstag, Mittwoch, Donnerstag</td></tr>
+	<tr><td>TA1</td><td>Montag, Dienstag, Mittwoch</td></tr>
+	<tr><td>TA2</td><td>Montag, Mittwoch, Donnerstag</td></tr>
+	<tr><td>TA3</td><td>Montag, Dienstag, Donnerstag</td></tr>
+	<tr><td>TA4</td><td>Dienstag, Mittwoch, Donnerstag</td></tr>
+	<tr><td>TA5</td><td>Montag, Dienstag, Donnerstag</td></tr>
+	<tr><td>TA6</td><td>Montag, Mittwoch, Donnerstag</td></tr>
+	<tr><td>TA7</td><td>Dienstag, Mittwoch, Donnerstag</td></tr>
 	</tbody>
 </table>
 <br>
@@ -346,10 +453,10 @@
 	</tr>
 	</thead>
 	<tbody>
-	<tr><td>Montag</td><td>Derk</td><td>Elias</td><td>Alesch</td><td>Ruben</td><td>Damien</td><td>-</td></tr>
-	<tr><td>Dienstag</td><td>Derk</td><td>Tobias</td><td>Yuma</td><td>Ruben</td><td>Damien</td><td>–</td></tr>
-	<tr><td>Mittwoch</td><td>Derk</td><td>Elias</td><td>Yuma</td><td>Tobias</td><td>Alesch</td><td>–</td></tr>
-	<tr><td>Donnerstag</td><td>Elias</td><td>Alesch</td><td>Yuma</td><td>Ruben</td><td>Damien</td><td>Tobias</td></tr>
+	<tr><td>Montag</td><td>TA1</td><td>TA2</td><td>TA6</td><td>TA5</td><td>TA3</td><td>-</td></tr>
+	<tr><td>Dienstag</td><td>TA1</td><td>TA4</td><td>TA7</td><td>TA5</td><td>TA3</td><td>–</td></tr>
+	<tr><td>Mittwoch</td><td>TA1</td><td>TA2</td><td>TA7</td><td>TA4</td><td>TA6</td><td>–</td></tr>
+	<tr><td>Donnerstag</td><td>TA2</td><td>TA6</td><td>TA7</td><td>TA5</td><td>TA3</td><td>TA4</td></tr>
 	</tbody>
 </table>
 <br>
