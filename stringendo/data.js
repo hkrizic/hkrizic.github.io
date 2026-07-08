@@ -131,15 +131,15 @@ const ENSEMBLES = [
 
 const CONCERTS = {
   next: {
-    date: { day: "28", month: "Jun", year: "2026" },
-    title: "«Facettenreich»",
-    where: "Grosse Kirche Fluntern · Gellertstrasse 2, 8044 Zürich",
-    program: "Werke von Williams, Tschaikovsky und Bartók · Streichorchester Stringendo · Leitung Jens Lohmann · Solist Paul Handschke (Violoncello).",
-    time: "Sonntag · 17:30",
+    date: { day: "14–19", month: "Sep", year: "2026" },
+    title: "«Herbst in der Helferei»",
+    where: "Helferei · Kirchgasse 13, 8001 Zürich",
+    program: "Klassik-Festival mit internationalen Gastsolist:innen — Stringendo ist das Festivalorchester. Eine Woche voller Begegnungen und Konzerte im Herzen der Zürcher Altstadt.",
+    time: "Festivalwoche",
     tickets:
-      "https://eventfrog.ch/de/p/klassik-opern/klassik/facettenreich-grosse-kirche-fluntern-7448466809122981391.html",
-    flyer: "assets/flyers/Stringendo-Sommerkonzert-Kirche-Fluntern.pdf",
-    image: "assets/flyers/facettenreich-cover.jpg"
+      "https://infomaniak.events/en-ch/shop/herbst-in-der-helferei-2026-DDJ9JLJ6J2",
+    site: "https://www.herbst-helferei.ch",
+    image: "assets/events/herbst-helferei-2026.jpg"
   },
   upcoming: [],
   archive: [
@@ -173,6 +173,17 @@ const CONCERTS = {
       image: "assets/events/pfingstkonzert-2026.jpg",
       flyer: "assets/flyers/Pfingstkonzert-Kloster-Fahr.pdf",
       tag: "Pfingsten 2026"
+    },
+    {
+      title: "«Facettenreich»",
+      subtitle: "Solist Paul Handschke (Violoncello)",
+      where: "Grosse Kirche Fluntern, Zürich",
+      date: "28. Juni 2026",
+      detail:
+        "Werke von Williams, Tschaikovsky und Bartók · Streichorchester Stringendo · Leitung Jens Lohmann · Solist Paul Handschke (Violoncello).",
+      image: "assets/flyers/facettenreich-cover.jpg",
+      flyer: "assets/flyers/Stringendo-Sommerkonzert-Kirche-Fluntern.pdf",
+      tag: "Sommer 2026"
     }
   ],
   seasonal: [

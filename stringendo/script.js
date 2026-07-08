@@ -116,13 +116,18 @@ if (megaTarget && typeof CONCERTS !== "undefined" && CONCERTS.next) {
   const flyerBtn = c.flyer
     ? `<a class="button orb-btn" data-orb="4" href="${c.flyer}" target="_blank" rel="noreferrer" download>Flyer (PDF) ↓</a>`
     : "";
+  const siteBtn = c.site
+    ? `<a class="button orb-btn" data-orb="5" href="${c.site}" target="_blank" rel="noreferrer">Zur Festival-Website →</a>`
+    : "";
+  const imgHref = c.flyer || c.site || "konzerte.html";
+  const imgExternal = Boolean(c.flyer || c.site);
   const onKonzertePage = (location.pathname.split("/").pop() || "").toLowerCase() === "konzerte.html";
   const allBtn = onKonzertePage
     ? ""
     : `<a class="button orb-btn" data-orb="2" href="konzerte.html">Alle Konzerte</a>`;
   megaTarget.innerHTML = `
-    <a class="mega-image is-flyer" href="${c.flyer || "konzerte.html"}" target="${c.flyer ? "_blank" : "_self"}" rel="noreferrer" aria-label="Konzert-Flyer öffnen">
-      <img src="${c.image}" alt="Flyer ${c.title}">
+    <a class="mega-image is-flyer" href="${imgHref}" target="${imgExternal ? "_blank" : "_self"}" rel="noreferrer" aria-label="Mehr erfahren">
+      <img src="${c.image}" alt="${c.title}">
       <span class="mega-eyebrow">Nächstes Konzert</span>
     </a>
     <div class="mega-body">
@@ -135,6 +140,7 @@ if (megaTarget && typeof CONCERTS !== "undefined" && CONCERTS.next) {
       <p class="mega-program">${c.program}</p>
       <div class="mega-actions">
         <a class="button orb-btn" data-orb="1" href="${c.tickets}" target="_blank" rel="noreferrer">Tickets buchen →</a>
+        ${siteBtn}
         ${flyerBtn}
         ${allBtn}
       </div>
