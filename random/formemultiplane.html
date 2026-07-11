@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALPACA Multi-plane &amp; Perturbers — Implementation Guide</title>
+<style>
+:root {
+  --bg: #ffffff; --fg: #1a1d21; --muted: #5c6570; --line: #dde2e8;
+  --card: #f6f8fa; --accent: #0b6bcb; --accent2: #8250df;
+  --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e;
+  --code-bg: #f0f2f5; --plane-main: #b22222; --plane-pert: #1e6eb4; --plane-src: #c88200;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117; --fg: #e6edf3; --muted: #8b949e; --line: #30363d;
+    --card: #161b22; --accent: #58a6ff; --accent2: #bc8cff;
+    --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+    --code-bg: #1c2128; --plane-main: #ff7b72; --plane-pert: #79c0ff; --plane-src: #e3b341;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.65 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+h1 { font-size: 2rem; margin: .2rem 0 .4rem; }
+h2 {
+  font-size: 1.5rem; margin: 3rem 0 1rem; padding-top: 1rem;
+  border-top: 2px solid var(--line);
+}
+h3 { font-size: 1.15rem; margin: 2rem 0 .6rem; }
+h4 { margin: 1.4rem 0 .4rem; }
+p, li { max-width: 75ch; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.5rem; }
+code, pre {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .875em;
+}
+code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: .9rem 1.1rem; overflow-x: auto; line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+  border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0;
+}
+.card.cls { border-left-color: var(--accent2); }
+.card h4 { margin: 0 0 .3rem; font-size: 1.02rem; }
+.card h4 code { font-size: 1em; background: none; padding: 0; }
+.loc {
+  display: inline-block; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .75rem; color: var(--muted); background: var(--code-bg);
+  border: 1px solid var(--line); border-radius: 999px; padding: .05rem .55rem;
+  margin-left: .5rem; vertical-align: middle; white-space: nowrap;
+}
+.tag {
+  display: inline-block; font-size: .7rem; font-weight: 600; letter-spacing: .03em;
+  border-radius: 4px; padding: .1rem .45rem; margin-left: .4rem; vertical-align: middle;
+}
+.tag.alpaca { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.tag.herc { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.tag.gotcha { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); }
+.note {
+  border-left: 4px solid var(--warn); background: color-mix(in srgb, var(--warn) 7%, transparent);
+  border-radius: 6px; padding: .7rem 1rem; margin: 1rem 0;
+}
+.note.good { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 7%, transparent); }
+.note.bad  { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 7%, transparent); }
+table { border-collapse: collapse; margin: 1rem 0; width: 100%; font-size: .92rem; }
+th, td { border: 1px solid var(--line); padding: .45rem .7rem; text-align: left; vertical-align: top; }
+th { background: var(--card); }
+.toc {
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 1rem 1.5rem; columns: 2; column-gap: 2.5rem;
+}
+.toc ul { margin: .2rem 0; padding-left: 1.1rem; }
+.toc > ul > li { break-inside: avoid; margin-bottom: .35rem; font-weight: 600; }
+.toc li li { font-weight: 400; }
+@media (max-width: 700px) { .toc { columns: 1; } }
+.diagram {
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 1.2rem; margin: 1.2rem 0; overflow-x: auto;
+}
+.diagram pre { border: none; background: none; margin: 0; padding: 0; }
+.pm { color: var(--plane-main); } .pp { color: var(--plane-pert); } .ps { color: var(--plane-src); }
+.kbd { color: var(--muted); font-size: .85rem; }
+.flow { list-style: none; counter-reset: step; padding-left: 0; }
+.flow > li {
+  counter-increment: step; position: relative; padding-left: 3rem; margin: 1rem 0;
+}
+.flow > li::before {
+  content: counter(step); position: absolute; left: 0; top: .1rem;
+  width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .95rem;
+}
+.small { font-size: .85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Multi-plane lensing &amp; LOS perturbers in ALPACA</h1>
+<p class="subtitle">
+A function-by-function guide to <code>alpaca/models/perturbers.py</code>,
+<code>alpaca/models/multiplane.py</code> and <code>alpaca/models/prob_model.py</code> —
+what each piece does, why it exists, and how the multi-plane machinery plugs into the
+rest of the pipeline (samplers, joint PSF, plotting, staged runs) without any of them noticing.
+<br><span class="small">Generated July 2026 from branch <code>staged-joint-psf</code>. Line numbers refer to that state and will drift.</span>
+</p>
+
+<nav class="toc">
+<ul>
+  <li><a href="#big-picture">0. The big picture</a></li>
+  <li><a href="#dataflow">1. End-to-end data flow (HE 0435 example)</a></li>
+  <li><a href="#perturbers">2. perturbers.py — catalog → model dicts</a>
+    <ul>
+      <li><a href="#pert-dataclasses">Dataclasses</a></li>
+      <li><a href="#pert-load">Loading &amp; coordinates</a></li>
+      <li><a href="#pert-prepare">Selection &amp; plane assignment</a></li>
+    </ul>
+  </li>
+  <li><a href="#multiplane">3. multiplane.py — the translation layer</a>
+    <ul>
+      <li><a href="#mp-geometry">MPGeometry &amp; builders</a></li>
+      <li><a href="#mp-facade">MPMassModelFacade</a></li>
+      <li><a href="#mp-lensimage">MPLensImageWithPSF</a></li>
+      <li><a href="#mp-adapter">MPLensImageAdapter</a></li>
+    </ul>
+  </li>
+  <li><a href="#probmodel">4. prob_model.py — priors, likelihood, kwargs</a>
+    <ul>
+      <li><a href="#pm-helpers">Shared kwargs helpers</a></li>
+      <li><a href="#pm-makelens">make_lens_image</a></li>
+      <li><a href="#pm-probmodel">ProbModel</a></li>
+      <li><a href="#pm-cf">ProbModelCorrField</a></li>
+    </ul>
+  </li>
+  <li><a href="#integration">5. Integration with everything else</a></li>
+  <li><a href="#correctness">6. Exact vs. approximate, verified numerically</a></li>
+  <li><a href="#gotchas">7. Contracts &amp; gotchas</a></li>
+  <li><a href="#extending">8. Extension cookbook</a></li>
+</ul>
+</nav>
+
+<!-- ================================================================ -->
+<h2 id="big-picture">0. The big picture</h2>
+
+<p><strong>One sentence:</strong> the sampler lives in a single-plane world
+(flat parameter names, one flat <code>kwargs_lens</code> list, one
+<code>kwargs_source</code>, one sampled <code>D_dt</code>); the module
+<code>alpaca/models/multiplane.py</code> is a bidirectional dictionary that, on
+<em>every</em> likelihood call, unfolds that flat world into herculens' per-plane
+multi-plane language, lets herculens do genuine multi-plane ray tracing, and folds
+the result back into single-plane shape. Nothing physical is single-plane — only the
+data format at the boundary is.</p>
+
+<div class="diagram"><pre>
+ sampler / prob_model / plotting / postprocess          (flat, "single-plane-shaped")
+ ─────────────────────┬──────────────────────────────────────────────────────────────
+                      │  kwargs_lens=[EPL, SHEAR, SIS]   kwargs_source=[...]   D_dt
+                      ▼
+ <b>MPLensImageAdapter</b>  +  <b>MPMassModelFacade</b>              (ALPACA: translation only)
+                      │  split_kwargs → [[EPL', SHEAR'], [SIS]]   eta_flat   k_planes
+                      ▼
+ <b>MPLensImageWithPSF</b>                                     (ALPACA: 2 overridden methods)
+                      │
+ ─────────────────────┼──────────────────────────────────────────────────────────────
+                      ▼
+ herculens <b>MPLensImage</b> / <b>MPMassModel</b> / <b>MPLightModel</b> / <b>MPPointSourceModel</b>
+                        (upstream: ALL the physics — eta recursion, rendering)
+</pre></div>
+
+<p>Who owns what:</p>
+<table>
+<tr><th>Component</th><th>Owner</th><th>Job</th></tr>
+<tr><td><code>MPMassModel.ray_shooting</code>, eta matrix, per-plane deflections/potentials</td>
+    <td><span class="tag herc">herculens</span></td><td>the multi-plane physics (recursion <code>x_j = x_1 − Σ η_ij α_i(x_i)</code>)</td></tr>
+<tr><td><code>MPLensImage</code> internals (Grid, Numerics, convolution, adaptive source grid)</td>
+    <td><span class="tag herc">herculens</span></td><td>image rendering</td></tr>
+<tr><td><code>MPGeometry</code>, <code>build_plane_structure</code>, <code>build_mp_geometry</code></td>
+    <td><span class="tag alpaca">ALPACA</span></td><td>static plane bookkeeping + fiducial-cosmology constants</td></tr>
+<tr><td><code>MPMassModelFacade</code></td>
+    <td><span class="tag alpaca">ALPACA</span></td><td>flat↔per-plane kwargs, convention rescaling, effective Fermat potential</td></tr>
+<tr><td><code>MPLensImageWithPSF</code></td>
+    <td><span class="tag alpaca">ALPACA</span></td><td>subclass fixing two upstream gaps (live-PSF hook, plane-selective light eval)</td></tr>
+<tr><td><code>MPLensImageAdapter</code></td>
+    <td><span class="tag alpaca">ALPACA</span></td><td>presents <code>LensImage.model()</code>'s exact call surface over the MP stack</td></tr>
+</table>
+
+<p><strong>Why this design?</strong> Every consumer in ALPACA — four sampler
+backends (NUTS, NIFTy, nautilus, gradient descent), joint-PSF fitting, blinding,
+postprocessing, all plotting — speaks the single-plane dialect. The adapter approach
+let multi-plane land without touching any of them (there are only
+<a href="#integration">7 <code>is_multiplane</code> branch sites</a> in the whole
+codebase, nearly all in plotting). The trade-off: the design is invisible from above,
+which is exactly why it can be hard to see "where multi-plane happens". Answer:
+entirely inside <code>multiplane.py</code>.</p>
+
+<!-- ================================================================ -->
+<h2 id="dataflow">1. End-to-end data flow — HE 0435−1223 with one perturber</h2>
+
+<p>Concrete system: main deflector at <span class="pm">z<sub>l</sub> = 0.4546</span>,
+source at <span class="ps">z<sub>s</sub> = 1.6926</span>, θ<sub>E</sub> ≈ 1.18″, plus one
+catalog perturber at <span class="pp">z = 0.78</span> with SIS θ<sub>E</sub> = 0.1″.
+All numbers below were computed with the actual ALPACA/herculens code
+(fiducial H<sub>0</sub> = 70, Ω<sub>m</sub> = 0.3).</p>
+
+<ol class="flow">
+<li><strong>Config &amp; catalog.</strong> <code>model.perturbers.path</code> points to the
+perturber-finder JSON. <code>perturber_inputs_from_config</code>
+(<code>perturbers.py:325</code>) parses config knobs; <code>load_perturber_set</code> parses the JSON.
+Fiducial cosmology from <code>default_config.py</code>: <code>PERTURBERS_H0_FID = 70.0</code>,
+<code>PERTURBERS_OM0 = 0.3</code>.</li>
+
+<li><strong>Plane assignment.</strong> <code>prepare_perturbers</code> (<code>perturbers.py:220</code>):
+since 0.4546 &lt; 0.78 &lt; 1.6926 and |z − z<sub>l</sub>| &gt; <code>z_tolerance</code> (0.01),
+the perturber gets <code>plane = "background"</code>. Its RA/Dec is converted to ALPACA's
+centered arcsec frame. <em>This one tag is the entire trigger for multi-plane mode.</em>
+(With <code>mode="single_plane"</code> it would be forced to <code>"main"</code> and everything
+below is skipped — plain single-plane model with one extra SIS.)</li>
+
+<li><strong>Model construction.</strong> <code>make_lens_image</code> (<code>prob_model.py:221</code>)
+sees an off-plane perturber at line 403 and calls <code>make_mp_lens_image</code>
+(<code>multiplane.py:595</code>), which builds the static geometry:
+<pre>plane_redshifts = [0.4546, 0.78]      main_plane_index = 0
+plane_slots     = [[0, 1], [2]]       # flat kwargs slots per plane
+profile_lists   = [["EPL","SHEAR"], ["SIS"]]
+eta(main→src)   = 1.732               defl_scales = [0.577, 1.0]
+TD prefactors   = [133.7, 182.7] days D_dt_fid = 2757 Mpc  (·TD_CONST = 77.2 d/arcsec²)</pre>
+All of this is <strong>frozen</strong> — the sampler never touches it.</li>
+
+<li><strong>Sampling.</strong> The sampler proposes flat sites, identical naming to a
+single-plane run plus one extra: <code>lens_theta_E, lens_gamma, …, lens_gamma1/2,
+pert5_theta_E, D_dt, …</code>. <code>ProbModel.model()</code> /
+<code>params2kwargs()</code> assemble the flat
+<code>kwargs_lens = [EPL, SHEAR, SIS]</code> via the shared helpers.</li>
+
+<li><strong>Unfold (every likelihood call).</strong> <code>MPMassModelFacade.split_kwargs</code>
+deals the flat list per plane and rescales into herculens' convention:
+θ<sub>E</sub> = 1.18″ → 0.68″ for the EPL (× 0.577<sup>1/(γ−1)</sup>), shear × 0.577;
+the SIS passes through (scale 1.0). The rescale and herculens' η = 1.732 cancel exactly,
+so parameters keep their standard source-referenced meaning.</li>
+
+<li><strong>Multi-plane ray shooting (herculens).</strong> A ray from image position
+(1.30″, 0.30″) travels:
+<pre><span class="pm">z=0      (+1.3000, +0.3000)  → deflected by EPL+SHEAR</span>
+<span class="pp">z=0.78   (+0.6355, +0.1375)  → deflected by the SIS *there*</span>
+<span class="ps">z=1.6926 (+0.2336, +0.0719)  = source-plane position</span></pre>
+The SIS acts on the <em>already-bent</em> ray — the nonlinear coupling single-plane
+models cannot express. The facade returns only the last row, so downstream code sees
+"source coordinates" as usual.</li>
+
+<li><strong>Image, PSF, point sources.</strong> <code>MPLensImageAdapter.model</code> routes
+<code>kwargs_lens_light</code> to the main plane's light plane and <code>kwargs_source</code>
+to the last one; the perturber plane is dark. <code>kwargs_psf</code> (live joint-PSF
+kernel) is threaded through <code>MPLensImageWithPSF</code> to the patched Numerics —
+joint PSF fitting works identically to single-plane. <code>MPPointSourceModel</code>
+solves the quad image positions through the full MP ray shooting.</li>
+
+<li><strong>Time delays.</strong> <code>facade.fermat_potential</code> returns the
+<em>effective</em> Fermat potential: the absolute fiducial arrival time
+(133.7 d × main-plane term + 182.7 d × perturber-plane term) divided by
+<code>TD_CONST · D_dt_fid</code> = 77.2 d/arcsec². The unchanged single-plane code in
+<code>prob_model.py:1899–1908</code> then computes
+<code>Δt = TD_CONST · D_dt · Δφ_eff = Δt_fid · (D_dt / D_dt_fid)</code>.
+The fiducial D_dt cancels algebraically (verified to 4×10<sup>−15</sup>,
+see <a href="#correctness">§6</a>); the sampled D_dt carries all H<sub>0</sub> information,
+exactly as before.</li>
+</ol>
+
+<!-- ================================================================ -->
+<h2 id="perturbers">2. <code>perturbers.py</code> — catalog → model dicts (395 lines)</h2>
+
+<p>Everything upstream of the model: parse the perturber-finder JSON, get the positions
+into ALPACA's frame without orientation bugs, decide who is on which plane, and package
+plain-data dicts that survive the pipeline's rebuild-from-attributes pattern.</p>
+
+<h3 id="pert-dataclasses">Dataclasses</h3>
+
+<div class="card cls">
+<h4><code>Perturber</code><span class="loc">perturbers.py:48</span></h4>
+<p>One catalog entry: <code>id, ra_deg, dec_deg, pixel_xy, z, theta_E_cat, sigma_kms,
+flexion_shift_arcsec, notes</code>. Two fields are filled later by
+<code>prepare_perturbers</code>: <code>plane</code>
+(<code>"foreground" | "main" | "background"</code>) and <code>center_x/center_y</code>
+(ALPACA arcsec frame). The <code>name</code> property returns <code>pert{id}</code> —
+the prefix of every numpyro site for this perturber (<code>pert5_theta_E</code>, …).</p>
+</div>
+
+<div class="card cls">
+<h4><code>PerturberSet</code><span class="loc">perturbers.py:72</span></h4>
+<p>Parsed catalog: target metadata (<code>ra0/dec0_deg, z_lens, z_source,
+pix_scale_arcsec, theta_E_main_arcsec</code>) + the <code>Perturber</code> list + source path.
+<code>z_lens/z_source</code> from here (not the config!) feed the multi-plane geometry.</p>
+</div>
+
+<h3 id="pert-load">Loading &amp; coordinate conversion</h3>
+
+<div class="card">
+<h4><code>load_perturber_set(path)</code><span class="loc">perturbers.py:85</span></h4>
+<p>Strict JSON parser. Every perturber must carry <code>redshift.z</code> and
+<code>SIS_profile.theta_E_arcsec</code> — missing values raise immediately rather than
+propagating NaNs into the model.</p>
+</div>
+
+<div class="card">
+<h4><code>_tangent_offsets_arcsec(pset, perts)</code><span class="loc">perturbers.py:136</span></h4>
+<p>Pure sky offsets from the target: u = ΔRA·cos(dec₀), v = ΔDec, in arcsec. No pixel
+convention yet — this is the raw input to both conversion routes.</p>
+</div>
+
+<div class="card">
+<h4><code>_pixel_offsets_from_wcs_fit(pset, perts)</code><span class="loc">perturbers.py:147</span></h4>
+<p>The rotation-proof route. Fits the affine sky→pixel map of the parent i2d image from
+the perturbers' own (RA/Dec, pixel_xy) pairs — 6 unknowns, needs ≥ 3 perturbers with
+pixel coordinates. The intercept is the target's pixel position. Catches rotation
+<em>and</em> parity flips that a naive North-up assumption would miss. Self-checks: fit
+RMS &gt; 1 pixel ⇒ prints a warning and returns <code>None</code> (fallback route
+takes over). Perturbers without <code>pixel_xy</code> are mapped through the fitted
+transform; exact catalog pixels are kept where available.</p>
+</div>
+
+<div class="card">
+<h4><code>_convert_positions(pset, perts, lens_center)</code><span class="loc">perturbers.py:189</span></h4>
+<p>Fills <code>center_x/y</code> on each perturber: ALPACA's <em>detected</em> lens
+center is the anchor (it corresponds to the catalog target RA/Dec), plus the pixel
+offsets × pixel scale. Fallback when the WCS fit is unavailable: tangent-plane offsets
+assuming North-up/East-left (<code>x = −u</code>). Either way the
+<code>perturbers_overlay</code> plot in <code>01_input/</code> is the visual check — a
+flipped axis is obvious there.</p>
+</div>
+
+<h3 id="pert-prepare">Selection, plane assignment, packaging</h3>
+
+<div class="card">
+<h4><code>prepare_perturbers(pset, lens_center, *, z_tolerance=0.01, …)</code><span class="loc">perturbers.py:220</span></h4>
+<p>The gatekeeper. In order: (1) apply <code>include_ids</code>/<code>exclude_ids</code>
+whitelist/blacklist; (2) drop perturbers below <code>min_flexion_shift_arcsec</code>
+(None keeps all); (3) <strong>plane assignment</strong> — the line that decides
+everything downstream:</p>
+<pre>if single_plane or abs(p.z - pset.z_lens) &lt;= z_tolerance:  p.plane = "main"
+elif p.z &lt; pset.z_lens:                                    p.plane = "foreground"
+else:                                                      p.plane = "background"</pre>
+<p>(4) convert positions; (5) sort by redshift. Any non-<code>"main"</code> plane later
+flips <code>make_lens_image</code> into multi-plane mode. <code>single_plane=True</code>
+(config <code>mode="single_plane"</code>) is the classic approximation: every perturber
+becomes a main-plane SIS and the forward model stays single-plane.</p>
+</div>
+
+<div class="card">
+<h4><code>perturbers_to_model_dicts(perts, *, theta_E_max_factor=3.0, position_sigma_arcsec=0.3, fix_positions=False)</code><span class="loc">perturbers.py:295</span></h4>
+<p>Converts <code>Perturber</code> objects into plain dicts (JSON/pickle friendly — they
+must survive the pipeline's stage-to-stage rebuild). Adds the prior hyperparameters the
+ProbModels consume: <code>theta_E_max = 3 × theta_E_cat</code> (Uniform prior upper
+bound), <code>position_sigma</code> (Normal prior width around the catalog position),
+<code>fix_positions</code> (freeze centers, θ<sub>E</sub> stays free). These dicts are
+what <code>ProbModel.perturbers</code> actually holds.</p>
+</div>
+
+<div class="card">
+<h4><code>perturber_inputs_from_config(pert_cfg)</code><span class="loc">perturbers.py:325</span></h4>
+<p>Config → <code>(PerturberSet, options dict)</code>; <code>(None, None)</code> when no
+catalog path is set (the default — the model is then byte-identical to the perturber-free
+pipeline). Shared by the pipeline runner <em>and</em> the postprocess replay so both build
+identical structures. This is also where <code>H0_fid</code>/<code>Om0</code> leave the
+config (<code>model.perturbers.cosmology</code>, defaults 70.0 / 0.3).</p>
+</div>
+
+<div class="card">
+<h4><code>plot_perturber_overlay(...)</code><span class="loc">perturbers.py:354</span></h4>
+<p>Diagnostic: perturber positions + θ<sub>E</sub> circles over the log-stretched data
+image, color-coded by plane. Off-image perturbers are clamped to the edge with an
+<code>x</code> marker so they stay visible. <strong>Always check this plot</strong> —
+it is the only defense against a silently flipped coordinate conversion.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="multiplane">3. <code>multiplane.py</code> — the translation layer (670 lines)</h2>
+
+<p>Everything multi-plane lives here. Constant first:
+<code>TD_CONST = 2.8000503e-02</code> <span class="loc">multiplane.py:54</span> —
+days per (Mpc·arcsec²), the same constant the single-plane time-delay factor uses
+(<code>prob_model.py:1894</code>). Keeping them identical is what makes the effective-Fermat
+trick exact.</p>
+
+<h3 id="mp-geometry">Static geometry</h3>
+
+<div class="card cls">
+<h4><code>MPGeometry</code><span class="loc">multiplane.py:71</span></h4>
+<p>A frozen bookkeeping record, built once at model construction:</p>
+<table>
+<tr><th>field</th><th>meaning</th></tr>
+<tr><td><code>plane_redshifts</code>, <code>main_plane_index</code>, <code>z_source</code></td>
+    <td>mass planes, ascending; where EPL+SHEAR lives</td></tr>
+<tr><td><code>plane_slots</code></td><td>for each plane, which indices of the FLAT
+    <code>kwargs_lens</code> list belong to it — e.g. <code>[[0,1],[2]]</code>.
+    This list <em>is</em> the flat↔per-plane dictionary.</td></tr>
+<tr><td><code>profile_lists</code></td><td>herculens profile names per plane, aligned with the slots</td></tr>
+<tr><td><code>eta_flat</code></td><td>the eta matrix (herculens convention), fiducial cosmology</td></tr>
+<tr><td><code>defl_scales</code></td><td><code>1/η[i, source]</code> per plane — the convention-rescaling factors (see facade)</td></tr>
+<tr><td><code>td_prefactors_days</code></td><td>per-plane arrival-time constants (1/c)(1+z<sub>i</sub>)D<sub>i</sub>D<sub>i+1</sub>/D<sub>i,i+1</sub>·arcsec²</td></tr>
+<tr><td><code>D_dt_fid</code></td><td>fiducial time-delay distance of the main lens — a pure normalization, cancels out of the inference</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h4><code>build_plane_structure(perturbers, z_lens, z_source)</code><span class="loc">multiplane.py:125</span></h4>
+<p>Groups profiles into planes. The flat kwargs order is fixed:
+<code>[EPL, SHEAR] + one SIS per perturber in list order</code>. Main-plane perturbers
+join the EPL+SHEAR plane; off-plane ones are grouped by identical redshift (one plane per
+unique z, ascending). Guards against a perturber tagged off-plane but sitting exactly at
+z_lens. <span class="tag gotcha">extension point</span> The one-slot-per-perturber
+mapping (<code>plane_slots[j].append(2 + i)</code>) is where "one profile per perturber"
+is hardcoded — a multi-profile companion (EPL+SHEAR) generalizes this to a running counter.</p>
+</div>
+
+<div class="card">
+<h4><code>build_mp_geometry(geometry, mp_mass_model, H0_fid=70, Om0=0.3)</code><span class="loc">multiplane.py:168</span></h4>
+<p>Fills the fiducial-cosmology numbers in place, using astropy (concrete floats, no JAX —
+these are static during inference): the eta matrix via herculens'
+<code>MPMassModel.build_eta_matrix</code>, the deflection scales, the per-plane
+time-delay prefactors, and D_dt_fid. Distance <em>ratios</em> are exactly
+H<sub>0</sub>-independent and only weakly Ω<sub>m</sub>-dependent — the standard TDCOSMO
+treatment (<a href="#correctness">measured in §6</a>).</p>
+</div>
+
+<h3 id="mp-facade">The mass-model facade</h3>
+
+<div class="card">
+<h4><code>_to_next_plane_convention(profile, kw, s)</code><span class="loc">multiplane.py:217</span></h4>
+<p>Herculens' MP convention defines each plane's reduced deflection relative to the
+<em>next</em> plane back; ALPACA's parameters (and the catalog) are
+<em>source</em>-referenced — the standard single-plane meaning. This function rescales
+one profile's deflection amplitude by the static factor <code>s</code>:</p>
+<pre>SIS:   theta_E ← theta_E · s
+EPL:   theta_E ← theta_E · s^(1/(γ−1))     # deflection ∝ θ_E^(γ−1)
+SHEAR: gamma1/2 ← gamma1/2 · s</pre>
+<p>For HE 0435: s = 0.577 on the main plane, and herculens later multiplies deflections by
+η = 1.732 = 1/s during propagation — <em>exact</em> cancellation, so
+<code>lens_theta_E</code> in your chains means what it always meant. Raises
+<code>NotImplementedError</code> for unknown profiles rather than silently mis-scaling.</p>
+</div>
+
+<div class="card cls">
+<h4><code>MPMassModelFacade</code><span class="loc">multiplane.py:238</span></h4>
+<p>Speaks <code>MassModel</code>'s API (<code>ray_shooting</code>,
+<code>fermat_potential</code>) with ONE flat kwargs list, over a herculens
+<code>MPMassModel</code>. It becomes <code>lens_image.MassModel</code> and
+<code>prob_model._mass_model_for_rayshoot</code>, so the time-delay and rayshoot
+likelihood factors work unchanged.</p>
+
+<h4 style="margin-top:1rem"><code>.split_kwargs(kwargs_lens)</code><span class="loc">multiplane.py:253</span></h4>
+<p>The unfold: flat source-referenced list → per-plane list-of-lists in the MP convention,
+via <code>plane_slots</code> + <code>_to_next_plane_convention</code>. Skips the rescale
+when s = 1 (main-plane-only case). Called on every model evaluation; under jit the
+bookkeeping compiles away to constants.</p>
+
+<h4><code>._at_least_1d(x, y)</code><span class="loc">multiplane.py:269</span></h4>
+<p>Workaround for an upstream bug: herculens' <code>MPMassModel.ray_shooting</code>
+mis-broadcasts <em>scalar</em> inputs (the (N+1, 1) eta slice turns them into
+(N+1, N+1)). Promotes to 1-D and remembers to squeeze the result back.</p>
+
+<h4><code>.ray_shooting(x, y, kwargs_lens)</code><span class="loc">multiplane.py:277</span></h4>
+<p>Image plane → <em>source</em> plane with single-plane semantics: runs the herculens MP
+recursion, returns only <code>xs[-1], ys[-1]</code>. Consumers (rayshoot-consistency
+factor, diagnostics) never see the intermediate planes.</p>
+
+<h4><code>.arrival_time_days(x, y, kwargs_lens)</code><span class="loc">multiplane.py:286</span></h4>
+<p>Absolute arrival time under the fiducial cosmology: mirrors herculens'
+<code>MPMassModel.arrival_time</code> but with the static eta matrix and the precomputed
+distance prefactors — no cosmology object in the jit-compiled hot loop. Per plane i:
+prefac<sub>i</sub> · (½|Δβ<sub>i</sub>|² − ψ<sub>i</sub>), summed.</p>
+
+<h4><code>.fermat_potential(x, y, kwargs_lens)</code><span class="loc">multiplane.py:306</span></h4>
+<p>The <strong>effective Fermat potential</strong>:
+<code>arrival_time_days / (TD_CONST · D_dt_fid)</code>, in arcsec²-equivalent units.
+Defined so that the existing single-plane code
+<code>dt = TD_CONST · D_dt · Δφ</code> yields exactly
+<code>Δt_fid · (D_dt / D_dt_fid)</code> — the standard rescaling that keeps ALPACA's
+D_dt parametrization intact. Reduces to the ordinary Fermat potential when only the main
+plane carries mass. D_dt_fid is a units choice, not an assumption
+(<a href="#correctness">§6</a>).</p>
+</div>
+
+<h3 id="mp-lensimage">The lens-image subclass</h3>
+
+<div class="card cls">
+<h4><code>MPLensImageWithPSF(MPLensImage)</code><span class="loc">multiplane.py:323</span></h4>
+<p>Thin subclass of herculens' <code>MPLensImage</code> overriding exactly two methods,
+both to close upstream gaps — everything else (Grid, Numerics, convolution,
+<code>adapt_source_coordinates</code>, noise/χ² helpers) is inherited untouched.</p>
+
+<h4 style="margin-top:1rem"><code>.point_source_image(..., kwargs_psf=None)</code><span class="loc">multiplane.py:328</span></h4>
+<p>Same as upstream but passes <code>kwargs_psf</code> down to
+<code>ImageNumerics.render_point_sources</code> — the live joint-PSF kernel must reach the
+point-source rendering too, not just the extended-light convolution.</p>
+
+<h4><code>.model(eta_flat, kwargs_mass, kwargs_light, ..., kwargs_psf=None)</code><span class="loc">multiplane.py:350</span></h4>
+<p>Reimplements upstream <code>MPLensImage.model</code> with two fixes:</p>
+<ul>
+<li><strong>Live-PSF hook:</strong> upstream drops <code>kwargs_psf</code>; here it is
+threaded into <code>re_size_convolve</code> and <code>point_source_image</code> (honored
+by the patched Numerics in <code>alpaca/patches/herculens_numerics.py</code> exactly as in
+the single-plane model). Without this, joint PSF fitting silently uses the stale seed
+kernel in MP runs.</li>
+<li><strong>Plane-selective light evaluation:</strong> upstream
+<code>MPLightModel.surface_brightness</code> evaluates <em>every</em> light-carrying plane
+and only discards deselected rows afterwards — which IndexErrors when a deselected plane
+carries empty kwargs (e.g. <code>source_add=False</code> in the arc-mask non-source
+build). Here deselected planes are skipped <em>before</em> evaluation and replaced by
+zeros; per-plane brightness still comes from herculens'
+<code>LightModel.surface_brightness</code>. k-based deselection was no alternative:
+herculens routes single-profile LightModels to <code>_surf_bright_single</code>, which
+treats k as an integer index.</li>
+</ul>
+<p class="small">Note the jit constraint documented in the code: <code>k_planes</code> is
+a static argument — must be hashable (tuple/int/None) — and the mask indexing uses
+NumPy (python-int) indices because jnp index arrays would be tracers.</p>
+</div>
+
+<h3 id="mp-adapter">The LensImage-interface adapter</h3>
+
+<div class="card cls">
+<h4><code>MPLensImageAdapter</code><span class="loc">multiplane.py:438</span></h4>
+<p>Presents <code>LensImage.model()</code>'s exact call surface over the MP stack. Marked
+by the <code>is_multiplane = True</code> class attribute — the flag the ~7 branch sites in
+the pipeline test with <code>getattr(lens_image, "is_multiplane", False)</code>.</p>
+<ul>
+<li><code>.MassModel</code> is the <code>MPMassModelFacade</code> — every consumer of
+<code>lens_image.MassModel.ray_shooting/fermat_potential</code> works unchanged.</li>
+<li>Passthrough properties: <code>Grid, PSF, Noise, ImageNumerics, MPLensImage</code>;
+noise/χ² helpers <code>C_D_model, normalized_residuals, reduced_chi2</code> forwarded
+(herculens' NIFTy utilities call <code>C_D_model</code> on a lens image).</li>
+<li>Light-plane bookkeeping <span class="loc">multiplane.py:465</span>: lens light on the
+main plane's light plane, source on the last (light planes = mass planes + 1). This
+hardcoded pair is <em>the</em> single-source assumption — the extension point for
+multi-source-plane work.</li>
+</ul>
+
+<h4 style="margin-top:1rem"><code>.model(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_point_source, kwargs_psf, source_add, lens_light_add, point_source_add, ...)</code><span class="loc">multiplane.py:527</span></h4>
+<p>The unfold for imaging: <code>split_kwargs</code> on the mass side; light kwargs dealt
+into the per-plane list (<code>kwargs_lens_light</code> → main plane,
+<code>kwargs_source</code> → last plane); the <code>source_add/lens_light_add</code>
+booleans become the <code>k_planes</code> tuple. Two special cases are handled explicitly:
+PS-only calls (the PSF-error-map noise term renders point sources without any light
+planes — <code>kwargs_lens</code> may even be None for LENSED_POSITIONS) and the
+empty-planes case (returns zeros instead of asking MPLightModel to evaluate nothing).</p>
+
+<h4><code>.mp_plot_inputs(kwargs_result)</code><span class="loc">multiplane.py:503</span></h4>
+<p>For plotting: converts a single-plane-style kwargs dict (as returned by
+<code>params2kwargs</code>) into <code>(raw MPLensImage, MP-format kwargs)</code> —
+herculens' <code>Plotter.model_summary</code> natively supports multi-plane models when fed
+this format. Used by the model-summary plots in the runner, sampling stage and staged
+pipeline (the three plotting <code>is_multiplane</code> branches).</p>
+</div>
+
+<div class="card">
+<h4><code>make_mp_lens_image(*, perturbers, perturbers_meta, pixel_grid, psf, noise, lens_light_model, source_light_model, source_arc_mask, kwargs_numerics, use_point_sources, source_grid_scale)</code><span class="loc">multiplane.py:595</span></h4>
+<p>The builder — mirrors the single-plane <code>make_lens_image</code> internals; the
+already-constructed PSF/Noise/LightModel objects are <em>reused</em>, only the
+mass/lensing structure changes. Steps: build plane structure → <code>MPMassModel</code> →
+fill fiducial geometry → light-model list (<code>lens_light</code> at the main plane,
+<code>None</code> for dark planes, <code>source</code> last) → arc masks (source mask on
+the source plane only) → <code>MPPointSourceModel</code>
+(<code>LENSED_POSITIONS</code>, solves image positions through the full MP mass model) →
+<code>MPLensImageWithPSF</code> → facade + adapter. Returns
+<code>(adapter, facade, mp_mass_model)</code>. The source plane's adaptive grid extent is
+scaled by <code>source_grid_scale</code> (CF option), other planes keep 1.0.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="probmodel">4. <code>prob_model.py</code> — priors, likelihood, kwargs (3340 lines)</h2>
+
+<p>The heart of the modeling layer. Three responsibilities: (1) model construction
+(<code>make_lens_image</code>), (2) two parallel numpyro model classes
+(<code>ProbModel</code> = analytic/Shapelets source, <code>ProbModelCorrField</code> =
+pixelated CF source), (3) shared flat-params ↔ herculens-kwargs helpers that keep every
+consumer (GD optimizer, NIFTy/nautilus likelihood modules, diagnostics) using the exact
+same ordering.</p>
+
+<div class="note">
+<strong>The ordering contract</strong> (module docstring, <code>prob_model.py:33</code>):
+the mass profile order is fixed everywhere as
+<code>[EPL, SHEAR, SIS(pert_1), …, SIS(pert_n)]</code>, and the lens-light profile order as
+<code>SERSIC (L1) [, SERSIC (L2)] [, SERSIC (L3)] [, MGE] [, UNIFORM sky — always last]</code>.
+Every kwargs assembly — <code>model()</code>, <code>params2kwargs()</code>, sampler
+likelihoods — MUST use the same order, which is why the shared helpers below exist.
+</div>
+
+<h3 id="pm-helpers">Shared helpers (module level)</h3>
+
+<div class="card">
+<h4><code>compute_prior_means(prob_model)</code><span class="loc">prob_model.py:85</span></h4>
+<p>Traces the numpyro model once and extracts each non-observed site's prior mean into a
+flat dict (same format as GD's <code>best_params_json</code>). Used to initialize
+optimizers/diagnostics. Falls back to the traced sample value for distributions without a
+finite mean.</p>
+</div>
+
+<div class="card">
+<h4><code>sample_perturber_kwargs(perturbers)</code><span class="loc">prob_model.py:140</span></h4>
+<p><strong>The perturbers' numpyro sites.</strong> Per perturber, in list order:
+<code>{name}_theta_E ~ Uniform(0, theta_E_max)</code> (theta_E_max = 3 × catalog value by
+default), and — unless <code>fix_positions</code> —
+<code>{name}_center_x/y ~ Normal(catalog position, position_sigma)</code>. Returns the SIS
+kwargs dicts, ready to append to <code>kwargs_lens</code>. Called from
+<em>both</em> model classes' <code>model()</code>.</p>
+</div>
+
+<div class="card">
+<h4><code>perturber_kwargs_from_params(params, perturbers)</code><span class="loc">prob_model.py:165</span></h4>
+<p>The deterministic mirror of the previous function: reads
+<code>{name}_theta_E</code> (+ centers, falling back to catalog positions on
+<code>fix_positions</code> runs) from a flat params dict. Used by
+<code>params2kwargs</code>, the GD optimizer and the sampler likelihood modules.
+<span class="tag gotcha">contract</span> Any new perturber parameter must be added to
+<em>both</em> functions or sampling and replay will silently disagree.</p>
+</div>
+
+<div class="card">
+<h4><code>kwargs_lens_from_params(params, perturbers=())</code><span class="loc">prob_model.py:182</span></h4>
+<p>Assembles the full flat <code>kwargs_lens</code>: EPL from
+<code>lens_theta_E/e1/e2/center_x/center_y/gamma</code>, SHEAR from
+<code>lens_gamma1/gamma2</code> (with <code>ra_0/dec_0</code> pinned to the lens center),
+then <code>+ perturber_kwargs_from_params(...)</code>. The canonical assembly point — the
+comment above it says every site that builds a kwargs_lens MUST go through it, so the
+order can never diverge.</p>
+</div>
+
+<div class="card">
+<h4><code>_mge_multi_kwargs(log_amps, sigmas, e1, e2, cx, cy)</code><span class="loc">prob_model.py:209</span></h4>
+<p>Packs the MGE lens-light latents into the single vectorized
+<code>MULTI_GAUSSIAN_ELLIPSE</code> profile's kwargs. Unrelated to multi-plane; listed for
+completeness of the lens-light ordering contract.</p>
+</div>
+
+<h3 id="pm-makelens"><code>make_lens_image</code> — the branch point</h3>
+
+<div class="card">
+<h4><code>make_lens_image(img, psf_kernel, noise_map, pixel_grid, ps_grid, ..., perturbers=None, perturbers_meta=None)</code><span class="loc">prob_model.py:221</span></h4>
+<p>Builds PSF, Noise, mass/light models and the lens image from config flags. The
+sequence:</p>
+<ol>
+<li>PSF (optionally supersampled) + Noise objects <span class="loc">prob_model.py:308</span>.</li>
+<li>Split the perturber list: <code>_off_plane = [p for p in perturbers if
+p["plane"] != "main"]</code>; main-plane perturbers set
+<code>n_perturbers_main</code> <span class="loc">prob_model.py:314</span>.</li>
+<li>Mass model: <code>MassModel(["EPL", "SHEAR"] + ["SIS"] * n_perturbers_main)</code>
+<span class="loc">prob_model.py:323</span> — main-plane perturbers are ordinary
+single-plane profiles.</li>
+<li>Lens light per the ordering contract (single/double/triple Sersic, MGE, MGE-correction,
+optional UNIFORM sky appended last) <span class="loc">prob_model.py:324–355</span>.</li>
+<li>Source light: CF <code>PixelatedLight</code> / Sersic+Shapelets / plain Sersic
+<span class="loc">prob_model.py:357–382</span>.</li>
+<li><strong>The multi-plane branch</strong> <span class="loc">prob_model.py:403</span>:
+if any off-plane perturber exists (requires <code>perturbers_meta</code> with z_lens,
+z_source, H0_fid, Om0 — from <code>data/setup.py:331</code>), delegate to
+<code>make_mp_lens_image</code> and return
+<code>(adapter, noise, psf, <b>facade</b>, lens_light_model, source_light_model,
+MPPointSourceModel)</code> — same tuple shape as single-plane, with the facade standing in
+for the MassModel. Callers cannot tell the difference.</li>
+<li>Otherwise: plain herculens <code>LensImage</code> with the same components
+<span class="loc">prob_model.py:436</span>.</li>
+</ol>
+</div>
+
+<h3 id="pm-probmodel"><code>ProbModel</code> — analytic-source numpyro model</h3>
+
+<div class="card cls">
+<h4><code>class ProbModel(_JointPSFSupport, NumpyroModel)</code><span class="loc">prob_model.py:912</span></h4>
+<p>Used by the multi-start gradient-descent stage (and NUTS on the analytic model). The
+mixin <code>_JointPSFSupport</code> <span class="loc">prob_model.py:540</span> holds the
+joint/frozen PSF machinery shared with the CF class: when <code>psf_joint=True</code> the
+Moffat/background PSF parameters are latents and <code>_build_kwargs_psf()</code> rebuilds
+the kernel every step, feeding it through the <code>kwargs_psf</code> hook — which is why
+the MP classes must thread that argument (see
+<a href="#mp-lensimage">MPLensImageWithPSF</a>).</p>
+</div>
+
+<div class="card">
+<h4><code>ProbModel.__init__(lens_image, img, ..., perturbers=None, perturbers_meta=None, ...)</code><span class="loc">prob_model.py:960</span></h4>
+<p>Perturber-relevant part <span class="loc">prob_model.py:1148–1163</span>:</p>
+<pre>self.perturbers = list(perturbers or [])
+self.perturbers_for_kwargs = self.perturbers   # canonical list for ALL kwargs assembly
+_off_plane = [p for p in self.perturbers if p.get("plane","main") != "main"]
+self.multiplane = bool(_off_plane)
+if self.multiplane and not getattr(lens_image, "is_multiplane", False):
+    raise ValueError("Off-plane perturbers require the multi-plane lens image ...")</pre>
+<p>That consistency check is the safety net: you cannot accidentally pair off-plane
+perturbers with a single-plane <code>LensImage</code> (e.g. by rebuilding the model
+between stages with mismatched flags). The rest of <code>__init__</code> stores data,
+data-derived prior scales (<code>sky_amp_scale</code> from the image border,
+<code>amp_src_safe</code> via <code>_compute_amp_src_safe</code>
+<span class="loc">prob_model.py:1283</span> — cached so the Nautilus prior factory reads
+the <em>identical</em> value), the γ prior, and delegates joint-PSF setup to
+<code>_init_joint_psf</code>.</p>
+</div>
+
+<div class="card">
+<h4><code>ProbModel.configure_cosmography(*, measured_delays, delay_errors, use_time_delays, use_rayshoot_consistency, ..., mass_model_for_rayshoot)</code><span class="loc">prob_model.py:1347</span></h4>
+<p>Arms the time-delay and rayshoot likelihood factors. Crucially,
+<code>mass_model_for_rayshoot</code> is whatever <code>make_lens_image</code> returned as
+the mass model — the plain <code>MassModel</code> in single-plane runs, the
+<strong><code>MPMassModelFacade</code></strong> in multi-plane runs. The likelihood code
+below calls <code>.fermat_potential()</code>/<code>.ray_shooting()</code> on it without
+knowing which it is. <em>This single line of indirection is how multi-plane time delays
+work "for free."</em></p>
+</div>
+
+<div class="card">
+<h4><code>ProbModel.model()</code><span class="loc">prob_model.py:1406</span></h4>
+<p>The numpyro model — every latent site plus three likelihood terms. Walkthrough in
+execution order:</p>
+<table>
+<tr><th>block</th><th>lines</th><th>what happens</th></tr>
+<tr><td>data-driven prior geometry</td><td>1431–1469</td>
+<td>lens center (user-supplied / PS mean / flux centroid), arc annulus radii from the
+detected point-source distances — these set prior widths, not physics</td></tr>
+<tr><td>lens mass sites</td><td>1475–1491</td>
+<td><code>lens_center_x/y ~ N(c, 0.3)</code>, <code>lens_theta_E ~ U(0.5·r_min, 1.5·r_max)</code>,
+<code>lens_e1/e2 ~ U(−0.4, 0.4)</code>, <code>lens_gamma ~ TruncN(2.0, 0.15, [1.6, 2.4])</code>,
+<code>lens_gamma1/2 ~ U(−0.5, 0.5)</code></td></tr>
+<tr><td><code>D_dt</code></td><td>1498–1501</td>
+<td><code>~ U(500, 10000)</code> Mpc — sampled <em>only</em> when the TD likelihood is
+armed, so imaging-only fits don't carry a prior-sampling nuisance parameter</td></tr>
+<tr><td>lens light sites</td><td>1540–1663</td>
+<td>single/double/triple Sersic (soft ordering via prior ranges), or MGE (vector site
+<code>log_mge_amps_L</code>), amplitudes scaled by the data-derived
+<code>amp_lens_safe</code></td></tr>
+<tr><td>source sites</td><td>1669–1701</td>
+<td>Sersic (<code>light_*_S</code>, <code>src_center_x/y ~ N(0, 0.6)</code>) + optional
+Shapelets vector</td></tr>
+<tr><td>point sources</td><td>1713–1750</td>
+<td><code>x/y_image ~ N(detected, 1 px)</code>, <code>ps_amp ~ LogU</code>, optional
+TD-only astrometric offsets</td></tr>
+<tr><td><strong>kwargs assembly</strong></td><td>1755–1839</td>
+<td>flat <code>kwargs_lens</code> = EPL + SHEAR dicts
+<strong>+ <code>sample_perturber_kwargs(self.perturbers_for_kwargs)</code></strong>
+(line 1768 — the only perturber-specific line in the whole method); lens light per the
+ordering contract; source; point sources</td></tr>
+<tr><td>forward model + imaging likelihood</td><td>1844–1875</td>
+<td><code>kwargs_psf = self._build_kwargs_psf()</code> (live joint-PSF kernel or None) →
+<code>self.lens_image.model(...)</code> — <em>in MP runs this is the adapter; the
+unfold/render/fold happens inside this one call</em> → Gaussian likelihood, optionally
+with the PSF-error-map noise boost (which needs a PS-only render — the adapter's
+special-cased path) and the likelihood mask</td></tr>
+<tr><td>PSF regularization</td><td>1882–1888</td>
+<td>starlet + positivity factor, only when the PSF background floats</td></tr>
+<tr><td><strong>time-delay factor</strong></td><td>1893–1908</td>
+<td><code>phi = self._mass_model_for_rayshoot.fermat_potential(x_img, y_img, kwargs_lens)</code>
+→ <code>dt_pred = TD_CONST · D_dt · Δφ</code> → Gaussian factor. Single-plane: ordinary
+Fermat potential. Multi-plane: the facade's <em>effective</em> potential — same code, both
+planes' arrival times included, rescaled by the sampled D_dt</td></tr>
+<tr><td>rayshoot-consistency factor</td><td>1913–1944</td>
+<td>back-project the image positions with
+<code>.ray_shooting(...)</code> (facade → <code>xs[-1]</code> in MP), penalize scatter
+around the source position; optional free systematic error; careful dof bookkeeping for
+the mean-reference variant</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h4><code>ProbModel.params2kwargs(params)</code><span class="loc">prob_model.py:1946</span></h4>
+<p>The deterministic twin of <code>model()</code>'s kwargs assembly: flat
+<code>{site: value}</code> dict → <code>{"kwargs_lens", "kwargs_source",
+"kwargs_lens_light", "kwargs_point_source"}</code>. Mass side goes through
+<code>kwargs_lens_from_params(params, self.perturbers_for_kwargs)</code>, so perturbers
+are included automatically. Used by plotting, postprocessing, warm starts, and the staged
+pipeline. <span class="tag gotcha">contract</span> must mirror <code>model()</code>
+exactly — any new site is added in both places.</p>
+</div>
+
+<div class="card">
+<h4><code>ProbModel.model_image_from_params</code> / <code>noise_map_effective</code> / <code>reduced_chi2</code><span class="loc">prob_model.py:2066–2160</span></h4>
+<p>Convenience evaluators on top of <code>params2kwargs</code>: render the model image for
+a flat params dict (through the adapter in MP runs — nothing special needed), compute the
+effective noise map (including the PSF-error-map boost term if active), and a reduced χ²
+over the likelihood mask.</p>
+</div>
+
+<h3 id="pm-cf"><code>ProbModelCorrField</code> — the pixelated-source twin</h3>
+
+<div class="card cls">
+<h4><code>class ProbModelCorrField(_JointPSFSupport, NumpyroModel)</code><span class="loc">prob_model.py:2161</span></h4>
+<p>Same skeleton as <code>ProbModel</code> with the source Sersic/Shapelets replaced by a
+Correlated-Field pixelated source (NIFTy GP prior; sites created by herculens'
+<code>CorrelatedField</code>, built in <code>create_corr_field</code>
+<span class="loc">prob_model.py:462</span>). Used by the CF warm-start / joint stages and
+final sampling. Everything perturber/multi-plane-related is <em>duplicated
+verbatim</em>:</p>
+<ul>
+<li>perturber storage + <code>is_multiplane</code> consistency check
+<span class="loc">prob_model.py:2340–2377</span> (mirror of 1123–1163),</li>
+<li><code>configure_cosmography</code> <span class="loc">prob_model.py:2519</span>,</li>
+<li>kwargs assembly with <code>sample_perturber_kwargs</code>
+<span class="loc">prob_model.py:2889–2902</span> (mirror of 1755–1768),</li>
+<li>TD + rayshoot factors <span class="loc">prob_model.py:3018–3037</span>,</li>
+<li><code>params2kwargs</code> <span class="loc">prob_model.py:3061</span>, plus
+<code>get_source_pixels_from_params</code> <span class="loc">prob_model.py:3310</span>
+for the CF source grid.</li>
+</ul>
+<div class="note" style="margin-bottom:0">
+<strong>Mirror-edit rule</strong> (module docstring): the two classes are intentionally
+parallel — when you edit one, mirror the edit in the other. The mass side is protected by
+the shared helpers; light-side and likelihood-side changes are not.
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="integration">5. How it works with everything else</h2>
+
+<p>The point of the adapter design: the integration surface is tiny. Complete inventory:</p>
+
+<h3>Consumers that need <em>zero</em> changes (the flat interface does the work)</h3>
+<table>
+<tr><th>consumer</th><th>why it just works</th></tr>
+<tr><td>NUTS / NIFTy / nautilus / gradient descent</td>
+<td>they see flat numpyro sites (one extra <code>pertN_theta_E</code> per perturber) and
+call <code>prob_model.model()</code>; the sampler likelihood modules
+(<code>sampler/nifty/likelihood.py</code>, <code>sampler/nautilus/likelihood.py</code>,
+<code>sampler/gradient_descent/optimizer.py</code>) re-import the shared kwargs helpers,
+so ordering can't diverge</td></tr>
+<tr><td>joint PSF fitting</td>
+<td><code>_build_kwargs_psf()</code> output flows through the adapter →
+<code>MPLensImageWithPSF</code> → patched Numerics — the same <code>kwargs_psf</code> hook
+as single-plane</td></tr>
+<tr><td>time delays / rayshoot consistency</td>
+<td><code>configure_cosmography(mass_model_for_rayshoot=...)</code> receives the facade;
+<code>fermat_potential</code>/<code>ray_shooting</code> keep their signatures</td></tr>
+<tr><td>blinding / postprocess</td>
+<td>operate on flat named sites; <code>D_dt</code> semantics unchanged (the effective
+Fermat trick preserves <code>dt = TD_CONST · D_dt · Δφ</code>); postprocess replay
+rebuilds identical structures via <code>perturber_inputs_from_config</code></td></tr>
+<tr><td>staged pipeline / warm starts</td>
+<td>stage state is flat params; rebuilds go through <code>make_lens_image</code> with the
+same perturber args, and the <code>__init__</code> consistency check catches mismatches</td></tr>
+</table>
+
+<h3>The explicit <code>is_multiplane</code> branch sites (all of them)</h3>
+<table>
+<tr><th>site</th><th>purpose</th></tr>
+<tr><td><code>prob_model.py:1157</code> and <code>:2374</code></td>
+<td>consistency guard: off-plane perturbers ⇒ lens image must be the adapter</td></tr>
+<tr><td><code>pipeline/runner.py:1096</code>, <code>pipeline/stages/sampling.py:873</code>,
+<code>pipeline/staged.py:185</code></td>
+<td>model-summary plotting: herculens' <code>Plotter</code> natively supports MP models but
+needs the <em>raw</em> <code>MPLensImage</code> + MP-format kwargs — provided by
+<code>adapter.mp_plot_inputs(kwargs_result)</code></td></tr>
+<tr><td><code>multiplane.py:452</code></td><td>the attribute definition itself</td></tr>
+</table>
+
+<h3>Related patches</h3>
+<ul>
+<li><code>alpaca/patches/herculens_numerics.py</code> — the Numerics-level
+<code>kwargs_psf</code> live-kernel override (shared by single- and multi-plane).</li>
+<li><code>alpaca/patches/herculens_mp_summary.py</code> — Plotter fixes for MP model
+summaries.</li>
+<li><code>tests/test_multiplane.py</code> — consistency tests, incl. the single-plane
+limit (facade with main-plane-only mass ⇒ ordinary Fermat potential/ray shooting) and
+adapter-vs-raw-MPLensImage agreement; <code>tests/test_perturbers.py</code> — catalog
+parsing, coordinate conversion, plane assignment.</li>
+</ul>
+
+<!-- ================================================================ -->
+<h2 id="correctness">6. Exact vs. approximate — verified numerically</h2>
+
+<p>Run on the HE 0435 toy configuration with the actual <code>MPMassModelFacade</code>
+(July 2026, this branch):</p>
+
+<div class="note good">
+<strong>The fiducial D_dt cancels at machine precision.</strong> Rebuilding the geometry
+with H<sub>0,fid</sub> = 60, 70 and 82.7 gives effective-Fermat differences identical to a
+fractional spread of 4×10<sup>−15</sup> — bit-level identical predicted delays at any
+sampled D_dt. It is a units choice (it appears once in the numerator via the prefactors
+∝ 1/H<sub>0</sub> and once in the denominator via D_dt_fid ∝ 1/H<sub>0</sub>), not an
+assumption. The posterior on D_dt is anchored to the data, not to the fiducial.
+</div>
+
+<div class="note">
+<strong>The only real approximation: distance ratios frozen at Ω<sub>m</sub> = 0.3.</strong>
+Moving Ω<sub>m</sub> to 0.25 / 0.35 shifts the predicted delay by ∓0.16% / +0.18% —
+far below time-delay measurement errors (few %). In the single-plane limit even this
+vanishes identically. This is the standard TDCOSMO treatment of LOS structure; if ever
+needed, herculens' <code>build_eta_matrix</code> accepts a <code>jax_cosmo</code>
+cosmology, so sampling Ω<sub>m</sub> is a feasible extension.
+</div>
+
+<div class="note good">
+<strong>Scale of the physics being added:</strong> in the same toy setup the 0.1″ SIS
+sitting ~1″ from image A changes that image pair's Fermat difference by tens of percent —
+orders of magnitude above the approximation error being accepted.
+</div>
+
+<p>Also exact: the convention rescaling (cancels against η analytically), the ray
+shooting itself (herculens recursion, no approximation), and the single-plane limit of
+every facade method.</p>
+
+<!-- ================================================================ -->
+<h2 id="gotchas">7. Contracts &amp; gotchas</h2>
+
+<table>
+<tr><th>rule</th><th>where enforced / where it bites</th></tr>
+<tr><td><strong>Flat kwargs order is law.</strong> <code>[EPL, SHEAR, pert_1, …]</code>;
+lens light per the ordering contract, sky always last.</td>
+<td>Assemble mass kwargs ONLY via <code>kwargs_lens_from_params</code> /
+<code>sample_perturber_kwargs</code>. The MP <code>plane_slots</code> are built against
+this exact order — a silent reorder mis-assigns profiles to planes.</td></tr>
+<tr><td><strong>Mirror-edit the twin classes.</strong></td>
+<td><code>ProbModel</code> and <code>ProbModelCorrField</code> duplicate sites, kwargs
+assembly and likelihood factors. Mass side is shared; light/likelihood edits must be made
+twice (e.g. lines 1755 ↔ 2889, 1893 ↔ 3018).</td></tr>
+<tr><td><strong><code>model()</code> ↔ <code>params2kwargs()</code> must match.</strong></td>
+<td>Sampling uses the former, every replay (plots, χ², warm starts) the latter. A site
+added to one only shows up as a subtly wrong replay, not a crash.</td></tr>
+<tr><td><strong>x64 is mandatory.</strong> <span class="tag gotcha">NaN</span></td>
+<td>herculens' SIS profile (SIS → NIE with a tiny softening) returns NaN
+<em>everywhere</em> in float32. The pipeline enables <code>jax_enable_x64</code>
+(<code>runner.py:275</code>), but any standalone script/notebook importing the model
+without it will silently NaN on perturber profiles.</td></tr>
+<tr><td><strong><code>k_planes</code> is a static jit arg.</strong></td>
+<td>Must be tuple/int/None (hashable) when calling
+<code>MPLensImageWithPSF.model</code>; the adapter always passes a tuple.</td></tr>
+<tr><td><strong>Scalars through the facade only.</strong></td>
+<td>Raw <code>MPMassModel.ray_shooting</code> mis-broadcasts scalar x/y (upstream bug);
+<code>MPMassModelFacade._at_least_1d</code> works around it — call the facade, not the raw
+model.</td></tr>
+<tr><td><strong>Perturber positions: verify the overlay.</strong></td>
+<td>The sky→pixel affine fit self-checks (RMS &gt; 1 px ⇒ fallback + warning), but the
+<code>perturbers_overlay</code> plot in <code>01_input/</code> is the only human check
+against parity/rotation errors.</td></tr>
+<tr><td><strong><code>perturbers_meta</code> is required for off-plane runs.</strong></td>
+<td><code>make_lens_image</code> raises without it; it carries z_lens/z_source (from the
+catalog) and H0_fid/Om0 (from config) into the geometry builder
+(<code>data/setup.py:331</code>).</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<h2 id="extending">8. Extension cookbook — where to change what</h2>
+
+<table>
+<tr><th>you want</th><th>touch</th><th>difficulty</th></tr>
+<tr>
+<td><strong>New mass profile for a perturber</strong> (e.g. EPL+SHEAR companion)</td>
+<td><code>perturbers.py</code> (catalog field + model dicts) ·
+<code>prob_model.py:140/165</code> (sites/kwargs per profile) ·
+<code>prob_model.py:323</code> (single-plane profile list) ·
+<code>multiplane.py:151</code> (slot mapping: one profile per perturber → per-perturber
+profile lists) · <code>config.py</code> (priors). <code>_to_next_plane_convention</code>
+already handles EPL &amp; SHEAR; a genuinely new profile needs a branch there (it raises
+if you forget).</td>
+<td>contained — days</td>
+</tr>
+<tr>
+<td><strong>Second lens with its own light</strong> (companion galaxy, double Sersic)</td>
+<td>All of the above for the mass, plus the one structural change: light-plane routing as
+<em>data</em> — light slots in <code>MPGeometry</code>, light-model list in
+<code>make_mp_lens_image</code> (<code>multiplane.py:633</code>), routing in
+<code>MPLensImageAdapter.model</code>/<code>mp_plot_inputs</code>
+(<code>multiplane.py:465–588</code>), light sites in <em>both</em> ProbModel classes.
+Free physics: a background companion's light is automatically lensed by the foreground
+mass.</td>
+<td>medium — ~a week incl. validation</td>
+</tr>
+<tr>
+<td><strong>Second source plane</strong> (light at another redshift, possibly beyond
+z_source)</td>
+<td>Everything in the previous row, plus: massless planes for light-only redshifts
+(<code>build_plane_structure</code>), plural <code>kwargs_source</code> up through
+<code>prob_model</code> (the flat-interface boundary — the expensive part), and pin the
+θ<sub>E</sub> convention reference to the <em>main</em> source plane instead of "last
+plane" (<code>multiplane.py:190</code> uses <code>eta_full[:, -1]</code>). If the second
+source has time delays: the single-D_dt parametrization no longer captures the cosmology
+dependence — a design decision, not a code edit.</td>
+<td>the real refactor</td>
+</tr>
+<tr>
+<td><strong>Sample Ω<sub>m</sub> in the distance ratios</strong></td>
+<td>Replace the frozen <code>eta_flat</code>/<code>td_prefactors_days</code> with
+per-step values from <code>jax_cosmo</code> (herculens' <code>build_eta_matrix</code>
+supports it). Measured payoff at present: ~0.2% on delays — not worth it yet.</td>
+<td>medium, low priority</td>
+</tr>
+</table>
+
+<p class="small" style="margin-top:3rem; border-top:1px solid var(--line); padding-top:1rem;">
+Companion documents: <code>docs/multiplane_example_HE0435.pdf</code> (the worked-example
+walkthrough with the geometry diagram) · <code>alpaca/models/multiplane.py</code> module
+docstring (the design rationale in the code itself) · <code>tests/test_multiplane.py</code>
+(executable spec). Line numbers valid for branch <code>staged-joint-psf</code>, July 2026.
+</p>
+
+</div>
+</body>
+</html>
