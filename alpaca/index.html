@@ -92,8 +92,6 @@ nav {
 }
 .tree a .tnum { color: var(--faint); font-size: 9.5px; }
 .tree a .tname { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.tree a.d1 .tname { padding-left: 11px; }
-.tree a.d2 .tname { padding-left: 22px; }
 .tree a .tc {
   min-width: 23px; padding: 3px 5px; border-radius: 999px; background: var(--paper-soft);
   color: var(--faint); font-size: 9px; text-align: center;
@@ -102,6 +100,11 @@ nav {
 .tree a.active { background: var(--navy); color: #fff; }
 .tree a.active .tnum { color: #9bc9c2; }
 .tree a.active .tc { background: rgba(255,255,255,.13); color: #d9efeb; }
+.tree-group + .tree-group { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--line); }
+.tree-group-label {
+  padding: 4px 9px 5px; color: var(--faint);
+  font: 750 8.5px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+}
 .tree a:focus-visible, button:focus-visible, input:focus-visible, a:focus-visible {
   outline: 3px solid rgba(13, 118, 110, .28); outline-offset: 2px;
 }
@@ -368,25 +371,37 @@ footer {
   <div class="navmeta"><span>19 sections</span><span>219 options</span></div>
   <div class="tree-label"><span>Sections</span><span>Options</span></div>
   <div class="tree" id="section-tree">
-  <a href="#g-run" data-g="g-run" class="d0"><span class="tnum">01</span><span class="tname">run</span><span class="tc">7</span></a>
-  <a href="#g-data" data-g="g-data" class="d0"><span class="tnum">02</span><span class="tname">data</span><span class="tc">8</span></a>
-  <a href="#g-mass-main" data-g="g-mass-main" class="d1"><span class="tnum">03</span><span class="tname">mass.main</span><span class="tc">10</span></a>
-  <a href="#g-mass-perturbers" data-g="g-mass-perturbers" class="d1"><span class="tnum">04</span><span class="tname">mass.perturbers</span><span class="tc">11</span></a>
-  <a href="#g-light" data-g="g-light" class="d0"><span class="tnum">05</span><span class="tname">light</span><span class="tc">25</span></a>
-  <a href="#g-stages-gd" data-g="g-stages-gd" class="d1"><span class="tnum">06</span><span class="tname">stages.gd</span><span class="tc">25</span></a>
-  <a href="#g-stages-cfw" data-g="g-stages-cfw" class="d1"><span class="tnum">07</span><span class="tname">stages.cf_warmstart</span><span class="tc">4</span></a>
-  <a href="#g-stages-cfj" data-g="g-stages-cfj" class="d1"><span class="tnum">08</span><span class="tname">stages.cf_joint</span><span class="tc">27</span></a>
-  <a href="#g-psf" data-g="g-psf" class="d0"><span class="tnum">09</span><span class="tname">psf</span><span class="tc">3</span></a>
-  <a href="#g-psf-iter" data-g="g-psf-iter" class="d1"><span class="tnum">10</span><span class="tname">psf.iterative</span><span class="tc">13</span></a>
-  <a href="#g-psf-joint" data-g="g-psf-joint" class="d1"><span class="tnum">11</span><span class="tname">psf.joint</span><span class="tc">17</span></a>
-  <a href="#g-likelihood" data-g="g-likelihood" class="d0"><span class="tnum">12</span><span class="tname">likelihood</span><span class="tc">12</span></a>
-  <a href="#g-sampling" data-g="g-sampling" class="d0"><span class="tnum">13</span><span class="tname">sampling</span><span class="tc">6</span></a>
-  <a href="#g-sampling-nuts" data-g="g-sampling-nuts" class="d1"><span class="tnum">14</span><span class="tname">sampling.nuts</span><span class="tc">4</span></a>
-  <a href="#g-sampling-nautilus" data-g="g-sampling-nautilus" class="d1"><span class="tnum">15</span><span class="tname">sampling.nautilus</span><span class="tc">5</span></a>
-  <a href="#g-sampling-niftyvi" data-g="g-sampling-niftyvi" class="d2"><span class="tnum">16</span><span class="tname">sampling.nifty.vi</span><span class="tc">9</span></a>
-  <a href="#g-sampling-niftynuts" data-g="g-sampling-niftynuts" class="d2"><span class="tnum">17</span><span class="tname">sampling.nifty.nuts</span><span class="tc">9</span></a>
-  <a href="#g-plotting" data-g="g-plotting" class="d0"><span class="tnum">18</span><span class="tname">plotting</span><span class="tc">14</span></a>
-  <a href="#g-blinding" data-g="g-blinding" class="d0"><span class="tnum">19</span><span class="tname">blinding</span><span class="tc">10</span></a>
+  <div class="tree-group"><div class="tree-group-label">Foundation</div>
+    <a href="#g-run" data-g="g-run"><span class="tnum">01</span><span class="tname">run</span><span class="tc">7</span></a>
+    <a href="#g-data" data-g="g-data"><span class="tnum">02</span><span class="tname">data</span><span class="tc">8</span></a>
+  </div>
+  <div class="tree-group"><div class="tree-group-label">Lens model</div>
+    <a href="#g-mass-main" data-g="g-mass-main"><span class="tnum">03</span><span class="tname">mass.main</span><span class="tc">10</span></a>
+    <a href="#g-mass-perturbers" data-g="g-mass-perturbers"><span class="tnum">04</span><span class="tname">mass.perturbers</span><span class="tc">11</span></a>
+    <a href="#g-light" data-g="g-light"><span class="tnum">05</span><span class="tname">light</span><span class="tc">25</span></a>
+  </div>
+  <div class="tree-group"><div class="tree-group-label">Optimisation</div>
+    <a href="#g-stages-gd" data-g="g-stages-gd"><span class="tnum">06</span><span class="tname">stages.gd</span><span class="tc">25</span></a>
+    <a href="#g-stages-cfw" data-g="g-stages-cfw"><span class="tnum">07</span><span class="tname">stages.cf_warmstart</span><span class="tc">4</span></a>
+    <a href="#g-stages-cfj" data-g="g-stages-cfj"><span class="tnum">08</span><span class="tname">stages.cf_joint</span><span class="tc">27</span></a>
+  </div>
+  <div class="tree-group"><div class="tree-group-label">PSF</div>
+    <a href="#g-psf" data-g="g-psf"><span class="tnum">09</span><span class="tname">psf</span><span class="tc">3</span></a>
+    <a href="#g-psf-iter" data-g="g-psf-iter"><span class="tnum">10</span><span class="tname">psf.iterative</span><span class="tc">13</span></a>
+    <a href="#g-psf-joint" data-g="g-psf-joint"><span class="tnum">11</span><span class="tname">psf.joint</span><span class="tc">17</span></a>
+  </div>
+  <div class="tree-group"><div class="tree-group-label">Inference</div>
+    <a href="#g-likelihood" data-g="g-likelihood"><span class="tnum">12</span><span class="tname">likelihood</span><span class="tc">12</span></a>
+    <a href="#g-sampling" data-g="g-sampling"><span class="tnum">13</span><span class="tname">sampling</span><span class="tc">6</span></a>
+    <a href="#g-sampling-nuts" data-g="g-sampling-nuts"><span class="tnum">14</span><span class="tname">sampling.nuts</span><span class="tc">4</span></a>
+    <a href="#g-sampling-nautilus" data-g="g-sampling-nautilus"><span class="tnum">15</span><span class="tname">sampling.nautilus</span><span class="tc">5</span></a>
+    <a href="#g-sampling-niftyvi" data-g="g-sampling-niftyvi"><span class="tnum">16</span><span class="tname">sampling.nifty.vi</span><span class="tc">9</span></a>
+    <a href="#g-sampling-niftynuts" data-g="g-sampling-niftynuts"><span class="tnum">17</span><span class="tname">sampling.nifty.nuts</span><span class="tc">9</span></a>
+  </div>
+  <div class="tree-group"><div class="tree-group-label">Output &amp; policy</div>
+    <a href="#g-plotting" data-g="g-plotting"><span class="tnum">18</span><span class="tname">plotting</span><span class="tc">14</span></a>
+    <a href="#g-blinding" data-g="g-blinding"><span class="tnum">19</span><span class="tname">blinding</span><span class="tc">10</span></a>
+  </div>
   </div>
 </nav>
 <main id="content" tabindex="-1">
@@ -1668,6 +1683,7 @@ Displayed defaults reproduce the example run; omitted advanced settings use thei
   const opts = Array.from(document.querySelectorAll('.opt'));
   const groups = Array.from(document.querySelectorAll('.group'));
   const tocLinks = Array.from(document.querySelectorAll('.tree a[data-g]'));
+  const treeGroups = Array.from(document.querySelectorAll('.tree-group'));
   const nav = document.querySelector('nav');
   const navToggle = document.querySelector('.mobile-nav-toggle');
   const backTop = document.querySelector('.back-top');
@@ -1752,6 +1768,9 @@ Displayed defaults reproduce the example run; omitted advanced settings use thei
     tocLinks.forEach(link => {
       const group = document.getElementById(link.dataset.g);
       link.classList.toggle('hidden', group.classList.contains('hidden'));
+    });
+    treeGroups.forEach(group => {
+      group.classList.toggle('hidden', !group.querySelector('a[data-g]:not(.hidden)'));
     });
 
     document.body.classList.toggle('searching', Boolean(raw));
