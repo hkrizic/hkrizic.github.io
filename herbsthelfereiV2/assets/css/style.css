@@ -633,7 +633,6 @@ h1, h2, h3, h4 {
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 30px; padding: 22px 0; border-top: 1px solid rgba(255,255,255,.14); font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; }
 .mobile-ticket-bar { position: fixed; inset: auto 0 0; z-index: 90; display: none; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: var(--night); border-top: 1px solid rgba(255,255,255,.2); }
 .mobile-ticket-bar .btn { width: 100%; }
-body.nav-open { overflow: hidden; }
 
 /* Older homepage class compatibility */
 .hero--editorial, .home-index, .festival-idea { display: none; }
@@ -666,13 +665,13 @@ body.nav-open { overflow: hidden; }
   :root { --header-h: 70px; }
   /* backdrop-filter would make the header the containing block for the
      fixed-position drawer and clamp it to the bar — disable it on mobile */
-  .site-header { padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--night); }
+  .site-header { padding: 0; backdrop-filter: none; background: var(--night); }
   .header-inner { width: calc(100% - 28px); }
   .site-header .brand, .nav-toggle { position: relative; z-index: 110; }
   .nav-toggle { display: block; }
   .header-cta { display: none; }
-  .nav { position: fixed; inset: 0; z-index: 100; width: 100%; height: 100dvh; min-height: 100svh; flex-direction: column; align-items: stretch; padding: calc(var(--header-h) + 20px) 26px calc(40px + env(safe-area-inset-bottom)); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; background: var(--night); visibility: hidden; transform: translateX(100%); transition: transform .35s var(--ease), visibility 0s linear .35s; }
-  .nav.is-open { visibility: visible; transform: none; transition-delay: 0s; }
+  .nav { position: fixed; inset: 0; z-index: 100; flex-direction: column; align-items: stretch; padding: calc(var(--header-h) + 20px) 26px 40px; overflow-y: auto; background: var(--night); visibility: hidden; transform: translateX(100%); transition: .35s var(--ease); }
+  .nav.is-open { visibility: visible; transform: none; }
   .nav-item { border-bottom: 1px solid rgba(255,255,255,.14); }
   .nav-link { justify-content: space-between; padding: 15px 2px; font-family: var(--font-body); font-size: 20px; text-transform: none; }
   .dropdown { position: static; display: none; width: 100%; padding: 0 0 12px 12px; border: 0; opacity: 1; visibility: visible; transform: none; }
