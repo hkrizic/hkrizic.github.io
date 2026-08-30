@@ -160,6 +160,9 @@ h1, h2, h3, h4 { letter-spacing: -.045em; }
 }
 @media (max-width: 960px) {
   :root { --header-h: 82px; }
+  /* A backdrop filter makes fixed descendants relative to the header in
+     Safari/Chromium, which would clamp the mobile drawer to the header bar. */
+  .site-header { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .nav-toggle span { background: var(--night); }
   .nav { background: var(--paper); }
   .nav-link { color: var(--night); }
@@ -321,7 +324,7 @@ body,
 .welcome-popup__panel p { color: var(--text-soft); }
 
 @media (max-width: 960px) {
-  .site-header { background: rgba(248,241,231,.98); color: var(--ink); }
+  .site-header { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(248,241,231,.98); color: var(--ink); }
   .site-header .brand::before { filter: none; }
   .site-header .brand::after { filter: brightness(.42) sepia(.5); }
   .nav { background: var(--paper); color: var(--ink); }
@@ -329,7 +332,7 @@ body,
   .nav-link { color: var(--ink); }
   .nav-link:hover,
   .nav-item:focus-within > .nav-link { color: var(--signal-dark); }
-  .dropdown { background: var(--white); }
+  .dropdown { border-radius: 0; background: var(--white); box-shadow: none; }
   .dropdown a { color: var(--text); }
 
   .schedule__item {
