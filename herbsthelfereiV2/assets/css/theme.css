@@ -1,0 +1,387 @@
+/* Version 2 — Quiet concert journal */
+:root {
+  --brand-brown: #7a5141;
+  --night: #3b2923;
+  --ink: #3b2923;
+  --signal: #9a6b58;
+  --signal-dark: #604034;
+  --acid: #d6bda5;
+  --paper: #f8f1e7;
+  --cream: #f8f1e7;
+  --cream-2: #eadfd2;
+  --white: #fffcf7;
+  --line: #d8c9b9;
+  --text: #42312a;
+  --text-soft: #7b6b62;
+  --font-display: Didot, "Bodoni 72", "Times New Roman", serif;
+  --font-page-title: Didot, "Bodoni 72", "Times New Roman", serif;
+  --font-body: Avenir, "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-mono: Avenir, "Avenir Next", "Helvetica Neue", sans-serif;
+  --header-h: 112px;
+  --radius: 999px;
+  --shadow: 0 25px 70px rgba(78, 50, 39, .11);
+}
+
+body { background: var(--paper); font-size: 17px; line-height: 1.72; }
+h1, h2, h3, h4 { letter-spacing: -.045em; }
+.container { width: min(1160px, calc(100% - 64px)); }
+.btn { border-radius: 999px; padding-inline: 28px; letter-spacing: .12em; }
+.btn--primary { background: var(--night); }
+.btn--primary:hover { background: var(--signal); }
+.btn--outline { border-color: rgba(59, 41, 35, .35); }
+.kicker, .eyebrow { color: var(--signal); font-size: 10px; letter-spacing: .22em; }
+
+.site-header { height: var(--header-h); background: rgba(248, 241, 231, .94); border-bottom: 1px solid var(--line); color: var(--ink); backdrop-filter: blur(20px); }
+.site-header::before { display: none; }
+.header-inner { width: min(1320px, calc(100% - 54px)); gap: 18px; }
+.site-header .brand { width: 292px; }
+.site-header .brand::before { width: 48px; height: 48px; filter: none; }
+.site-header .brand::after { filter: brightness(.42) sepia(.5); }
+.nav-link { color: var(--ink); font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: .16em; background: none; }
+.nav-link:hover, .nav-item:focus-within > .nav-link { color: var(--signal); }
+.nav-item.is-active > .nav-link {
+  color: var(--signal-dark);
+  background: linear-gradient(var(--signal), var(--signal)) center bottom 10px / calc(100% - 30px) 1px no-repeat;
+}
+.has-dropdown > .nav-link::after { color: var(--signal); }
+.dropdown { border: 1px solid var(--line); border-radius: 18px; background: rgba(255,252,247,.98); box-shadow: var(--shadow); }
+.dropdown a { color: var(--text); border: 0; }
+.dropdown a:hover { padding-left: 19px; background: var(--cream-2); color: var(--signal-dark); }
+.dropdown a.is-current { padding-left: 19px; background: var(--cream-2); color: var(--signal-dark); }
+.header-cta::before { background: var(--line); }
+.header-cta .btn { border: 1px solid var(--night); border-radius: 999px; background: transparent; color: var(--night); }
+
+.experience-hero { min-height: calc(100svh - var(--header-h)); place-items: end start; background: var(--cream-2); }
+.experience-hero__media img { filter: sepia(.28) saturate(.55) brightness(.92); }
+.experience-hero::before { background: linear-gradient(90deg, rgba(42,27,22,.78) 0, rgba(42,27,22,.48) 46%, rgba(42,27,22,.08) 75%); }
+.experience-hero::after { background: linear-gradient(180deg, transparent 45%, rgba(32,20,16,.58)); }
+.experience-hero__content { width: min(1180px, calc(100% - 90px)); margin-inline: auto; padding: 80px 0 86px; text-align: center; }
+.experience-hero__mark { width: 62px; margin: 0 auto 28px; }
+.experience-hero h1 {
+  display: block;
+  position: static;
+  width: min(900px, 100%);
+  max-width: 900px;
+  margin: 0 auto 30px;
+  font-size: clamp(70px, 8vw, 132px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: .88;
+  text-align: center;
+  transform: none;
+}
+.experience-hero h1 span { white-space: nowrap; }
+.experience-hero h1 span:first-child { margin-bottom: .08em; font-size: .54em; font-style: italic; letter-spacing: -.02em; }
+.experience-hero__lead { max-width: 620px; margin-bottom: 32px; color: #f9eee3; font-family: Georgia, serif; font-size: clamp(18px, 1.8vw, 24px); line-height: 1.45; }
+.experience-hero__actions { justify-content: center; }
+.experience-hero__ticket { background: var(--paper); color: var(--night); }
+.experience-hero__program { border-color: rgba(255,255,255,.55); border-radius: 999px; }
+
+.experience-hero__date {
+  display: block;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e9c8aa;
+  font-family: var(--font-body);
+  font-size: clamp(19px, 1.6vw, 25px);
+  font-weight: 500;
+  letter-spacing: .13em;
+  line-height: 1;
+  box-shadow: none;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(20,10,7,.6);
+  text-transform: uppercase;
+}
+.experience-hero__date strong {
+  color: #fffaf4;
+  font-weight: 700;
+  letter-spacing: .07em;
+}
+.experience-hero__actions { margin-top: 30px; }
+
+.home-program { padding-block: clamp(100px, 12vw, 180px); background: var(--white); }
+.home-program__head { max-width: 940px; }
+.home-program__head h2 { font-size: clamp(58px, 7vw, 104px); font-weight: 400; }
+.home-program__head h2::after { display: block; width: 80px; height: 1px; margin: 32px auto; background: var(--signal); content: ""; }
+.home-program__lead { font-family: Georgia, serif; font-style: italic; }
+.schedule { max-width: 1040px; grid-template-columns: 1fr; gap: 0; }
+.schedule__item { grid-template-columns: 70px 170px minmax(240px, 1fr) 1.2fr 38px; min-height: 124px; padding: 24px 12px; border-top: 1px solid var(--line); border-bottom: 0; }
+.schedule__item:last-child { border-bottom: 1px solid var(--line); }
+.schedule__item:hover { padding-left: 24px; background: var(--paper); }
+.schedule__number { color: var(--acid); font: italic 34px/1 var(--font-display); }
+.schedule__date { font-weight: 500; }
+.schedule__title { font: 400 clamp(27px, 3vw, 40px)/1 var(--font-display); }
+.schedule__type { color: var(--text-soft); font-family: Georgia, serif; font-size: 14px; }
+.schedule__arrow { color: var(--signal); font-size: 22px; }
+.home-program__action { gap: 18px; }
+
+.festival-letter { grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); background: #6c493b; }
+.festival-letter__portrait img { filter: sepia(.2) saturate(.65); }
+.festival-letter__copy { padding: clamp(70px, 10vw, 150px); }
+.festival-letter__copy h2 { font-size: clamp(52px, 6.2vw, 90px); font-weight: 400; line-height: .98; }
+.festival-letter__copy h2 em { color: #e5c9ad; font-weight: 400; }
+.festival-letter__copy > p { font-family: Georgia, serif; }
+.home-guide { background: var(--paper); }
+.home-guide__row { grid-template-columns: 80px 1fr 1.25fr .75fr; padding-block: 46px; border-top: 1px solid var(--line); }
+.home-guide__number { color: var(--acid); font: italic 30px/1 var(--font-display); }
+
+.page-hero { min-height: 590px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.page-hero::before { inset: 34px; border: 1px solid var(--line); border-radius: 280px 280px 0 0; }
+.page-hero--image::after { opacity: .1; filter: sepia(.45) grayscale(.45); }
+.page-hero .container { width: min(920px, calc(100% - 100px)); }
+.page-hero h1 { max-width: 16ch; font-size: clamp(52px, 6.5vw, 92px); font-weight: 400; }
+.page-hero h1::before { width: 42px; opacity: .7; }
+.page-hero .lead { max-width: 58ch; font-family: Georgia, serif; }
+.event-hero-meta { border-radius: 999px; background: var(--night); }
+.section { padding-block: clamp(95px, 11vw, 160px); }
+.section-head { margin-inline: auto; text-align: center; }
+.section-head h2 { font-size: clamp(52px, 6vw, 86px); font-weight: 400; }
+.events-grid { gap: 54px 30px; }
+.event-card { border: 0; border-radius: 160px 160px 14px 14px; overflow: hidden; background: var(--white); box-shadow: 0 24px 60px rgba(78,50,39,.09); }
+.event-card__media { border-radius: 160px 160px 0 0; }
+.event-card__media img { filter: sepia(.22) saturate(.7); }
+.event-card__body { padding: 30px; text-align: center; }
+.event-card__meta { justify-content: center; }
+.event-card__title { font-weight: 400; }
+.event-card__actions { justify-content: center; }
+.price-card, .info-card, .team-card, .venue-card, .quote-card { border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(78,50,39,.07); }
+.split__media img { border-radius: 240px 240px 18px 18px; filter: sepia(.18) grayscale(.3); }
+.gallery { gap: 18px; }
+.gallery a { border-radius: 180px 180px 14px 14px; }
+.site-footer { background: #3d2b24; }
+.welcome-popup__panel { border: 1px solid var(--line); border-radius: 28px; box-shadow: 0 40px 100px rgba(35,22,17,.28); }
+
+@media (max-width: 1180px) {
+  .site-header .brand { width: 245px; }
+  .nav-link { padding-inline: 8px; }
+}
+@media (max-width: 960px) {
+  :root { --header-h: 82px; }
+  .nav-toggle span { background: var(--night); }
+  .nav { background: var(--paper); }
+  .nav-link { color: var(--night); }
+}
+@media (max-width: 700px) {
+  .experience-hero__content { width: calc(100% - 42px); padding-bottom: 54px; }
+  .experience-hero h1 {
+    width: 100%;
+    margin-bottom: 28px;
+    font-size: clamp(58px, 17vw, 88px);
+    line-height: .87;
+  }
+  .schedule__item { grid-template-columns: 50px 1fr 28px; }
+  .schedule__date, .schedule__title, .schedule__type { grid-column: 2; }
+  .festival-letter { grid-template-columns: 1fr; }
+  .home-guide__row { grid-template-columns: 44px 1fr; }
+  .page-hero::before { inset: 18px; }
+}
+
+/* Konzertjournal stability pass — explicit alignment and contrast contracts */
+body,
+.section--cream,
+.section--paper { color: var(--text); }
+
+.section--cream h1,
+.section--cream h2,
+.section--cream h3,
+.section--cream h4,
+.section--paper h1,
+.section--paper h2,
+.section--paper h3,
+.section--paper h4 { color: var(--ink); }
+
+.section--dark { background: var(--night); color: #f5e9db; }
+.section--dark h1,
+.section--dark h2,
+.section--dark h3,
+.section--dark h4 { color: #fffaf4; }
+.section--dark p,
+.section--dark li { color: #eadbcb; }
+.section--dark .btn--outline { border-color: rgba(255,255,255,.62); color: #fffaf4; }
+.section--dark .btn--outline:hover { background: #fffaf4; color: var(--night); }
+
+.home-program__head {
+  display: block;
+  max-width: 920px;
+  margin-inline: auto;
+  text-align: center;
+}
+.home-program__head .kicker { margin-inline: auto; }
+.home-program__head h2 { color: var(--ink); text-wrap: balance; }
+.home-program__head h2::after { margin: 32px auto; }
+.home-program__lead {
+  max-width: 42ch;
+  margin: 0 auto;
+  color: var(--text-soft);
+  text-align: center;
+  text-wrap: balance;
+}
+.home-program__action { justify-content: center; }
+
+.schedule__item { color: var(--text); }
+.schedule__item:hover { color: var(--text); }
+.schedule__date,
+.schedule__title,
+.schedule__type { text-align: left; }
+.schedule__date i { color: var(--text-soft); }
+.schedule__arrow { justify-self: end; }
+
+.festival-letter { color: #fff8ef; }
+.festival-letter__copy .kicker { color: #ead2bb; }
+.festival-letter__copy h2 { color: #fffaf4; }
+.festival-letter__copy h2 em { color: #edcfb2; }
+.festival-letter__copy > p:not(.kicker) { color: #f0dfcf; }
+.festival-letter__signature,
+.festival-letter__signature strong { color: #fffaf4 !important; }
+.festival-letter__copy .poster-link { color: #f2d6bb; }
+.festival-letter__copy .poster-link:hover { color: #fffaf4; }
+
+.home-guide__head { text-align: left; }
+.home-guide__row { color: var(--text); }
+.home-guide__row h3 { color: var(--ink); }
+.home-guide__row p { color: var(--text-soft); }
+.home-guide__row--tickets { color: #fffaf4; }
+.home-guide__row--tickets h3 { color: #fffaf4; }
+.home-guide__row--tickets p { color: #dfcfc0; }
+.home-guide__row--tickets .home-guide__links { color: #eed2b5; }
+
+.section-head { width: min(900px, 100%); margin-inline: auto; text-align: center; }
+.section-head .eyebrow,
+.section-head .kicker { margin-inline: auto; }
+.section-head h2 { color: var(--ink); text-wrap: balance; }
+.section-head .lead { margin-inline: auto; color: var(--text-soft); text-wrap: balance; }
+.section--dark .section-head h2 { color: #fffaf4; }
+.section--dark .section-head .lead { color: #eadbcb; }
+
+.page-hero .breadcrumbs,
+.page-hero h1,
+.page-hero .lead { text-align: center; }
+.page-hero .lead { color: var(--text); }
+.event-hero-meta { color: #fffaf4; }
+
+.event-card { color: var(--text); }
+.event-card__meta { color: var(--signal-dark); }
+.event-card__title,
+.event-card__title a { color: var(--ink); }
+.event-card__teaser { color: var(--text-soft); }
+.event-card__actions .btn--outline { color: var(--ink); }
+
+.price-card,
+.info-card,
+.team-card,
+.venue-card,
+.quote-card { background: var(--white); color: var(--text); }
+.price-card h3,
+.info-card h3,
+.team-card h3,
+.venue-card h3,
+.quote-card h3 { color: var(--ink); }
+.price-card--featured { background: var(--night); color: #fffaf4; }
+.price-card--featured h3,
+.price-card--featured .amount,
+.price-card--featured li { color: #fffaf4; }
+.price-card--featured .amount small,
+.price-card--featured p { color: #dfcfc0; }
+
+.split { text-align: left; }
+.split h2 { color: var(--ink); }
+.split p { color: var(--text); }
+.prose { color: var(--text); }
+.prose h2,
+.prose h3 { color: var(--ink); }
+
+.cta-banner { color: #fffaf4; }
+.cta-banner h2 { color: #fffaf4; }
+.cta-banner p { color: #eadbcb; }
+.cta-banner .eyebrow { color: #edcfb2 !important; }
+.cta-banner .btn--primary { border-color: #fffaf4; background: #fffaf4; color: var(--night); }
+.cta-banner .btn--primary:hover { border-color: #edcfb2; background: #edcfb2; color: var(--night); }
+.cta-banner .btn--ghost { border-color: rgba(255,255,255,.68); color: #fffaf4; }
+.cta-banner .btn--ghost:hover { background: #fffaf4; color: var(--night); }
+
+.ticket-box { color: #fffaf4; }
+.ticket-box h3 { color: #fffaf4; }
+.ticket-box .btn--primary { background: #fffaf4; color: var(--night); }
+
+.site-footer { color: #dbcbbb; }
+.site-footer .tagline,
+.site-footer .item,
+.site-footer .footer-bottom { color: #dbcbbb; }
+.site-footer .btn--primary { border-color: var(--signal); background: var(--signal); color: #fffaf4; }
+.site-footer .btn--primary:hover { border-color: #c18e76; background: #c18e76; }
+
+.mobile-ticket-bar { background: var(--night); }
+.mobile-ticket-bar .btn--primary { border-color: #fffaf4; background: #fffaf4; color: var(--night); }
+
+.welcome-popup__panel { background: var(--paper); color: var(--text); }
+.welcome-popup__panel h2 { color: var(--ink); }
+.welcome-popup__panel p { color: var(--text-soft); }
+
+@media (max-width: 960px) {
+  .site-header { background: rgba(248,241,231,.98); color: var(--ink); }
+  .site-header .brand::before { filter: none; }
+  .site-header .brand::after { filter: brightness(.42) sepia(.5); }
+  .nav { background: var(--paper); color: var(--ink); }
+  .nav-item { border-bottom-color: var(--line); }
+  .nav-link { color: var(--ink); }
+  .nav-link:hover,
+  .nav-item:focus-within > .nav-link { color: var(--signal-dark); }
+  .dropdown { background: var(--white); }
+  .dropdown a { color: var(--text); }
+
+  .schedule__item {
+    grid-template-columns: 54px 132px minmax(0, 1fr) 28px;
+    gap: 16px;
+  }
+  .schedule__type { display: none; }
+  .schedule__arrow { grid-column: 4; }
+}
+
+@media (max-width: 700px) {
+  .experience-hero__content { padding-block: 54px; text-align: center; }
+  .experience-hero__date { justify-content: center; }
+  .experience-hero__actions { align-items: center; margin-top: 28px; }
+  .experience-hero__actions .btn { width: min(100%, 320px); }
+
+  .home-program__head { margin-bottom: 54px; }
+  .home-program__head h2 { font-size: clamp(50px, 15vw, 76px); }
+
+  .schedule__item {
+    grid-template-columns: 42px minmax(0, 1fr) 24px;
+    gap: 8px 12px;
+    padding: 22px 8px;
+  }
+  .schedule__number { grid-column: 1; grid-row: 1 / span 3; font-size: 28px; }
+  .schedule__date,
+  .schedule__title,
+  .schedule__type { grid-column: 2; }
+  .schedule__date { grid-row: 1; font-size: 9px; }
+  .schedule__title { grid-row: 2; font-size: clamp(25px, 8vw, 34px); }
+  .schedule__type { display: block; grid-row: 3; font-size: 12px; }
+  .schedule__arrow { grid-column: 3; grid-row: 1 / span 3; }
+
+  .festival-letter__copy { text-align: left; }
+  .home-guide__head { text-align: left; }
+  .home-guide__row h3,
+  .home-guide__row p,
+  .home-guide__links { grid-column: 2; }
+  .section-head { text-align: left; }
+  .section-head .eyebrow,
+  .section-head .kicker,
+  .section-head .lead { margin-left: 0; }
+  .page-hero .container { width: calc(100% - 48px); }
+  .page-hero h1 { overflow-wrap: anywhere; }
+  .event-card__body { padding: 26px 22px 30px; }
+
+  .experience-hero__mark { width: 48px; margin: 0 auto 18px; }
+  .experience-hero__date {
+    width: 100%;
+    font-size: clamp(14px, 4vw, 18px);
+    letter-spacing: .09em;
+    white-space: nowrap;
+  }
+  .experience-hero__actions { margin-top: 24px; }
+}
