@@ -2,16 +2,19 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gruppeneinteilung nach Nachname</title>
 <style>
 body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 36px; background:#f7f7f8; color:#222;}
 h1 { text-align:center; font-weight:700; letter-spacing:.3px;}
 .summary {text-align:center; margin-top:6px; color:#666;}
-.groups { display:grid; grid-template-columns: repeat(3, minmax(280px, 1fr)); gap:20px; margin-top:28px;}
-.group { background:#fff; border-radius:14px; padding:18px 18px 8px 18px; box-shadow: 0 6px 16px rgba(0,0,0,.06);}
+.groups { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:28px;}
+.group { background:#fff; border-radius:14px; padding:18px 18px 8px 18px; box-shadow: 0 6px 16px rgba(0,0,0,.06); border-top:5px solid #ccc;}
 .group h2 { margin:0 0 6px 0; font-size:18px;}
 .group .range { color:#666; font-size:13px; }
-.count { font-weight:600; margin:6px 0 10px 0;}
+.count { font-weight:600; margin:6px 0 4px 0;}
+.rooms { font-size:12px; color:#666; margin-bottom:10px;}
+.rooms b { color:#333; }
 ul { list-style:none; padding-left:0; margin:0; max-height: 380px; overflow:auto;}
 li { padding:4px 0; border-bottom:1px dashed #eee;}
 li:last-child { border-bottom:none;}
@@ -20,235 +23,272 @@ li:last-child { border-bottom:none;}
 </head>
 <body>
 <h1>Gruppeneinteilung nach Nachname</h1>
-<div class="summary">Gesamt: <b>184</b> Studierende</div>
+<div class="summary">Vorkurs 2026 &middot; Gesamt: <b>213</b> Studierende in 7 Gruppen</div>
 <div class="groups">
 
-<div class="group">
-<h2>Gruppe Einstein</h2>
-<div class="range">A – C</div>
-<div class="count">Anzahl: 26</div>
+<div class="group" style="border-top-color:#1F4E79;">
+<h2 style="color:#1F4E79;">Gruppe Einstein</h2>
+<div class="range">A – Co</div>
+<div class="count">Anzahl: 30</div>
+<div class="rooms">Mo <b>HIT H51</b> &middot; Di <b>HIT K52</b> &middot; Do <b>HIT K51</b></div>
 <ul>
-<li>Abreu Giulio</li>
-<li>Almasan Isabel Andrea</li>
-<li>Althaus Patrick</li>
-<li>Alvaro Sanchez Martín</li>
-<li>Ampikapathy Nila</li>
-<li>Antony Bryan</li>
-<li>Asfour Chiara</li>
-<li>Atmacagil Arda</li>
-<li>Bamert Mathias</li>
-<li>Bär Paul</li>
-<li>Bauer Nelson</li>
-<li>Bayer Anna</li>
-<li>Beerenwinkel Marlene</li>
-<li>Behrndt Niklas</li>
-<li>Beyeler Lilo</li>
-<li>Bian Keyan</li>
-<li>Borysov Yevhen</li>
-<li>Boucek Eric</li>
-<li>Brachmann Leonard</li>
-<li>Brüderlin Maxie</li>
-<li>Brühwiler Ramona</li>
-<li>Bula David</li>
-<li>Caslli Kevin</li>
-<li>Cek Onat</li>
-<li>Çelen Ege</li>
-<li>Chan Keanu</li>
+<li>Al Ayad Rana</li>
+<li>Alexander Kaminski Alexander</li>
+<li>Amacher Christoph</li>
+<li>Andreev Boris</li>
+<li>Bakstein Güell William</li>
+<li>Balocco Jordi</li>
+<li>Barbavara Alberto</li>
+<li>Barbieri Viale Eugenio</li>
+<li>Bauer Lili Ann</li>
+<li>Baumann Ella</li>
+<li>Baumann Risto</li>
+<li>Bergqvist Felix</li>
+<li>Bertram Franziska</li>
+<li>Bettner Balint</li>
+<li>Blecken Lucie</li>
+<li>Borbely-Ipkovich Bendeguz</li>
+<li>Bozacıoğlu Burak</li>
+<li>Brück Fynn</li>
+<li>Buchner Luis</li>
+<li>Bujok Elias</li>
+<li>Burger Liv</li>
+<li>Bürle Cheyenne</li>
+<li>Büttiker Ariane</li>
+<li>Caponio Angelo Raffaele</li>
+<li>Carstanjen Cornelius</li>
+<li>Caruta Sorina</li>
+<li>Casale Nicola</li>
+<li>Christen Aina</li>
+<li>Colella Matteo</li>
+<li>Coppola Luca Lorenzo</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Curie</h2>
-<div class="range">D – Ge</div>
-<div class="count">Anzahl: 27</div>
+<div class="group" style="border-top-color:#375623;">
+<h2 style="color:#375623;">Gruppe Curie</h2>
+<div class="range">Cr – Hae</div>
+<div class="count">Anzahl: 30</div>
+<div class="rooms">Mo <b>HIT J52</b> &middot; Di <b>HIT H51</b> &middot; Do <b>HIT K52</b></div>
 <ul>
-<li>Decio Remo</li>
-<li>Dempewolff Linda</li>
-<li>Deng Renzhe</li>
-<li>Dicken Clemens</li>
-<li>Döge Jannes Karl</li>
-<li>Donnola Maja</li>
-<li>Dvořák Matěj</li>
-<li>Ehrenhöfer Philipp</li>
-<li>Elsener Cyrill</li>
-<li>Fang Helena</li>
-<li>Fedier Noah</li>
-<li>Fellenberg Julius</li>
-<li>Feuilleux Maelis</li>
-<li>Fileva Sophia</li>
-<li>Fink Niko</li>
-<li>Fischer Aaron</li>
-<li>Flütsch Lian</li>
-<li>Fölster Linnea</li>
-<li>Frei Adrian</li>
-<li>Friedman Mia</li>
-<li>Frohn Annika</li>
-<li>Galstyan Andranik</li>
-<li>gao Lion</li>
-<li>Garbani Evan</li>
-<li>Geldbach Simon</li>
-<li>Georgiadis Gregorios</li>
-<li>Georgiev Hristo</li>
+<li>Cristofaro Valeria</li>
+<li>Deshpande Stuti</li>
+<li>Diehl Hauke</li>
+<li>Dietz Luisa</li>
+<li>Dogan Can</li>
+<li>Dormann Aurelia</li>
+<li>Doshi Frederik</li>
+<li>Dreher Simon</li>
+<li>Druz Pliskin Alisa</li>
+<li>Dumitrache Stefan Daniel</li>
+<li>Dzhurkov Boris</li>
+<li>Ehrler Jorin</li>
+<li>Fachruddin Sophie</li>
+<li>Fang Mingqian</li>
+<li>Fehlmann Severin</li>
+<li>Flichy Zadig</li>
+<li>Floraki Eleni</li>
+<li>Fluri Runa</li>
+<li>Frankenberger Sophie</li>
+<li>Freund Max</li>
+<li>Friedrich Hannah Elise</li>
+<li>Fuentes Gonzalez Carla</li>
+<li>Galli Luca</li>
+<li>Glass Lina</li>
+<li>Gloth Aline</li>
+<li>Gondal Chaudhry Shaafay Khan</li>
+<li>Grübner Damian</li>
+<li>Günesoglu Benjamin</li>
+<li>Gysin Elias</li>
+<li>Haefliger Manon</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Feynman</h2>
-<div class="range">Gi – Ji</div>
-<div class="count">Anzahl: 27</div>
+<div class="group" style="border-top-color:#7F6000;">
+<h2 style="color:#7F6000;">Gruppe Feynman</h2>
+<div class="range">Haf – Ke</div>
+<div class="count">Anzahl: 30</div>
+<div class="rooms">Mo <b>HIT J53</b> &middot; Di <b>HIT J52</b> &middot; Do <b>HIT H51</b></div>
 <ul>
-<li>Gilabert Prem</li>
-<li>Gjuraj Samuel</li>
-<li>Goltz Nina</li>
-<li>Grazzini Caterina</li>
-<li>Gredig Mia Sara</li>
-<li>Halter Nina</li>
-<li>Hammerschmidt Fiona</li>
-<li>Heinimann Louis</li>
-<li>Hengster Alexander-Rupert</li>
-<li>Hensel Anton</li>
-<li>Hermann Edwin</li>
-<li>Hisker Gustav</li>
-<li>Hoffner Robert</li>
-<li>Holtgreve Mira</li>
-<li>Hong Eric</li>
-<li>Horber Leo</li>
-<li>Imboden Nando Jonas</li>
-<li>Imhof Sarina</li>
-<li>Ineichen Marc</li>
-<li>Jaekel Nicolas</li>
-<li>Jakobsen Lennart Arne</li>
-<li>Jaskovic Filip</li>
-<li>Jenny Samuel</li>
-<li>Jeong Gaeun</li>
-<li>Jia Linya-Christin</li>
-<li>Jiang Qirui</li>
-<li>Jiang Shuyu</li>
+<li>Haffner Nikita</li>
+<li>Haider Shenelle</li>
+<li>Handlir Helena</li>
+<li>Hauck Nico</li>
+<li>Hauenstein Benjamin</li>
+<li>Hediger David</li>
+<li>Heerdt Philipp</li>
+<li>Heilscher Linus</li>
+<li>Heim Katja</li>
+<li>Hepting Nicolas</li>
+<li>Herrmann Mella</li>
+<li>Hirschbüchler Philipp</li>
+<li>Hofheinz Aidan</li>
+<li>Hoßfeld Tobias</li>
+<li>Ippolito Alessandro</li>
+<li>Iten Nora</li>
+<li>Ivaniychuk Georgy</li>
+<li>Jaeschke Julia</li>
+<li>Jain Mridul</li>
+<li>Jhalani Anisha</li>
+<li>Jörger Dominik</li>
+<li>Kaffenberger Tim</li>
+<li>Kagermeier Leonhard</li>
+<li>Kalanke Lara</li>
+<li>Karam—Titze Leonard Elijah Nicolas</li>
+<li>Kashyap Shourya</li>
+<li>Keel Simon</li>
+<li>Kersten Tim</li>
+<li>Kesmer Leon</li>
+<li>Kettenbach Nicklas Gian</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Newton</h2>
-<div class="range">Jo – Li</div>
-<div class="count">Anzahl: 27</div>
+<div class="group" style="border-top-color:#833C0C;">
+<h2 style="color:#833C0C;">Gruppe Newton</h2>
+<div class="range">Kn – Mij</div>
+<div class="count">Anzahl: 30</div>
+<div class="rooms">Mo <b>HIT K51</b> &middot; Di <b>HIT J53</b> &middot; Do <b>HIT J52</b></div>
 <ul>
-<li>Joliat Clément</li>
-<li>Jung Felix</li>
-<li>Jung Florian</li>
-<li>Jurcik Jakub</li>
-<li>Kabadayi Efe</li>
-<li>Karidis Matteo</li>
-<li>Kat Rene</li>
-<li>Keller Simon</li>
-<li>Kiefer Moritz</li>
-<li>Kiener Celina</li>
-<li>Kim Clara</li>
-<li>Kiori Konstantinos</li>
-<li>Klassen Tobias</li>
-<li>Klein Lopez Felix</li>
-<li>Kocher Damien</li>
-<li>Kramer Elias</li>
-<li>Krämer Gian Luis</li>
-<li>Kreuzer Theodor</li>
-<li>Kröger Hendrik</li>
-<li>Kukorelly Dalma</li>
-<li>Küttel Lars</li>
-<li>Kuvalekar Soham</li>
-<li>Liebenstein Luis</li>
-<li>Lin Xiaoman</li>
-<li>Liu Haiming</li>
-<li>Liu Hexuan</li>
-<li>Liu Shizong</li>
+<li>Knappich Sophie</li>
+<li>Koller Jakob</li>
+<li>Köppel Ilona</li>
+<li>Kostamo Bertta</li>
+<li>Krambs Moritz</li>
+<li>Kriyan Reddy Kriyan</li>
+<li>Kümin Céline</li>
+<li>Kunze Lukas</li>
+<li>Kwak Doyun</li>
+<li>Lenz Andreas</li>
+<li>Liebrenz Elena</li>
+<li>Lin Erika</li>
+<li>Lin Huaxia</li>
+<li>Lugali Lugali</li>
+<li>Luo Yizhi</li>
+<li>Ma Kevin</li>
+<li>Maffei Riccardo</li>
+<li>Marfurt Maurice</li>
+<li>Marty Nils</li>
+<li>Masal Simon</li>
+<li>Maurer Maris</li>
+<li>McDowell Scott</li>
+<li>McNeill Henry</li>
+<li>Meng Andy</li>
+<li>Merkle Clemens</li>
+<li>Merz Ricarda</li>
+<li>Meyer Simone</li>
+<li>Meylan Stéphanie</li>
+<li>Mihaljevic Mark</li>
+<li>Mijucić Aleksandar</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Bohr</h2>
-<div class="range">Lu – Ro</div>
-<div class="count">Anzahl: 28</div>
+<div class="group" style="border-top-color:#4B3F72;">
+<h2 style="color:#4B3F72;">Gruppe Bohr</h2>
+<div class="range">Mil – R</div>
+<div class="count">Anzahl: 30</div>
+<div class="rooms">Mo <b>HIT K52</b> &middot; Di <b>HIT K51</b> &middot; Do <b>HIT J53</b></div>
 <ul>
-<li>Ludwig Linus</li>
-<li>Manieri Alessandro</li>
-<li>Martina Ciferri</li>
-<li>Marucci Giulia</li>
-<li>Mauch Sofia</li>
-<li>Meszaros Marcell Gabor</li>
-<li>Meyer Theis</li>
-<li>Michelucci Caterina Sofia</li>
-<li>Mitev Amélie</li>
-<li>Naef Maximilien</li>
-<li>Nagel Anja</li>
-<li>Nakhleh Joud</li>
-<li>Nenova Simona</li>
-<li>Neuerburg Aeneas</li>
-<li>Niederacher Julia</li>
-<li>Nowak Darius</li>
-<li>Obregon Kai</li>
-<li>Ortiz Maria</li>
-<li>Özkan Emin</li>
-<li>Passalis Filippos</li>
-<li>Peters Jonas</li>
-<li>Preis Ian</li>
-<li>Ramseier Pascal</li>
-<li>Ribeiro Ventura Leonardo</li>
-<li>Riepp Julian</li>
-<li>Riggenbach Ida</li>
-<li>Roarty Cian</li>
-<li>Roth Adrian</li>
+<li>Mills Sienna</li>
+<li>Miranda Cruzado Jael Levi</li>
+<li>Mladenov Hristo</li>
+<li>Mojon Catherine</li>
+<li>Monnerat Camille</li>
+<li>Morsy Abubakr</li>
+<li>Mursalieva Miriam</li>
+<li>Nezel Samuele</li>
+<li>Nigg Maris</li>
+<li>Oezdemir Leila</li>
+<li>Palamarchuk Mariia</li>
+<li>Pang Jiangyi</li>
+<li>Paoloni Laura</li>
+<li>Paranthaman Shrishanth</li>
+<li>Pauli Ennio</li>
+<li>Perkovic Anna</li>
+<li>Piva Anna</li>
+<li>Pollnau Leonore</li>
+<li>Prinzessin zu Waldeck und Pyrmont Charlotte</li>
+<li>Puffer Santonja Alana</li>
+<li>Râpă-Bălan Tudor-Florin</li>
+<li>Reimann Ilona</li>
+<li>Rentsch Silvio</li>
+<li>Reut Roger</li>
+<li>Rojahn Konrad</li>
+<li>Romeu de Vicente Rodrigo</li>
+<li>Ruan Zilin</li>
+<li>Rüegg Silvan</li>
+<li>Ruhrberg Estevez Elda</li>
+<li>Ruiz Mena Rodrigo</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Hawking</h2>
-<div class="range">Ru – Ti</div>
-<div class="count">Anzahl: 25</div>
+<div class="group" style="border-top-color:#9C1F3C;">
+<h2 style="color:#9C1F3C;">Gruppe Hawking</h2>
+<div class="range">S – St</div>
+<div class="count">Anzahl: 31</div>
+<div class="rooms">Mo <b>HCP 1</b> &middot; Di <b>HCP 2</b> &middot; Do <b>HCP 1</b></div>
 <ul>
-<li>Ruess Martínez Guillermo Francisco</li>
-<li>Ruisinger Jonas</li>
-<li>Sageder Leander</li>
-<li>Saporito Marco</li>
-<li>Schärer Eliane</li>
-<li>Scheithauer Maja</li>
-<li>Schmidt-Wellenburg Julian</li>
-<li>Schneider Liam</li>
-<li>Sebben Nicola</li>
-<li>Senn Remirez Pablo</li>
-<li>Seyferth Thornike</li>
-<li>Silvestri Sofia Emelie</li>
-<li>Staub Julian</li>
-<li>Stefanetti Elia</li>
-<li>Stoll Friedrich</li>
-<li>Storni Gianluca</li>
-<li>Strobl Viktor</li>
-<li>Szucsany Laszlo</li>
-<li>Tabernig Jonathan</li>
-<li>Takacs Liliana</li>
-<li>Tami Daniel</li>
-<li>Taverna Nicola</li>
-<li>Terenzi Eleonora</li>
-<li>Tian Xiya</li>
-<li>Tiwary Saanvi</li>
+<li>Salzano Edoardo</li>
+<li>Saur Muriel</li>
+<li>Schäfer Timo</li>
+<li>Schätz Samy</li>
+<li>Schefer Linda</li>
+<li>Schinnerer Sonja</li>
+<li>Schmid Moritz</li>
+<li>Schmid Noah David</li>
+<li>Schneider Siraya Ameline</li>
+<li>Schölkopf Elmar</li>
+<li>Scholz Alexander</li>
+<li>Schön Julie</li>
+<li>Schulte Julius</li>
+<li>Schultze Marie</li>
+<li>Senn Martin</li>
+<li>Sevici Rana</li>
+<li>Shamout Adnan</li>
+<li>Sierra Szabo Santiago</li>
+<li>Sierra Szabo Victor</li>
+<li>Sierra Szabo Victor</li>
+<li>Silveira Camargo Rachel</li>
+<li>Silveira Camargo Rachel</li>
+<li>Skudlarz Christoph</li>
+<li>Soltysik Tim</li>
+<li>Ssaid Anas</li>
+<li>Steiner Bigna</li>
+<li>Steinmetz Dominique</li>
+<li>Stephanblome Niklas</li>
+<li>Stier Remo</li>
+<li>Stöckli Patrick</li>
+<li>Stranjak Alan</li>
 </ul></div>
-<div class="group">
-<h2>Gruppe Noether</h2>
-<div class="range">Tr – Z</div>
-<div class="count">Anzahl: 24</div>
+<div class="group" style="border-top-color:#11615C;">
+<h2 style="color:#11615C;">Gruppe Noether</h2>
+<div class="range">Su – Z</div>
+<div class="count">Anzahl: 32</div>
+<div class="rooms">Mo <b>HCP 2</b> &middot; Di <b>HCP 1</b> &middot; Do <b>HCP 2</b></div>
 <ul>
-<li>Trebst Philip</li>
-<li>Tsanev Kaloyan</li>
-<li>Uhles Floria</li>
-<li>Urso Nada</li>
-<li>van de Vijfeijken Diana</li>
-<li>Vassilev Ilia</li>
-<li>Velchev Kristian</li>
-<li>Verma Abhinav</li>
-<li>Vögeli Selina</li>
-<li>Waksman Lina</li>
-<li>Walcher Philippe</li>
-<li>Weiller Andreas</li>
-<li>Wenger Xeno</li>
-<li>Wieser David</li>
-<li>Wirth Aaron</li>
-<li>Wixmerten Jan</li>
-<li>Wrenger Hanno</li>
-<li>Wu Han</li>
-<li>Wyss Dwayne Kalen</li>
-<li>Yu Jiacheng</li>
-<li>Yushko Liliia</li>
-<li>Zavagli Jona</li>
-<li>Zeller Valentin</li>
-<li>Zwinger Melissa</li>
+<li>Suleman Ali</li>
+<li>Szmolyan Bruno</li>
+<li>Tang Tiffany</li>
+<li>Tessera Gideone</li>
+<li>Truniger Leila</li>
+<li>Turra Elena</li>
+<li>Tzankov Carmen</li>
+<li>Tzankov Carmen</li>
+<li>Urban Maurizio</li>
+<li>Veit David</li>
+<li>Vinahradau Ronald</li>
+<li>Wachter Sebastian</li>
+<li>Wagner Lukas Maximilian</li>
+<li>Wang Jiawen</li>
+<li>Weber Elena</li>
+<li>Weber Yannis</li>
+<li>Wecht Arthur</li>
+<li>Weiser Nathanael</li>
+<li>Wesseler Mauritz</li>
+<li>Wicht Thomas</li>
+<li>Widmer Meret Lucy</li>
+<li>Widmer Simon</li>
+<li>Wildner Noah</li>
+<li>Wobmann Gian</li>
+<li>Wolters Johanna Sophie</li>
+<li>Wöltinger Kimberly Siyan</li>
+<li>Wruk Greta</li>
+<li>Zajc Jakob</li>
+<li>Zhang Luka</li>
+<li>Zhang Yang</li>
+<li>Zheng Boyi</li>
+<li>Zöttl Cajetan</li>
 </ul></div>
 </div>
-<div class="footer">Automatisch gruppiert nach Bereichsgrenzen A–C, D–Ge, Gi–Ji, Jo–Li, Lu–Ro, Ru–Ti, Tr–Z.</div>
-</body></html>
+<div class="footer">Am Mittwoch findet statt der Tutorien das Soziale Event statt.</div>
+</body>
+</html>
