@@ -1,0 +1,319 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+\usepackage[
+		pdftex,
+		bookmarks=true,
+		bookmarksnumbered=true,
+		bookmarksopen=true,
+		colorlinks=true,
+		filecolor=black,
+	    linkcolor=red,
+		urlcolor=blue,
+		plainpages=false,
+		pdfpagelabels,
+		citecolor=black,
+		unicode=true,
+		pdftitle={Vorkurs 2026 – Mittwoch},
+		pdfauthor={Hrvoje Krizic},
+		pdfdisplaydoctitle=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{stmaryrd}
+\usepackage{dsfont}
+\usepackage{txfonts}
+\usepackage[pdftex]{graphicx}
+\usepackage{enumitem}
+\usepackage[a4paper, total={6.5in, 9.5in}]{geometry}
+\usepackage{cancel}
+\renewcommand{\baselinestretch}{1.15}
+
+\newcommand{\ce}{\coloneqq}
+\newcommand{\ec}{\eqqcolon}
+\renewcommand{\c}{\colon}
+\newcommand{\Ra}{\Rightarrow}
+\newcommand{\La}{\Leftarrow}
+\newcommand{\LRa}{\Leftrightarrow}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+
+\setlength{\parindent}{0pt}
+\usepackage{hyperref}
+% toggle tutorium-exercises (which do not get distributed)
+\renewcommand{\t}[1]{#1}
+%\renewcommand{\t}[1]{}
+
+%toggle solutions
+\newcommand{\s}[1]{#1}
+%\newcommand{\s}[1]{}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{wasysym}
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\arraystretch}{1.4}
+\renewcommand{\arraycolsep}{0.2cm}
+\renewcommand{\tabcolsep}{0.25cm}
+\begin{document}
+
+\section*{Mittwoch: Relationen}
+\subsection*{Aufgabe 1}
+Beweise per Induktion: \textit{Eine Menge mit }$n$\textit{ Elementen besitzt} $2^n$ \textit{Teilmengen.}\\
+\textit{Hinweis: die leere Menge ist Teilmenge jeder Menge.}
+\s{\subsection*{Lösung}
+Wir beweisen die Aussage per Induktion:
+\begin{itemize}
+    \item $n=1$: Die Menge $\{x\}$ besitzt nur $\emptyset$ und $\{x\}$ als Teilmengen. Es sind also $2=2^1$ Teilmengen.
+    \item $n\implies n+1$: Wir nehmen also an, dass jede aus $n$ Elementen bestehende Menge $2^n$ Teilmengen besitzt. Wir betrachten nun eine Menge $E_{n+1}$ welche aus den $n+1$ Elementen $x_1,...,x_n,x_{n+1}$ besteht:
+    \begin{align*}
+        E_{n+1} = \{x_1,...,x_n,x_{n+1}\}
+    \end{align*}
+    Wir zerlegen $E_{n+1}=E_n\cup \{x_{n+1}\}$, wobei $E_n=\{x_1,...,x_n\}$ $n$ Elemente besitzt. $E_n$ hat laut Induktionsannahme $2^n$ Teilmengen. Alle anderen Teilmengen von $E_{n+1}$ bekommt man als Vereinigung von $\{x_{n+1}\}$ mit einer der Teilmengen von $E_n$. Es sind somit weitere $2^n$ Teilmengen dazuzuzählen. Insgesamt haben wir $$2^n+2^n=2\cdot 2^n=2^{n+1}$$Teilmengen.
+\end{itemize}
+}
+\subsection*{Aufgabe 2}
+
+Für $x,y\in \R$ setzen wir
+\begin{align*}
+    x\sim y \iff |x-y|<0.25.
+\end{align*}
+Definiert $\sim$ eine Äquivalenzrelation?
+
+\s{\subsubsection*{Lösung}
+	Nein. Gegenbeispiel: Für $x=0$, $y=0.2$ und $z=0.4$ gilt $|x-y|=0.2<0.25$ und $|y-z|=0.2<0.25$, aber $|x-z|=0.4>0.25$. Also $(x\sim y)\land(y\sim z)\nRightarrow (x\sim z)$ und somit ist die Transitivität im Allgemeinen nicht erfüllt und $\sim$ keine Äquivalenzrelation.
+}
+
+\subsection*{Aufgabe 3}
+
+Zeige, dass die folgenden Relationen auch Äquivalenzrelationen sind.
+\begin{enumerate}[label=(\alph*)]
+    \item Sei $f:\R \to \R$ eine Funktion. Für $x,y\in \R$ setzen wir $x\sim y \iff f(x)=f(y)$.
+    \item Auf $\Z$ definieren wir: $n\sim m \iff 5$ teilt $(n-m)$.
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+    \item Dies folgt direkt aus der Definition einer Funktion: eine Funktion $f:\R\to \R$ ordnet jedem Element aus $\R$ genau ein Element aus $\R$ zu. Seien also $x,y,z\in \R$. Dann gilt:
+    \begin{itemize}
+        \item Reflexivität: Für alle $x\in \R$ gilt trivialerweise $f(x)=f(x)$. Das bedeutet, dass $x\sim x$.
+        \item Symmetrie: Ist $x\sim y$, so ist $f(x)=f(y)$. Dann ist aber auch $f(y)=f(x)$, also $y\sim x$.
+        \item Transitivität: Falls $x\sim y$ und $y\sim z$, so gilt $f(x)=f(y)$ und $f(y)=f(z)$. Es folgt $f(x)=f(y)=f(z)$ also auch $f(x)=f(z)$ und somit $x\sim z$.
+    \end{itemize}
+    \item Wir überprüfen die drei Eigenschaften der Definition einer Äquivalenzrelation. Seien $n,m,l\in \Z$ gegeben:
+    \begin{itemize}
+        \item Reflexivität: $5$ teilt $0=n-n$. Somit $n\sim n$.
+        \item Symmetrie: Ist $n\sim m$, so ist $n-m$ durch $5$ teilbar. Folglich ist auch $m-n=-(n-m)$ durch $5$ teilbar, also $m\sim n$.
+        \item Transitivität: Falls $n\sim m$ und $m\sim l$, so sind $n-m$ und $m-l$ durch 5 teilbar. Es gilt nun $n-l=(n-m)+(m-l)$. Da die Terme $n-m$ und $m-l$ separat durch $5$ teilbar sind, ist auch deren Summe $n-l$ durch $5$ teilbar, das heisst $n\sim l$.
+    \end{itemize}
+    \end{enumerate}
+}
+
+
+\subsection*{Aufgabe 4}
+
+Auf der Menge $\mathcal{P}(\N)$ aller Teilmengen von $\N$ definieren wir: $A\sim B\iff A\subseteq B$ oder $B\subseteq A$. Definiert $\sim$ eine Äquivalenzrelation auf $\mathcal{P}(\N)$?
+
+\s{\subsubsection*{Lösung}
+    Nein. Die Relation ist zwar reflexiv und symmetrisch, aber nicht transitiv.
+    Zum Beispiel gilt
+    \[
+    \{1,2\}\sim\{1\}
+    \quad\text{und}\quad
+    \{1\}\sim\{1,3\},
+    \]
+    aber
+    \[
+    \{1,2\}\not\sim\{1,3\}.
+    \]
+    Somit ist $\sim$ keine Äquivalenzrelation.
+ }   
+
+  
+\subsection*{Aufgabe 5}
+Auf der Menge $A=\{-3,-2,-1,0,1,2,3\}$ definieren wir
+\begin{align*}
+    x\sim y \iff x^2=y^2.
+\end{align*}
+Zeige, dass $\sim$ eine Äquivalenzrelation auf $A$ definiert und finde \textbf{alle Äquivalenzklassen}.
+
+
+\s{\subsubsection*{Lösung}
+Dass $\sim$ eine Äquivalenzrelation ist, haben wir schon in Aufgabe 3a) bewiesen. Wir betrachten nun zuerst das Element $3\in A$. Die Äquivalenzklasse zu $3$ ist die Menge aller $y\in A$, welche äquivalent zu $3$ sind, d.h. alle $y\in A$ sodass $y^2=3^2$ erfüllt ist:
+\begin{align*}
+    [3]_\sim = \{y\in A\mid y\sim 3\}=\{y\in A\mid y^2=3^2\} = \{-3,3\}
+\end{align*}
+Die Äquivalenzklasse zu $3$ besteht also aus den Elementen $\pm 3$. Da $-3\in [3]_\sim$ müssen wir gar keine Arbeit leisten, um $[-3]_\sim$ zu bestimmen, denn $[-3]_\sim=[3]_\sim$ und wir wählen den Repräsentanten $[3]_\sim$\footnote{Wir hätten hier natürlich auch $-3$ als Repräsentanten wählen können. Die Wahl ist egal.}. Analog betrachten wir die Zahl $2$:
+\begin{align*}
+    [2]_\sim = \{y\in A\mid y\sim 2\}=\{y\in A\mid y^2=2^2\} = \{-2,2\}
+\end{align*}
+und somit $-2\in [2]_\sim$ respektive $[2]_\sim=[-2]_\sim=\{-2,2\}$. Für die Zahl $1\in A$ erhalten wir
+\begin{align*}
+    [1]_\sim = \{y\in A\mid y\sim 1\}=\{y\in A\mid y^2=1^2\} = \{-1,1\}
+\end{align*}
+und somit $-1\in [1]_\sim$ respektive $[1]_\sim=[-1]_\sim=\{-1,1\}$. Als letztes betrachten wir die Zahl $0\in A$ und sehen
+\begin{align*}
+    [0]_\sim = \{y\in A\mid y\sim 0\}=\{y\in A\mid y^2=0^2\} = \{0\}
+\end{align*}
+Alle Äquivalenzklassen von $A$ lauten also
+\begin{align*}
+    [0]_\sim = \{0\},\quad [1]_\sim = \{-1,1\},\quad [2]_\sim = \{-2,2\},\quad [3]_\sim = \{-3,3\}.
+\end{align*}
+}
+\subsection*{Aufgabe 6}
+Auf der Menge $A=\{1,2,3,...,20\}$ definieren wir
+\begin{align*}
+    x\sim y \iff x \text{ und }y\text{ haben dieselbe Anzahl nichttrivialer Teiler.}
+\end{align*}
+Nichttrivial bedeutet hier, dass wir die Zahl selbst und $1$ nicht dazuzählen. Zeige, dass $\sim$ eine Äquivalenzrelation auf $A$ definiert und finde \textbf{alle Äquivalenzklassen}.
+
+\s{\subsubsection*{Lösung}
+Wir zeigen anhand der drei Eigenschaften, dass $\sim$ eine Äquivalenzrelation ist:
+\begin{itemize}
+    \item Reflexivität: trivialerweise $x\sim x$, da $x$ gleich viele Teiler hat wie $x$.
+    \item Symmetrie: Wenn $x$ gleich viele nichttriviale Teiler hat wie $y$, dann hat automatisch auch $y$ gleich viele nichttriviale Teiler wie $x$.
+    \item Transitivität: Haben $x$ und $y$ gleich viele nichttriviale Teiler und $y$ und $z$ gleich viele nichttriviale Teiler, dann müssen auch $x$ und $z$ gleich viele nichttriviale Teiler haben.
+\end{itemize}
+Die $1$ und alle Primzahlen haben keine nichttrivialen Teiler und gehören deshalb zur selben Äquivalenzklasse. Die einzigen beiden Zahlen, welche genau einen nichttrivialen Teiler haben, sind $4$ und $9$. Die Zahlen $6,8,10,14$ und $15$ haben alle zwei nichttriviale Teiler. Die einzige Zahl, welche drei nichttriviale Teiler hat, ist $16$. Die Zahl $12$ hat vier nichttriviale Teiler, genauso wie $18$ und $20$. Wir finden somit
+\begin{align*}
+    [1]_\sim &= \{1,2,3,5,7,11,13,17,19\}\\
+    [4]_\sim &= \{4,9\}\\
+    [6]_\sim &= \{6,8,10,14,15\}\\
+    [16]_\sim &= \{16\}\\
+    [12]_\sim &= \{12,18,20\}
+\end{align*}
+}
+
+\subsection*{Aufgabe 7}
+Betrachte die, auf $\Z$ definierte, Äquivalenzrelation
+\begin{align*}
+    n\sim m \iff n \equiv m\mod 4
+\end{align*}
+Finde \textbf{alle Äquivalenzklassen} bezüglich $\sim$. Wie sehen die Äquivalenzklassen aus, wenn wir anstelle von $4$ irgendeine Zahl $p$ wählen?
+
+\s{\subsubsection*{Lösung}
+Die Äquivalenzklasse $[0]_\sim$ besteht aus allen Zahlen in $\Z$ welche modulo $4$ gleich $0$ sind. Diese sind $0,4,8,...$ Es gilt somit
+\begin{align*}
+    [0]_\sim = \{0,\pm 4,\pm 8,\pm 12,...\}.
+\end{align*}
+Die Äquivalenzklasse $[1]_\sim$ besteht aus allen Zahlen in $\Z$ welche modulo $4$ gleich $1$ sind. Diese sind $1,5,9,...$ Es gilt somit
+\begin{align*}
+    [1]_\sim = \{1,5,9,13,-3,-7...\}
+\end{align*}
+Analog folgt
+\begin{align*}
+    [2]_\sim = \{ \pm 2, \pm 6, \pm 10, \pm 14,...\}\quad [3]_\sim = \{ 3, 7, 11, 15, -1,-5...\}
+\end{align*}
+Es gibt keine weiteren Äquivalenzklassen, weil wir alle Zahlen in $\Z$ betrachtet haben. Somit sind die Äquivalenzklassen
+\begin{align*}
+    [0]_\sim,[1]_\sim,[2]_\sim,[3]_\sim
+\end{align*}
+Für ein beliebiges $p\in\N$ mit $p\geq 2$ erhalten wir die Äquivalenzklassen
+\begin{align*}
+    [0]_\sim,[1]_\sim,\hdots ,[p-2]_\sim,[p-1]_\sim
+\end{align*}
+beziehungsweise
+\begin{align*}
+    [r]_\sim = \{r+kp\mid k\in \Z\}
+\end{align*}
+Denn $p$ hätte wieder Rest $0$ und $[p]_\sim = [0]_\sim$ usw. Siehe hierzu \href{https://de.wikipedia.org/wiki/Restklassenring}{Restklassenringe} (mit denen werdet ihr euch in der Analysis I noch viel beschäftigen).
+}
+
+\subsection*{Zusatzaufgabe}
+In der Vorlesung haben wir das faszinierende Gedankenexperiment des Hilbertschen Hotels kennengelernt - ein Hotel mit unendlich vielen Zimmern, die alle belegt sind. Dennoch konnten wir mathematisch zeigen, dass es möglich ist, für einen neuen Gast stets ein Zimmer zu finden, indem wir alle bestehenden Gäste bitten, in das jeweils nächste Zimmer umzuziehen.\\
+
+Doch was passiert, wenn ein Bus mit unendlich vielen nummerierten Plätzen vor dem Hotel hält? Auch in diesem Fall fanden wir eine Lösung: Indem wir alle aktuellen Gäste aufforderten, sich in die Zimmer mit den geraden Nummern ($2n$) zu bewegen, blieben die ungeraden Zimmer frei und wir konnten alle Busgäste unterbringen.\\
+
+Nun stellen wir uns eine neue Herausforderung vor: Was geschieht, wenn unendlich viele Busse, jeder mit unendlich vielen Plätzen, vor dem Hotel ankommen? Gibt es auch dann noch genug Platz für alle?\\
+
+Und wenn wir die Situation noch weiter denken: Was passiert, wenn das Hotel am Ufer eines Ozeans liegt und unendlich viele Schiffe ankommen, die jeweils unendlich viele Busse geladen haben, und in jedem dieser Busse befinden sich unendlich viele Gäste? Gibt es auch in diesem scheinbar grenzenlosen Szenario genug Zimmer im Hotel?
+
+
+\s{\subsubsection*{Lösung}
+
+Tatsächlich gibt es in beiden Fällen genügend Zimmer. Entscheidend ist, dass wir jedem Gast eine eindeutige Zimmernummer zuweisen können. Dabei nutzen wir die eindeutige Primfaktorzerlegung natürlicher Zahlen.
+
+\textbf{Unendlich viele Busse mit jeweils unendlich vielen Gästen.}
+
+Wir nummerieren die Busse mit $b\in\N$ und die Gäste innerhalb jedes Busses mit $g\in\N$. Ausserdem sei $n\in\N$ die bisherige Zimmernummer eines bereits im Hotel wohnenden Gastes.
+
+Wir verteilen die Gäste nun folgendermassen:
+\begin{align*}
+    \text{bisheriger Gast aus Zimmer }n
+    &\longmapsto \text{Zimmer }2^n,\\
+    \text{Gast }g\text{ aus Bus }b
+    &\longmapsto \text{Zimmer }3^b5^g.
+\end{align*}
+
+Diese Zuordnung führt niemals dazu, dass zwei verschiedene Gäste dasselbe Zimmer erhalten. Zwei bisherige Hotelgäste erhalten wegen
+\begin{align*}
+    2^{n_1}=2^{n_2}
+    \quad\Longrightarrow\quad
+    n_1=n_2
+\end{align*}
+verschiedene Zimmer. Ebenso gilt aufgrund der eindeutigen Primfaktorzerlegung
+\begin{align*}
+    3^{b_1}5^{g_1}=3^{b_2}5^{g_2}
+    \quad\Longrightarrow\quad
+    b_1=b_2
+    \quad\text{und}\quad
+    g_1=g_2.
+\end{align*}
+Somit erhalten auch zwei verschiedene Busgäste verschiedene Zimmer.
+
+Ausserdem kann ein Zimmer der Form $2^n$ niemals mit einem Zimmer der Form $3^b5^g$ übereinstimmen, da die Primfaktorzerlegungen dieser Zahlen verschiedene Primzahlen enthalten.
+
+Damit können sowohl alle bisherigen Gäste als auch alle Gäste aus den unendlich vielen Bussen gleichzeitig im Hotel untergebracht werden.
+
+
+\textbf{Unendlich viele Schiffe mit jeweils unendlich vielen Bussen und jeweils unendlich vielen Gästen.}
+
+Nun nummerieren wir zusätzlich die Schiffe mit $s\in\N$. Ein neu ankommender Gast wird damit eindeutig durch drei natürliche Zahlen beschrieben:
+\begin{align*}
+    (s,b,g)
+    =
+    (\text{Schiffsnummer},\text{Busnummer},\text{Gastnummer}).
+\end{align*}
+
+Wir können beispielsweise folgende Zimmerverteilung wählen:
+\begin{align*}
+    \text{bisheriger Gast aus Zimmer }n
+    &\longmapsto \text{Zimmer }2^n,\\
+    \text{Gast }g\text{ aus Bus }b\text{ auf Schiff }s
+    &\longmapsto \text{Zimmer }3^s5^b7^g.
+\end{align*}
+
+Wiederum erhält jeder Gast ein eigenes Zimmer. Denn aus der eindeutigen Primfaktorzerlegung folgt
+\begin{align*}
+    3^{s_1}5^{b_1}7^{g_1}
+    =
+    3^{s_2}5^{b_2}7^{g_2}
+    \quad\Longrightarrow\quad
+    s_1=s_2,\qquad b_1=b_2,\qquad g_1=g_2.
+\end{align*}
+Verschiedene Gäste können also nicht dieselbe Zimmernummer erhalten. Gleichzeitig kollidiert keine dieser Zimmernummern mit den Zimmern $2^n$ der bisherigen Hotelgäste.
+
+Somit gibt es sogar dann genügend Zimmer, wenn unendlich viele Schiffe ankommen, auf jedem Schiff unendlich viele Busse stehen und in jedem Bus unendlich viele Gäste sitzen.
+
+Der Grund dafür ist, dass sowohl die Menge
+\begin{align*}
+    \N\times\N
+\end{align*}
+als auch die Menge
+\begin{align*}
+    \N\times\N\times\N
+\end{align*}
+abzählbar unendlich ist. Obwohl also scheinbar immer weitere Ebenen von Unendlichkeit hinzukommen, gibt es nicht mehr Gäste als natürliche Zahlen und damit nicht mehr Gäste als Zimmer im Hilbertschen Hotel.
+
+\medskip
+
+Eine schöne weiterführende Diskussion des Hilbertschen Hotels findet man in diesem
+\href{https://archive.nytimes.com/opinionator.blogs.nytimes.com/2010/05/09/the-hilbert-hotel/}{Artikel der New York Times}.
+Weitere Lösungsansätze und Verallgemeinerungen, insbesondere für die Variante mit den Schiffen, findet man
+\href{https://bit.ly/hilbertvorkurs}{hier}.
+}
+
+
+\end{document}

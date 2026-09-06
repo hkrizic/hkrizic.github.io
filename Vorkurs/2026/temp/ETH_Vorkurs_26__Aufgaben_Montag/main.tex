@@ -1,0 +1,157 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+\usepackage[
+		pdftex,
+		bookmarks=true,
+		bookmarksnumbered=true,
+		bookmarksopen=true,
+		colorlinks=true,
+		filecolor=black,
+	    linkcolor=red,
+		urlcolor=blue,
+		plainpages=false,
+		pdfpagelabels,
+		citecolor=black,
+		unicode=true,
+		pdftitle={Vorkurs 2026 – Montag},
+		pdfauthor={Hrvoje Krizic},
+		pdfdisplaydoctitle=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{stmaryrd}
+\usepackage{dsfont}
+\usepackage{txfonts}
+\usepackage[pdftex]{graphicx}
+\usepackage{enumitem}
+\usepackage[a4paper, total={6.5in, 9.5in}]{geometry}
+\usepackage{cancel}
+\renewcommand{\baselinestretch}{1.15}
+
+\newcommand{\ce}{\coloneqq}
+\newcommand{\ec}{\eqqcolon}
+\renewcommand{\c}{\colon}
+\newcommand{\Ra}{\Rightarrow}
+\newcommand{\La}{\Leftarrow}
+\newcommand{\LRa}{\Leftrightarrow}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+
+\setlength{\parindent}{0pt}
+
+% toggle tutorium-exercises (which do not get distributed)
+%\renewcommand{\t}[1]{#1}
+\renewcommand{\t}[1]{}
+
+%toggle solutions
+\newcommand{\s}[1]{#1}
+%\newcommand{\s}[1]{}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{wasysym}
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\arraystretch}{1.4}
+\renewcommand{\arraycolsep}{0.2cm}
+\renewcommand{\tabcolsep}{0.25cm}
+\begin{document}
+
+\section*{Montag: Aussagenlogik, direkte Beweise}
+
+\subsection*{Aufgabe 1}
+Zeige, dass die Lösungen $x_{1,2}$ der Mitternachtsformel
+\begin{align*}
+    x_{1,2}=\frac{-b\pm \sqrt{b^2-4ac}}{2a}.
+\end{align*}
+Nullstellen des Polynoms $f(x) = ax^2 + bx + c$ mit $a\neq 0$ und $b^2-4ac\geq 0$ sind.
+
+\s{\subsubsection*{Lösung}
+Die Mitternachtsformel besagt, dass für ein quadratisches Polynom $P(x)=ax^2+bx+c$, wobei $a,b,c\in \R$, bis zu zwei Nullstellen gegeben sind (abhängig davon, ob $b^2-4ac$ grösser, gleich oder kleiner $0$ ist) durch
+\begin{align*}
+    x_{1,2}=\frac{-b\pm \sqrt{b^2-4ac}}{2a}.
+\end{align*}
+Um dies zu überprüfen, setzen wir die Lösungen der Mitternachtsformel in das quadratische Polynom $P(x)$ ein. Wir erhalten
+\begin{align*}
+    P(x_{1,2}) &= a \cdot \left(\frac{-b\pm \sqrt{b^2-4ac}}{2a}\right)^2 + b\cdot \left(\frac{-b\pm \sqrt{b^2-4ac}}{2a}\right) + c \\
+    &= \frac{1}{4a}(b^2\mp 2b\sqrt{b^2-4ac}+b^2-4ac) + \frac{1}{2a}(-b^2\pm b\sqrt{b^2-4ac}) + c \\
+    &= \frac{1}{4a}(\cancel{2b^2}\mp \cancel{2b\sqrt{b^2-4ac}}-4ac-\cancel{2b^2}\pm \cancel{2b\sqrt{b^2-4ac}})+c\\
+    &= \frac{-4ac}{4a}+c\\
+    &= 0
+\end{align*}
+Somit sind $x_{1,2}$ Nullstellen und die Aussage ist bewiesen.\\
+Beachte, dass wir nicht bewiesen haben, dass dies auch die einzigen Nullstellen von $f(x)$ sind. Dies folgt aber aus der Aussage, dass Polynome vom Grad $2$ auf $\R$ maximal zwei Nullstellen haben, wie in der Zusatzaufgabe des Übungsblattes für Dienstag bewiesen wird.
+}
+
+\subsection*{Aufgabe 2}
+\begin{enumerate}[label=(\alph*)]
+    \item Beweise mittels Wahrheitstafel: $(A \Rightarrow B) \Leftrightarrow (\neg B \Rightarrow \neg A)$.
+    \item Beweise: $\neg (A \land B) \Leftrightarrow (\neg A \lor \neg B)$.
+    \item Beweise: $(A\implies B) \Leftrightarrow (\neg A \lor B)$.
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+    \item Wir beweisen mittels Wahrheitstafel:
+        \begin{center}
+            \begin{tabular}{c | c || c | c | c | c}
+                $A$ & $B$ & $A \Rightarrow B$ & $\neg B$ & $\neg A$ & $\neg B \Rightarrow \neg A$ \\ \hline
+                w & w & w & f & f & w \\
+                w & f & f & w & f & f \\
+                f & w & w & f & w & w \\
+                f & f & w & w & w & w \\
+            \end{tabular}
+        \end{center}
+        Die Aussagen $A \Rightarrow B$ und $\neg B \Rightarrow \neg A$ haben gemäss Wahrheitstafel für alle Fälle denselben Wahrheitswert. Demnach sind sie äquivalent.
+    \item Wir beweisen mittels Wahrheitstafel:
+        \begin{center}
+            \begin{tabular}{c | c || c | c | c | c | c}
+                $A$ & $B$ & $A \land B$ & $\neg (A \land B)$ & $\neg A$ & $\neg B$ & $\neg A \lor \neg B$ \\ \hline
+                w & w & w & f & f & f & f \\
+                w & f & f & w & f & w & w \\
+                f & w & f & w & w & f & w \\
+                f & f & f & w & w & w & w \\
+            \end{tabular}
+        \end{center}
+        Die Aussagen $\neg (A \land B)$ und $\neg A \lor \neg B$ haben gemäss Wahrheitstafel für alle Fälle denselben Wahrheitswert. Demnach sind sie äquivalent.
+        \item Wir beweisen mittels Wahrheitstafel:
+        \begin{center}
+            \begin{tabular}{c | c || c | c | c }
+                $A$ & $B$ & $A \implies B$ & $\neg A$ & $\neg A \lor  B$ \\ \hline
+                w & w & w  & f  & w \\
+                w & f & f  & f  & f \\
+                f & w & w  & w  & w \\
+                f & f & w  & w  & w \\
+            \end{tabular}
+        \end{center}
+        Die Aussagen $A\implies B$ und $\neg A\lor B$ haben gemäss Wahrheitstafel für alle Fälle denselben Wahrheitswert. Demnach sind sie äquivalent.
+\end{enumerate}
+}
+
+
+\subsection*{Aufgabe 3}
+Beweise folgenden Satz:
+\textit{Sei $x,y\in \R$. Wenn $y^3+yx^2 \leq x^3+xy^2$, dann gilt $y\leq x$.}
+\s{\subsubsection*{Lösung}
+Wir beweisen den Satz mit einem direkten Beweis: Sei $y^3+yx^2\leq x^3+xy^2$. Dann gilt auch $y^3+yx^2- x^3-xy^2\leq 0$. Wir faktorisieren die linke Seite und erhalten $(y-x)(x^2+y^2)\leq 0$. Da $x^2+y^2$ positiv ist, können wir beide Seiten durch $x^2+y^2$ teilen, wobei zu beachten gilt, dass bei $x^2+y^2=0$ auch $x=y=0$ gilt und somit der Satz trivial ist. Wir erhalten $y-x\leq 0$ und somit $y\leq x$.\hfill$\square$
+}
+
+
+\subsection*{Aufgabe 4}
+    Beweise folgenden Satz: \textit{Für alle $n \in \N$ ist $\frac{n(n+1)(n+2)}{6} \in \N$.}
+\s{\subsubsection*{Lösung}
+Aus der Vorlesung wissen wir, dass $\frac{n(n+1)}{2}$ eine natürliche Zahl ist, oder äquivalent, dass $n(n+1)$ durch $2$ teilbar ist. Damit ist aber auch $n(n+1)(n+2)$ durch $2$ teilbar.\\
+Wir zeigen nun zuerst, dass $n(n+1)(n+2)$ durch $3$ teilbar ist, also $\frac{n(n+1)(n+2)}{3} \in \N$. Dazu nutzen wir Fallunterscheidung:
+\begin{enumerate}
+    \item $n$ ist durch $3$ teilbar: Dann gibt es also ein $k \in \N$, sodass $n = 3k$. Dies folgt aus der Definition von Teilbarkeit. Folglich ist $\frac{n(n+1)(n+2)}{3} = \frac{(3k)(n+1)(n+2)}{3} = k(n+1)(n+2) \in \N$.
+    \item $n$ geteilt durch $3$ ergibt Rest $1$: Dies bedeutet, dass es ein $k \in \N$ gibt, sodass $n = 3k - 2$.\footnote{\ Wir hätten auch schreiben können \flqq Dies bedeutet, dass es ein $k \in \N$ gibt, sodass $n = 3k + 1$\frqq, hätten dann aber die Fälle $n = 1$ und $n = 2$ gesondert betrachten müssen---denn in diesen Fällen wäre $k = 0$.} Wir können folgern, dass $n + 2 = 3k$. Aber dann $\frac{n(n+1)(n+2)}{3} = \frac{n(n+1)(3k)}{3} = n(n+1)k \in \N$.
+    \item $n$ geteilt durch $3$ ergibt Rest $2$: Hier ist nun $n = 3k-1$, also $n+1 = 3k$. Es folgt analog zu den obigen Fällen $\frac{n(n+1)(n+2)}{3} = \frac{n(3k)(n+2)}{3} = nk(n+2) \in \N$.
+\end{enumerate}
+Weitere Fälle kann es nicht geben, denn der Rest bei Division durch $3$ ist $0$, $1$ oder $2$. Demnach ist für alle $n \in \N$ immer $\frac{n(n+1)(n+2)}{3} \in \N$. Äquivalent ist $n(n+1)(n+2)$ für alle $n \in \N$ durch $3$ teilbar.\\
+Wir haben also gesehen, dass $n(n+1)(n+2)$ sowohl durch $2$, als auch durch $3$ teilbar ist. Da $2$ und $3$ teilerfremd sind, folgt daraus, dass $n(n+1)(n+2)$ auch durch $2\cdot 3 = 6$ teilbar sein muss, also $\frac{n(n+1)(n+2)}{6} \in \N$. Nämlich gilt: Ist $n(n+1)(n+2) \in \N$ durch $2$ teilbar, so ist $n(n+1)(n+2) = 2k$ für ein $k \in \N$. Ist nun $n(n+1)(n+2)$ auch durch $3$ teilbar, so muss auch $k$ durch $3$ teilbar sein, also $k = 3\ell$ für $\ell \in \N$. Folglich ist $n(n+1)(n+2) = 2k = 6 \ell$ durch $6$ teilbar.\hfill$\square$
+}
+
+
+\end{document}

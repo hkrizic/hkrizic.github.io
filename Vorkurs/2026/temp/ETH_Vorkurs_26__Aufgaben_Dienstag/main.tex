@@ -1,0 +1,519 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+\usepackage[
+		pdftex,
+		bookmarks=true,
+		bookmarksnumbered=true,
+		bookmarksopen=true,
+		colorlinks=true,
+		filecolor=black,
+	    linkcolor=red,
+		urlcolor=blue,
+		plainpages=false,
+		pdfpagelabels,
+		citecolor=black,
+		unicode=true,
+		pdftitle={Vorkurs 2026 – Dienstag},
+		pdfauthor={Hrvoje Krizic},
+		pdfdisplaydoctitle=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{stmaryrd}
+\usepackage{dsfont}
+\usepackage{txfonts}
+\usepackage[pdftex]{graphicx}
+\usepackage{enumitem}
+\usepackage[a4paper, total={6.5in, 9.5in}]{geometry}
+\usepackage{cancel}
+\renewcommand{\baselinestretch}{1.15}
+
+\newcommand{\ce}{\coloneqq}
+\newcommand{\ec}{\eqqcolon}
+\renewcommand{\c}{\colon}
+\newcommand{\Ra}{\Rightarrow}
+\newcommand{\La}{\Leftarrow}
+\newcommand{\LRa}{\Leftrightarrow}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+
+\setlength{\parindent}{0pt}
+
+% toggle tutorium-exercises (which do not get distributed)
+%\renewcommand{\t}[1]{#1}
+\renewcommand{\t}[1]{}
+
+%toggle solutions
+\newcommand{\s}[1]{#1}
+%\newcommand{\s}[1]{}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{wasysym}
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\arraystretch}{1.4}
+\renewcommand{\arraycolsep}{0.2cm}
+\renewcommand{\tabcolsep}{0.25cm}
+\begin{document}
+
+\section*{Dienstag: Beweismethoden}
+
+
+\subsection*{Aufgabe 1}
+
+Finde möglichst viele verschiedene Beweise folgender mathematischer Aussage:\\
+\emph{Seien $n,k\in\N$ mit $k \ge 2$. Ist $k$ ein Teiler von $n$, so ist die Zahl $n + 1$ nicht durch $k$ teilbar.}
+
+\s{\subsubsection*{Lösung}
+	\begin{enumerate}
+		\item direkter Beweis: Sei $n = k \cdot b$, also ist $n+1 = k \cdot b +1$. Aber dann ist $(k \cdot b+1)/k = b + \frac{1}{k}$. Während $b$ eine natürliche Zahl ist, ist der Bruch $\frac{1}{k}$ im zweiten Summand keine ganze Zahl, da $k \ge 2$. Deren Summe kann dann auch keine ganze Zahl sein und demnach ist $n+1$ nicht durch $k$ teilbar.
+		\item mittels Widerspruch: Nehmen wir an, dass auch $n+1$ durch $k$ teilbar ist. Dann ist also $n = k \cdot b$ und $n+1= k \cdot a$. Subtraktion liefert $1 = k (a - b)$, oder $\frac{1}{k} = a-b$. Für $k \ge 2$ ist die linke Seite dieser Gleichung keine ganze Zahl, die rechte Seite aber schon. Dies ist ein Widerspruch, unsere Annahme war also falsch und damit ist $n+1$ nicht durch $k$ teilbar.
+		\item geometrischer Beweis: Da $k$ ein Teiler von $n$ ist, kann man $n$ Punkte in einem Rechteck mit Höhe $k$ und Breite $b$ darstellen. Die Höhe ist dabei mindestens zwei, sodass es nicht möglich ist, auf der Seite des Rechteckes einen weiteren Punkt hinzuzufügen und wieder ein Rechteck der Höhe $k$ zu erhalten.
+		\item via Mengen: Die Menge aller Vielfachen von $k$ ist zugleich die Menge aller natürlichen Zahlen, die durch $k$ teilbar sind. Diese Menge ist gegeben durch $\{ a \cdot k \mid a \in \mathbb{N} \}$. Der Abstand zweier solcher Zahlen $ak$ und $bk$ mit $a \neq b$ ist $k \lvert a - b \rvert \ge k \ge 2$. Aber der Abstand von $n$ und $n+1$ ist eins und daher können nicht beide Teil dieser Menge sein.
+	\end{enumerate}
+}
+
+\subsection*{Aufgabe 2}
+
+Beweise folgende Aussagen mittels Kontraposition:
+\begin{enumerate}[label=(\alph*)]
+    \item Wenn $x$ und $y$ zwei natürliche Zahlen sind, deren Produkt gerade ist, so muss mindestens eine der beiden Zahlen gerade sein.
+    \item Wenn $x$ und $y$ zwei natürliche Zahlen sind, deren Produkt ungerade ist, so müssen beide Zahlen ungerade sein.
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+    \item Wir bilden die Kontraposition der Aussage: wenn $x$ und $y$ beide ungerade sind, so ist ihr Produkt ungerade. Wir nehmen also an, dass $x$ und $y$ beide ungerade sind. Also existiert ein $m\in \Z$ so dass $x=2m+1$ und es existiert $n \in \Z$ so dass $y=2n+1$. Demnach gilt $xy= (2m+1)(2n+1) = 2(2mn+m+n)+1$. Damit ist $xy$ ungerade und somit die Kontraposition, bzw. die Aussage, bewiesen.
+    \item Wir bilden wiederum die Kontraposition der Aussage: wenn mindestens eine der Zahlen $x$ oder $y$ gerade ist, so ist $xy$ gerade. Ohne Beschränkung der Allgemeinheit können wir annehmen, dass $x$ gerade ist. Dann gilt: es existiert ein $n\in \Z$ sodass $x=2n$ und wir folgern daraus $xy=2(ny)$. Das Produkt ist demnach gerade und die Aussage konnte per Kontraposition bewiesen werden.
+\end{enumerate}
+}
+
+
+\subsection*{Aufgabe 3}
+
+Schreibe einen möglichst präzisen Beweis für die folgenden Aussagen:
+\begin{enumerate}[label=(\alph*)]
+    \item Es gibt keine ganzen Zahlen $a,b \in \mathbb{Z}$, sodass $6a+18b=1$.
+    \item Es seien $a,b,c$ natürliche Zahlen mit $a\cdot b = c$. Dann gilt $a \le \sqrt{c}$ oder $b \le \sqrt{c}$.
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+    \begin{enumerate}[label=(\alph*)]
+        \item Wir zeigen die Aussage per Widerspruchsbeweis. Seien also $a$ und $b$ ganze Zahlen, sodass $6a+18b=1.$ Wir dividieren beide Seiten durch $6$ und erhalten
+        \begin{align*}
+            a+3b=\frac{1}{6}.
+        \end{align*}
+        Dies ist ein Widerspruch, da die Summe zweier ganzer Zahlen $a$ und $3b$ ebenfalls eine ganze Zahl sein muss. Daher gibt es keine ganzen Zahlen $a$ und $b$, sodass $6a+18b=1$.
+        \item Wir zeigen die Aussage per Widerspruchsbeweis. Man nehme also an, dass $a>\sqrt{c}$ und $b>\sqrt{c}$. Dann gilt aber
+        \begin{align*}
+            a\cdot b > \sqrt{c}\cdot\sqrt{c}=c.
+        \end{align*}
+        Dies ist aber ein Widerspruch zur Aussage $a\cdot b=c$. Der Satz folgt.
+    \end{enumerate}
+ }   
+
+  
+\subsection*{Aufgabe 4}
+
+Beweise folgende Aussagen für alle natürlichen Zahlen $n$ mittels vollständiger Induktion\footnote{Das Summenzeichen ist definiert als $\sum_{k=1}^n f(k) = f(1) + f(2) + \ldots + f(n-1) + f(n)$ für beliebige Funktionen $f(k)$. Somit ist beispielsweise für Aufgabenteil (a) die Summe $\sum_{k=1}^n k = 1 + 2 + \ldots + (n-1) + n$ gerade die Summe aller natürlichen Zahlen $\le n$.}:
+
+\begin{enumerate}[label=(\alph*)]
+	\item $\sum\limits_{k=1}^n k = \frac{n\, (n+1)}{2}$ \,.
+	\item $\sum\limits_{k=1}^n k^2 = \frac{n\, (n+1)\,(2n+1)}{6}$ \,.
+	\item $n^3 + (n+1)^3 + (n+2)^3$ ist durch $9$ teilbar.
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+	\begin{enumerate}[label=(\alph*)]
+		\item 
+		\begin{enumerate}[label=(\roman*)]
+		    \item Induktionsanfang: Für $n=1$ ergeben beide Seiten genau $1$.
+		    \item Induktionsschritt: Wir nehmen an, dass die Aussage für $n$ gilt (IV = Induktionsvoraussetzung) und beweisen nun, dass daraus die Aussage auch für $n+1$ folgt: \begin{align*}
+		        \sum\limits_{k=1}^{n+1} k &= \sum\limits_{k=1}^{n} k + (n+1) \overset{\text{IV}}{=} \frac{n\, (n+1)}{2} + \frac{2 \, (n+1)}{2} \\
+		        &= \frac{n\, (n+1) + 2 \, (n+1)}{2} = \frac{(n+1) \, (n+2)}{2}.
+		    \end{align*}
+		    Dies ist genau die zu zeigende Aussage für $n +1$.
+		\end{enumerate}
+		\item 
+		\begin{enumerate}[label=(\roman*)]
+		    \item Induktionsanfang: Für $n=1$ ergeben beide Seiten genau $1$.
+		    \item Induktionsschritt: Wir nehmen an, dass die Aussage für $n$ gilt und beweisen nun, dass daraus die Aussage auch für $n+1$ folgt: 
+		    \begin{align*}
+		        \sum\limits_{k=1}^{n+1} k^2 &= \sum\limits_{k=1}^{n} k^2 + (n+1)^2 \overset{\text{IV}}{=} \frac{n\, (n+1)\,(2n+1)}{6} + \frac{6 \, (n+1)^2}{6} \\
+		        &= \frac{(n+1)\, (n+2)\,(2n+3)}{6}.
+		    \end{align*}
+		    Dies ist gerade die zu zeigende Aussage für $n +1$.
+		\end{enumerate}
+		\item 
+		\begin{enumerate}[label=(\roman*)]
+		    \item Induktionsanfang: Für $n=1$ ist $1^3+2^3+3^3 = 36$ durch $9$ teilbar.
+		    \item Induktionsschritt: Wir nehmen an, dass die Aussage für $n$ gilt und beweisen nun, das daraus die Aussage auch für $n+1$ folgt: 
+		    \begin{align*}
+		        (n+1)^3+(n+2)^3+(n+3)^3 &= (n+1)^3+(n+2)^3+(n^3+9n^2+27n+27)\\
+		        &=n^3+(n+1)^3+(n+2)^3 + (9n^2+27n+27)\\
+		        &=\underbrace{n^3+(n+1)^3+(n+2)^3}_{\text{IV: durch 9 teilbar}} \,+\, 9\,(n^2+3n+3).
+		    \end{align*}
+		    Der letzte Term ist offensichtlich durch $9$ teilbar und somit ist die Aussage bewiesen.
+		\end{enumerate}
+	\end{enumerate}
+}
+
+
+\subsection*{Aufgabe 5: Das Steinhaufen-Spiel}
+
+Wir spielen folgendes Spiel: Zu Beginn liegt ein Haufen aus $n$ Steinen auf dem Tisch und der Punktestand beträgt $0$. In jedem Zug wählst du einen Haufen mit mindestens zwei Steinen und teilst ihn in zwei nichtleere Haufen auf. Haben die beiden neuen Haufen $a$ beziehungsweise $b$ Steine, so erhältst du für diesen Zug
+\begin{align*}
+    a\cdot b
+\end{align*}
+Punkte. Das Spiel endet, sobald nur noch $n$ einzelne Haufen mit jeweils einem Stein übrig sind.
+
+\begin{enumerate}[label=(\alph*)]
+    \item Spiele das Spiel für $n=6$ auf zwei möglichst unterschiedliche Arten. Versuche einmal, die Haufen jeweils möglichst ungleich, und einmal möglichst gleichmässig aufzuteilen. Vergleiche deine beiden Endpunktzahlen. Was vermutest du? Wie ist der Endstand bei $n=5$?
+
+    \item Bestimme den Endpunktestand in Abhängigkeit von $n$ und beweise deine Vermutung mittels vollständiger Induktion.
+
+    \item[(c*)] \textit{Bonus:} Finde einen zweiten Beweis, der ganz ohne Induktion auskommt. Stelle dir dazu vor, dass zu Beginn jedes Paar von Steinen durch einen Faden miteinander verbunden ist. Was geschieht mit diesen Fäden, wenn ein Haufen geteilt wird?
+\end{enumerate}
+
+
+\s{\subsubsection*{Lösung}
+
+\begin{enumerate}[label=(\alph*)]
+    \item Eine Möglichkeit besteht darin, immer einen einzelnen Stein abzutrennen:
+    \begin{align*}
+        6&\longrightarrow 1+5 &&\Rightarrow 1\cdot5=5,\\
+        5&\longrightarrow 1+4 &&\Rightarrow 1\cdot4=4,\\
+        4&\longrightarrow 1+3 &&\Rightarrow 1\cdot3=3,\\
+        3&\longrightarrow 1+2 &&\Rightarrow 1\cdot2=2,\\
+        2&\longrightarrow 1+1 &&\Rightarrow 1\cdot1=1.
+    \end{align*}
+    Der Endpunktestand beträgt also
+    \begin{align*}
+        5+4+3+2+1=15.
+    \end{align*}
+
+    Teilen wir die Haufen hingegen möglichst gleichmässig, können wir beispielsweise spielen:
+    \begin{align*}
+        6&\longrightarrow 3+3 &&\Rightarrow 3\cdot3=9,\\
+        3&\longrightarrow 1+2 &&\Rightarrow 1\cdot2=2,\\
+        3&\longrightarrow 1+2 &&\Rightarrow 1\cdot2=2,\\
+        2&\longrightarrow 1+1 &&\Rightarrow 1\cdot1=1,\\
+        2&\longrightarrow 1+1 &&\Rightarrow 1\cdot1=1.
+    \end{align*}
+    Auch hier erhalten wir
+    \begin{align*}
+        9+2+2+1+1=15.
+    \end{align*}
+    Es liegt daher die Vermutung nahe, dass der Endpunktestand gar nicht von der gewählten Strategie abhängt.
+
+    \item
+    Wir behaupten, dass ein Spiel mit $n$ Steinen unabhängig von der gewählten Strategie immer mit
+    \begin{align*}
+        S(n)=\frac{n(n-1)}{2}
+    \end{align*}
+    Punkten endet.
+
+    Wir beweisen dies mittels vollständiger Induktion in starker Form. Als Induktionsvoraussetzung nehmen wir also an, dass die Aussage für \emph{alle} Haufen mit höchstens $n$ Steinen gilt.
+
+    \textbf{Induktionsanfang:}
+    Für $n=1$ ist kein Zug möglich und der Punktestand beträgt
+    \begin{align*}
+        S(1)=0=\frac{1\cdot0}{2}.
+    \end{align*}
+
+    \textbf{Induktionsschritt:}
+    Wir nehmen an, dass für alle $k\in\{1,\ldots,n\}$ jedes Spiel mit $k$ Steinen unabhängig von der Strategie mit
+    \begin{align*}
+        S(k)=\frac{k(k-1)}{2}
+    \end{align*}
+    Punkten endet.
+
+    Wir betrachten nun einen Haufen mit $n+1$ Steinen. Im ersten Zug wird dieser in zwei nichtleere Haufen mit $a$ beziehungsweise $b$ Steinen geteilt, wobei
+    \begin{align*}
+        a+b=n+1.
+    \end{align*}
+    Für diesen ersten Zug erhalten wir $ab$ Punkte.
+
+    Da beide Haufen weniger als $n+1$ Steine enthalten, können wir auf beide die Induktionsvoraussetzung anwenden. Das vollständige Zerlegen des ersten Haufens liefert daher weitere
+    \begin{align*}
+        \frac{a(a-1)}{2}
+    \end{align*}
+    Punkte und das vollständige Zerlegen des zweiten Haufens weitere
+    \begin{align*}
+        \frac{b(b-1)}{2}
+    \end{align*}
+    Punkte.
+
+    Insgesamt erhalten wir somit
+    \begin{align*}
+        S(n+1)
+        &=ab+\frac{a(a-1)}{2}+\frac{b(b-1)}{2}\\
+        &=\frac{2ab+a^2-a+b^2-b}{2}\\
+        &=\frac{(a+b)^2-(a+b)}{2}\\
+        &=\frac{(n+1)^2-(n+1)}{2}\\
+        &=\frac{n(n+1)}{2}.
+    \end{align*}
+    Entscheidend ist, dass das Ergebnis nicht davon abhängt, wie die Zahlen $a$ und $b$ gewählt wurden. Somit ist der Endpunktestand unabhängig von allen Entscheidungen während des Spiels.
+
+    Also gilt für jedes $n\in\N$
+    \begin{align*}
+        S(n)=\frac{n(n-1)}{2}.
+    \end{align*}
+    Es gibt also überhaupt keine bessere oder schlechtere Strategie.
+
+    \item[(c*)]
+    Wir stellen uns vor, dass zu Beginn zwischen jedem Paar von Steinen ein Faden gespannt ist.
+
+    Wird nun ein Haufen in zwei Haufen mit $a$ beziehungsweise $b$ Steinen geteilt, so werden genau diejenigen Fäden durchtrennt, die einen Stein des ersten mit einem Stein des zweiten Haufens verbinden. Davon gibt es genau
+    \begin{align*}
+        a\cdot b.
+    \end{align*}
+    Die in einem Zug erhaltene Punktzahl entspricht also genau der Anzahl der in diesem Zug durchtrennten Fäden.
+
+    Am Ende liegt jeder Stein in einem eigenen Haufen. Damit wurde jedes Paar von Steinen irgendwann voneinander getrennt und folglich jeder ursprüngliche Faden genau einmal durchtrennt.
+
+    Die Anzahl der Paare von $n$ Steinen ist
+    \begin{align*}
+        \binom{n}{2}=\frac{n(n-1)}{2}.
+    \end{align*}
+    Daher muss der Endpunktestand unabhängig von der Spielweise immer
+    \begin{align*}
+        \frac{n(n-1)}{2}
+    \end{align*}
+    betragen.
+\end{enumerate}
+}
+
+\subsection*{Zusatzaufgabe}
+
+Wir beweisen in dieser Aufgabe die folgende mathematische Aussage aus der Vorlesung vom Montag:\\
+\emph{Ein Polynom vom Grad $n \in \N$ hat maximal $n$ verschiedene Nullstellen.}\\
+Dazu gehen wir wie folgt vor:
+\begin{enumerate}[label=(\alph*)]
+    \item Sei $n \in \N$. Sei $Q(x)$ ein Polynom vom Grad $n-1$ und sei
+    \begin{align*}
+        P(x)=(x-x_0)Q(x).
+    \end{align*}
+    Zeige, dass $P(x)$ ein Polynom vom Grad $n$ ist.
+
+    \item Zeige: Ist $P(x)$ ein Polynom vom Grad $n$ und $x_0$ eine Nullstelle von $P(x)$, so kann $P(x)$ geschrieben werden als
+    \begin{align*}
+        P(x)=(x-x_0)Q(x),
+    \end{align*}
+    wobei $Q(x)$ ein Polynom vom Grad $n-1$ ist.\\
+    \textit{Warnung: sehr schwierig! (Löse ggf.\ erst (c).)}
+
+    \item Beweise nun den Satz unter Nutzung von (a) und (b).
+\end{enumerate}
+
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+
+    \item
+    Als Polynom vom Grad $n-1$ hat $Q(x)$ die Form
+    \begin{align*}
+        Q(x)=\sum_{i=0}^{n-1} b_i x^i,
+    \end{align*}
+    wobei $b_{n-1}\neq 0$. Damit gilt
+    \begin{align*}
+        P(x)
+        &=(x-x_0)Q(x)\\
+        &=(x-x_0)\sum_{i=0}^{n-1}b_i x^i.
+    \end{align*}
+    Der Term höchsten Grades entsteht durch
+    \begin{align*}
+        x\cdot b_{n-1}x^{n-1}=b_{n-1}x^n.
+    \end{align*}
+    Da $b_{n-1}\neq0$ ist und alle übrigen Terme höchstens Grad $n-1$ haben, kann dieser Term nicht wegfallen. Somit ist
+    \begin{align*}
+        \deg(P)=n.
+    \end{align*}
+
+    \item
+    Sei
+    \begin{align*}
+        P(x)=\sum_{i=0}^{n}a_i x^i
+    \end{align*}
+    ein Polynom vom Grad $n$, wobei $a_n\neq0$, und sei $x_0$ eine Nullstelle von $P$, also
+    \begin{align*}
+        P(x_0)=0.
+    \end{align*}
+    Wir wollen ein Polynom
+    \begin{align*}
+        Q(x)=\sum_{i=0}^{n-1}b_i x^i
+    \end{align*}
+    konstruieren, sodass
+    \begin{align*}
+        P(x)=(x-x_0)Q(x)
+    \end{align*}
+    gilt.
+
+    Ausmultiplizieren liefert
+    \begin{align*}
+        (x-x_0)Q(x)
+        &= (x-x_0)\sum_{i=0}^{n-1}b_i x^i\\
+        &= b_{n-1}x^n
+        +\sum_{i=1}^{n-1}(b_{i-1}-x_0b_i)x^i
+        -x_0b_0.
+    \end{align*}
+    Damit die Koeffizienten mit denen von $P(x)$ übereinstimmen, benötigen wir
+    \begin{align*}
+        a_n &= b_{n-1},\\
+        a_i &= b_{i-1}-x_0b_i
+        \qquad\text{für }1\le i\le n-1,\\
+        a_0 &= -x_0b_0.
+    \end{align*}
+
+    Wir wählen zunächst
+    \begin{align*}
+        b_{n-1}=a_n
+    \end{align*}
+    und definieren anschliessend rekursiv
+    \begin{align*}
+        b_{i-1}=a_i+x_0b_i
+        \qquad\text{für }i=n-1,n-2,\ldots,1.
+    \end{align*}
+    Damit sind die Koeffizienten aller Potenzen $x^1,\ldots,x^n$ bereits korrekt.
+
+    Explizit erhält man
+    \begin{align*}
+        b_0
+        =a_1+a_2x_0+a_3x_0^2+\cdots+a_nx_0^{n-1}.
+    \end{align*}
+    Somit gilt
+    \begin{align*}
+        -x_0b_0
+        &=-a_1x_0-a_2x_0^2-\cdots-a_nx_0^n.
+    \end{align*}
+    Da $x_0$ eine Nullstelle von $P$ ist, gilt
+    \begin{align*}
+        0=P(x_0)
+        &=a_0+a_1x_0+a_2x_0^2+\cdots+a_nx_0^n.
+    \end{align*}
+    Also folgt
+    \begin{align*}
+        a_0
+        &=-a_1x_0-a_2x_0^2-\cdots-a_nx_0^n\\
+        &=-x_0b_0.
+    \end{align*}
+    Somit stimmt auch der konstante Koeffizient überein und daher gilt tatsächlich
+    \begin{align*}
+        P(x)=(x-x_0)Q(x).
+    \end{align*}
+    Ausserdem ist
+    \begin{align*}
+        b_{n-1}=a_n\neq0,
+    \end{align*}
+    weshalb $Q(x)$ Grad $n-1$ hat.
+
+    \textit{Hinweis: Diese Teilaufgabe ist auf einem Schwierigkeitslevel, das erst im weiteren Verlauf des ersten Semesters erreicht wird. Man beachte, wie hier die Idee des Koeffizientenvergleichs hilft, die gewünschte Faktorisierung eines Polynoms explizit zu konstruieren.}
+
+    \item
+    Wir beweisen die Aussage mittels vollständiger Induktion nach $n$.
+
+    \begin{enumerate}[label=(\roman*)]
+        \item
+        \textbf{Induktionsanfang:}
+        Für $n=1$ hat ein Polynom ersten Grades die Form
+        \begin{align*}
+            P(x)=a_1x+a_0
+        \end{align*}
+        mit $a_1\neq0$. Es besitzt genau eine Nullstelle,
+        \begin{align*}
+            x=-\frac{a_0}{a_1},
+        \end{align*}
+        und damit insbesondere höchstens eine Nullstelle.
+
+        \item
+        \textbf{Induktionsschritt:}
+        Wir nehmen als Induktionsvoraussetzung an, dass jedes Polynom vom Grad $n$
+        höchstens $n$ verschiedene Nullstellen besitzt.
+
+        Sei nun $P(x)$ ein Polynom vom Grad $n+1$.
+
+        Besitzt $P(x)$ keine Nullstelle, so ist die Aussage unmittelbar erfüllt.
+        Besitzt $P(x)$ mindestens eine Nullstelle, so sei $x_0$ eine solche
+        Nullstelle. Nach Teil (b) können wir schreiben
+        \begin{align*}
+            P(x)=(x-x_0)Q(x),
+        \end{align*}
+        wobei $Q(x)$ ein Polynom vom Grad $n$ ist.
+
+        Nach Induktionsvoraussetzung besitzt $Q(x)$ höchstens $n$ verschiedene
+        Nullstellen.
+
+        Sei nun $x_1\neq x_0$ eine weitere Nullstelle von $P(x)$. Dann gilt
+        \begin{align*}
+            0=P(x_1)=(x_1-x_0)Q(x_1).
+        \end{align*}
+        Da $x_1\neq x_0$, ist $x_1-x_0\neq0$. Daher muss
+        \begin{align*}
+            Q(x_1)=0
+        \end{align*}
+        gelten. Jede von $x_0$ verschiedene Nullstelle von $P(x)$ ist also auch
+        eine Nullstelle von $Q(x)$.
+
+        Da $Q(x)$ höchstens $n$ verschiedene Nullstellen besitzt, kann $P(x)$
+        neben $x_0$ höchstens $n$ weitere verschiedene Nullstellen besitzen.
+        Somit besitzt $P(x)$ insgesamt höchstens $n+1$ verschiedene Nullstellen.
+
+        Damit ist der Induktionsschritt und somit die Aussage bewiesen.
+    \end{enumerate}
+
+    \item[(c*)]
+    \textbf{Alternative Beweisidee.}
+    Man kann sogar die folgende stärkere Aussage zeigen:\\
+    \emph{Besitzt ein Polynom $P(x)$ mindestens $n+1$ verschiedene Nullstellen,
+    so gilt $\deg(P)\ge n+1$.}
+
+    Seien also $x_1,x_2,\ldots,x_{n+1}$ verschiedene Nullstellen von $P(x)$.
+    Nach Teil (b) können wir zunächst schreiben
+    \begin{align*}
+        P(x)=(x-x_1)Q_1(x)
+    \end{align*}
+    für ein Polynom $Q_1(x)$.
+
+    Da $x_2$ ebenfalls eine Nullstelle von $P(x)$ ist, gilt
+    \begin{align*}
+        0=P(x_2)=(x_2-x_1)Q_1(x_2).
+    \end{align*}
+    Wegen $x_2\neq x_1$ ist $x_2-x_1\neq0$, also folgt
+    \begin{align*}
+        Q_1(x_2)=0.
+    \end{align*}
+    Somit ist $x_2$ eine Nullstelle von $Q_1(x)$. Wiederum nach Teil (b)
+    können wir daher schreiben
+    \begin{align*}
+        Q_1(x)=(x-x_2)Q_2(x).
+    \end{align*}
+    Einsetzen ergibt
+    \begin{align*}
+        P(x)=(x-x_1)(x-x_2)Q_2(x).
+    \end{align*}
+
+    Dieses Argument können wir für die weiteren verschiedenen Nullstellen
+    $x_3,\ldots,x_{n+1}$ fortsetzen. Nach $n+1$ Schritten erhalten wir
+    \begin{align*}
+        P(x)
+        =(x-x_1)(x-x_2)\cdots(x-x_{n+1})Q_{n+1}(x)
+    \end{align*}
+    für ein Polynom $Q_{n+1}(x)$.
+
+    Das Produkt
+    \begin{align*}
+        (x-x_1)(x-x_2)\cdots(x-x_{n+1})
+    \end{align*}
+    hat Grad $n+1$. Daher kann $P(x)$ nicht Grad kleiner als $n+1$ haben. Es folgt
+    \begin{align*}
+        \deg(P)\ge n+1.
+    \end{align*}
+
+    Insbesondere kann ein Polynom vom Grad $n$ nicht mehr als $n$
+    verschiedene Nullstellen besitzen.
+\end{enumerate}
+}
+
+\end{document}

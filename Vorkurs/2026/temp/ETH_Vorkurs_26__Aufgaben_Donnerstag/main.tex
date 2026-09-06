@@ -1,0 +1,388 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+\usepackage[
+		pdftex,
+		bookmarks=true,
+		bookmarksnumbered=true,
+		bookmarksopen=true,
+		colorlinks=true,
+		filecolor=black,
+	    linkcolor=red,
+		urlcolor=blue,
+		plainpages=false,
+		pdfpagelabels,
+		citecolor=black,
+		unicode=true,
+		pdftitle={Vorkurs 2026 – Donnerstag},
+		pdfauthor={Hrvoje Krizic},
+		pdfdisplaydoctitle=true]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{stmaryrd}
+\usepackage{dsfont}
+\usepackage{txfonts}
+\usepackage[pdftex]{graphicx}
+\usepackage{enumitem}
+\usepackage[a4paper, total={6.5in, 9.5in}]{geometry}
+\usepackage{cancel}
+\renewcommand{\baselinestretch}{1.15}
+
+\newcommand{\ce}{\coloneqq}
+\newcommand{\ec}{\eqqcolon}
+\renewcommand{\c}{\colon}
+\newcommand{\Ra}{\Rightarrow}
+\newcommand{\La}{\Leftarrow}
+\newcommand{\LRa}{\Leftrightarrow}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Sp}{\operatorname{Sp}}
+\setlength{\parindent}{0pt}
+\usepackage{hyperref}
+% toggle tutorium-exercises (which do not get distributed)
+\renewcommand{\t}[1]{#1}
+%\renewcommand{\t}[1]{}
+
+%toggle solutions
+\newcommand{\s}[1]{#1}
+%\newcommand{\s}[1]{}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{wasysym}
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\arraystretch}{1.4}
+\renewcommand{\arraycolsep}{0.2cm}
+\renewcommand{\tabcolsep}{0.25cm}
+\begin{document}
+
+\section*{Donnerstag: Lineare Algebra}
+\subsection*{Aufgabe 1}
+Zeige: Der Lösungsraum
+\begin{align*}
+    L = L_{A,b}= \{x\in \R^n \,|\,Ax=b\}\subseteq \R^n
+\end{align*}
+ist ein Untervektorraum, genau dann, wenn $b=0\in \R^m$.
+
+\s{\subsection*{Lösung}
+\begin{proof}
+Wir beweisen beide Richtungen separat.
+
+($\Leftarrow$) Sei $b=0$. Wir überprüfen die Untervektorraum-Axiome:
+
+\begin{itemize}
+\item $0\in L$, da $A\cdot 0=0$.
+\item Für $x,y\in L$ gilt $A(x+y)=Ax+Ay=0+0=0$, also $x+y\in L$.
+\item Für $x\in L$ und $\lambda\in \R$ gilt $A(\lambda x)=\lambda(Ax)=\lambda\cdot 0=0$, also $\lambda x\in L$.
+\end{itemize}
+
+($\Rightarrow$) Sei $L$ ein Untervektorraum. Dann muss insbesondere
+$0\in L$ gelten. Nach Definition von $L$ folgt daraus
+\begin{align*}
+    A0=b.
+\end{align*}
+Da aber $A0=0$ gilt, folgt $b=0$.
+
+Damit ist $L$ genau dann ein Untervektorraum von $\R^n$, wenn $b=0$.
+\end{proof}
+
+}
+\subsection*{Aufgabe 2}
+
+Sei $V$ ein Vektorraum über $\R$ und $S\subseteq V$. Der Spann (oder die lineare Hülle) von $S$ ist definiert durch
+\begin{align*}
+    \Sp(S)
+    :=
+    \left\{
+    a_1v_1+\ldots+a_nv_n
+    \,\middle|\,
+    n\in\N,\;
+    a_i\in\R,\;
+    v_i\in S
+    \text{ für alle }1\leq i\leq n
+    \right\}.
+\end{align*}
+
+Zeige, dass $\Sp(S)$ der kleinste Untervektorraum von $V$ ist, der $S$ enthält. Zeige dazu:
+
+\begin{enumerate}[label=(\alph*)]
+    \item $S\subseteq \Sp(S)$.
+    \item $\Sp(S)$ ist ein Untervektorraum von $V$.
+    \item Für jeden Untervektorraum $W\subseteq V$ mit $S\subseteq W$ gilt
+    \begin{align*}
+        \Sp(S)\subseteq W.
+    \end{align*}
+\end{enumerate}
+
+Erkläre, weshalb aus diesen drei Aussagen folgt, dass $\Sp(S)$ der kleinste Untervektorraum von $V$ ist, der $S$ enthält.
+
+\s{\subsubsection*{Lösung}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item
+    Sei $v\in S$. Dann können wir $v$ als Linearkombination eines einzigen Vektors aus $S$ schreiben:
+    \begin{align*}
+        v=1\cdot v.
+    \end{align*}
+    Nach Definition von $\Sp(S)$ gilt also $v\in\Sp(S)$. Da dies für jedes $v\in S$ gilt, folgt
+    \begin{align*}
+        S\subseteq\Sp(S).
+    \end{align*}
+
+    \item
+    Wir überprüfen die Untervektorraum-Axiome.
+
+    Zunächst gilt mit $a_i=0$ für alle $1\leq i\leq n$:
+    \begin{align*}
+        0\in\Sp(S).
+    \end{align*}
+
+    Seien nun $x,y\in\Sp(S)$. Falls einer der beiden Vektoren der Nullvektor ist, ist unmittelbar auch $x+y\in\Sp(S)$. Andernfalls können wir schreiben
+    \begin{align*}
+        x &= a_1v_1+\ldots+a_nv_n,\\
+        y &= b_1w_1+\ldots+b_mw_m,
+    \end{align*}
+    wobei $a_i,b_j\in\R$ und $v_i,w_j\in S$ gelten. Dann ist
+    \begin{align*}
+        x+y
+        =
+        a_1v_1+\ldots+a_nv_n
+        +b_1w_1+\ldots+b_mw_m
+    \end{align*}
+    wiederum eine endliche Linearkombination von Vektoren aus $S$. Somit gilt
+    \begin{align*}
+        x+y\in\Sp(S).
+    \end{align*}
+
+    Sei zuletzt $x\in\Sp(S)$ und $\lambda\in\R$. Für $x=0$ gilt offensichtlich
+    \begin{align*}
+        \lambda x=0\in\Sp(S).
+    \end{align*}
+    Andernfalls sei
+    \begin{align*}
+        x=a_1v_1+\ldots+a_nv_n.
+    \end{align*}
+    Dann gilt
+    \begin{align*}
+        \lambda x
+        &=
+        \lambda(a_1v_1+\ldots+a_nv_n)\\
+        &=
+        (\lambda a_1)v_1+\ldots+(\lambda a_n)v_n.
+    \end{align*}
+    Dies ist wiederum eine endliche Linearkombination von Vektoren aus $S$, also
+    \begin{align*}
+        \lambda x\in\Sp(S).
+    \end{align*}
+
+    Damit erfüllt $\Sp(S)$ alle Untervektorraum-Axiome und ist somit ein Untervektorraum von $V$.
+
+    \item
+    Sei $W\subseteq V$ ein beliebiger Untervektorraum mit
+    \begin{align*}
+        S\subseteq W.
+    \end{align*}
+    Wir zeigen, dass dann
+    \begin{align*}
+        \Sp(S)\subseteq W
+    \end{align*}
+    gilt.
+
+    Da $W$ ein Untervektorraum ist, gilt zunächst $0\in W$.
+
+    Sei nun $x\in\Sp(S)$ mit $x\neq0$. Nach Definition von $\Sp(S)$ gibt es $n\in\N$, Koeffizienten $a_1,\ldots,a_n\in\R$ und Vektoren $v_1,\ldots,v_n\in S$, sodass
+    \begin{align*}
+        x=a_1v_1+\ldots+a_nv_n.
+    \end{align*}
+    Wegen $S\subseteq W$ gilt
+    \begin{align*}
+        v_1,\ldots,v_n\in W.
+    \end{align*}
+    Da $W$ unter skalarer Multiplikation abgeschlossen ist, gilt
+    \begin{align*}
+        a_1v_1,\ldots,a_nv_n\in W.
+    \end{align*}
+    Da $W$ ausserdem unter Addition abgeschlossen ist, folgt
+    \begin{align*}
+        a_1v_1+\ldots+a_nv_n\in W.
+    \end{align*}
+    Somit ist $x\in W$.
+
+    Also gilt für jedes $x\in\Sp(S)$ auch $x\in W$, und damit
+    \begin{align*}
+        \Sp(S)\subseteq W.
+    \end{align*}
+\end{enumerate}
+
+Nach (a) enthält $\Sp(S)$ die Menge $S$, und nach (b) ist $\Sp(S)$ selbst ein Untervektorraum von $V$. Nach (c) ist $\Sp(S)$ in jedem anderen Untervektorraum $W$ enthalten, der $S$ enthält. Damit ist $\Sp(S)$ genau der kleinste Untervektorraum von $V$, der $S$ enthält.
+}
+
+\subsection*{Aufgabe 3}
+Welche der folgenden Mengen sind Untervektorräume der angegebenen Vektorräume? 
+Was passiert, wenn in (c) der Körper $\R$ durch den endlichen Körper $\Bbb F_2$ ersetzt wird? Verwende hierfür, dass $a^2=a$ für alle $a\in \Bbb F_2$ gilt.
+\begin{enumerate}[label=(\alph*)]
+\item $\{(x_1,x_2,x_3)\in\R^3 \mid x_1=x_2=2x_3\} \subset \R^3$
+\item $\{(x_1,x_2,x_3)\in\R^3 \mid x_1x_2x_3=0\} \subset \R^3$
+\item $\{(x_1,x_2)\in\R^2 \mid x_1^2+x_2^4=0\} \subset \R^2$ (und für $\Bbb F_2^2$?)
+\item $\{(\mu+a,a^2)\in\R^2 \mid \mu,a\in\R\} \subset \R^2$
+\end{enumerate}
+\s{\subsubsection*{Lösung}
+
+\begin{enumerate}[label=(\alph*)]
+
+\item Dies ist die Lösungsmenge des homogenen linearen Gleichungssystems
+\[
+\begin{pmatrix}
+1 & -1 & 0 \\
+0 & 1 & -2
+\end{pmatrix}
+\begin{pmatrix}
+x_1 \\ x_2 \\ x_3
+\end{pmatrix}
+=
+\begin{pmatrix}
+0 \\ 0
+\end{pmatrix}
+\]
+über $\R$ und deshalb ein Untervektorraum.
+
+\item Die Menge $A := \{(x_1,x_2,x_3)\in\R^3 \mid x_1x_2x_3=0\}$ ist kein Untervektorraum von $\R^3$, denn es gilt $(1,1,0),(0,1,1)\in A$, aber $(1,2,1)=(1,1,0)+(0,1,1)\notin A$. Das zweite Axiom ist also verletzt.
+
+\item Die Gleichung $x_1^2+x_2^4=0$ ist in $\R$ nur durch $x_1=x_2=0$ erfüllt. Die Menge ist daher $\{(0,0)\}$ und somit ein Untervektorraum.  
+Für den Körper $\Bbb F_2$ sieht es anders aus: Für alle $a\in \Bbb F_2$ gilt $a^2=a$ und daher liest sich die Gleichung über $\Bbb F_2$ als $x_1+x_2=0$. Die Menge ist also die Lösungsmenge eines homogenen linearen Gleichungssystems und damit ein Untervektorraum von $\Bbb F_2^2$.
+\item Die Menge ist kein Untervektorraum von $\R^2$, da z.B. $(1,1)$ enthalten ist, das skalare Vielfache $(-1)\cdot(1,1)=(-1,-1)$ jedoch nicht, denn das Quadrat einer reellen Zahl ist immer nicht-negativ. Das dritte Axiom ist also verletzt.  
+
+\end{enumerate}
+}
+
+\subsection*{Aufgabe 4}
+Sei $V$ ein Vektorraum über $\R$. Zeige oder widerlege die folgenden Aussagen. 
+\begin{enumerate}[label=(\alph*)]
+\item Seien $v_1,\dots,v_n \in V$ linear unabhängig und sei $0\neq \lambda \in \R$. 
+Dann sind $\lambda v_1,\lambda v_2,\dots,\lambda v_n$ linear unabhängig.
+\item Seien $v_1,\dots,v_n \in V$ und $w_1,\dots,w_n \in V$ jeweils linear unabhängig. 
+Dann sind $v_1+w_1,\dots,v_n+w_n$ linear unabhängig.
+\end{enumerate}
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+\item Die Aussage ist wahr und wir beweisen sie direkt.
+\begin{proof}
+Seien $a_1,\dots,a_n \in \R$ mit $a_1(\lambda v_1)+\dots+a_n(\lambda v_n)=0$.  
+Dann gilt $(a_1\lambda)v_1+\dots+(a_n\lambda)v_n=0$. Wegen der linearen Unabhängigkeit von $v_1,\dots,v_n$ folgt $a_1\lambda=\dots=a_n\lambda=0$. Da $\lambda\neq 0$, folgt $a_1=...=a_n=0$, also sind $\lambda v_1,\dots,\lambda v_n$ linear unabhängig.
+\end{proof}
+
+\item Die Aussage ist falsch. Seien $v_1,\dots,v_n \in V$ linear unabhängig und sei $w_i=-v_i$ für $i\in\{1,\dots,n\}$.  
+Dann sind $w_1,\dots,w_n$ nach Teilaufgabe (a) linear unabhängig, aber $v_1+w_1=0_V,\dots,v_n+w_n=0_V$ sind linear abhängig. Dies liegt daran, dass eine Menge von Vektoren, die den Nullvektor enthält, immer linear abhängig ist. Genauer: Seien $v_1,\dots,v_m,0_V\in V$. Dann ist $0\cdot v_1+\dots+0\cdot v_m+1\cdot 0_V=0_V$ eine nicht-triviale Linearkombination dieser Vektoren.
+\end{enumerate}
+}
+
+\subsection*{Aufgabe 5}
+Sei $n\in\N_0$. Wir betrachten
+\[
+\R_{\leq n}[x] = \{\, p(x) \mid p(x) = a_0 + a_1x + \dots + a_nx^n,\; a_i \in \R \,\},
+\]
+also die Menge aller reellen Polynome vom Grad höchstens $n$.  
+
+\begin{enumerate}[label=(\alph*)]
+\item Die Menge aller reellen Polynome ist $\R[x]$. Es lässt sich leicht zeigen, dass dies ein Vektorraum ist. Ist diese Menge $\R_{\leq n}[x]$ ein Vektorraum?
+\item Finde eine Basis des Polynom-Vektorraums $\R_{\leq n}[x]$. Vergleiche diese mit der Standardbasis
+\begin{align*}
+    (1,0,\dots,0),\,(0,1,0,\dots,0),\,\dots,\,(0,\dots,0,1)
+\end{align*}
+von $\R^{n+1}$.
+
+\item Bestimme die Dimension von $\R_{\leq n}[x]$.  
+
+\end{enumerate}
+\s{\subsubsection*{Lösung}
+\begin{enumerate}[label=(\alph*)]
+\item Ja, $\R_{\leq n}[x]$ ist ein Vektorraum über $\R$. Denn $\R_{\leq n}[x]\subseteq \R[x]$ und die Untervektorraum-Axiome sind erfüllt:  
+\begin{itemize}
+\item Die Nullfunktion $p(x)=0$ liegt in $\R_{\leq n}[x]$.  
+\item Sind $p(x),q(x)\in \R_{\leq n}[x]$, so gilt auch $p(x)+q(x)\in \R_{\leq n}[x]$, da die Summe zweier Polynome wieder ein Polynom vom Grad höchstens $n$ ist.  
+\item Für $\lambda\in\R$ und $p(x)\in \R_{\leq n}[x]$ gilt $\lambda p(x)\in \R_{\leq n}[x]$.  
+\end{itemize}
+Somit ist $\R_{\leq n}[x]$ ein Untervektorraum von $\R[x]$ und somit auch ein Vektorraum.
+
+\item
+Wir behaupten, dass
+\begin{align*}
+    B=\{1,x,x^2,\ldots,x^n\}
+\end{align*}
+eine Basis von $\R_{\leq n}[x]$ ist.
+
+Dazu müssen wir zeigen, dass die Elemente von $B$ linear unabhängig sind und dass sie den gesamten Vektorraum $\R_{\leq n}[x]$ aufspannen.
+
+Für die lineare Unabhängigkeit seien $\alpha_0,\ldots,\alpha_n\in\R$ so gewählt, dass
+\begin{align*}
+    \alpha_0\cdot 1
+    +\alpha_1x
+    +\alpha_2x^2
+    +\ldots
+    +\alpha_nx^n
+    =0.
+\end{align*}
+Die rechte Seite bezeichnet hier das Nullpolynom. Zwei Polynome sind genau dann gleich, wenn alle ihre Koeffizienten übereinstimmen. Daher folgt
+\begin{align*}
+    \alpha_0=\alpha_1=\ldots=\alpha_n=0.
+\end{align*}
+Somit sind die Polynome
+\begin{align*}
+    1,x,x^2,\ldots,x^n
+\end{align*}
+linear unabhängig.
+
+Nun sei
+\begin{align*}
+    p(x)=a_0+a_1x+\ldots+a_nx^n
+\end{align*}
+ein beliebiges Element von $\R_{\leq n}[x]$. Dann können wir schreiben
+\begin{align*}
+    p(x)
+    =
+    a_0\cdot 1
+    +a_1\cdot x
+    +a_2\cdot x^2
+    +\ldots
+    +a_n\cdot x^n.
+\end{align*}
+Jedes Polynom aus $\R_{\leq n}[x]$ ist also eine Linearkombination der Elemente von $B$. Somit spannt $B$ den gesamten Vektorraum auf.
+
+Damit ist
+\begin{align*}
+    B=\{1,x,x^2,\ldots,x^n\}
+\end{align*}
+eine Basis von $\R_{\leq n}[x]$.
+
+Der Vergleich mit $\R^{n+1}$ wird besonders deutlich, wenn wir einem Polynom seine Koeffizienten zuordnen:
+\begin{align*}
+    a_0+a_1x+\ldots+a_nx^n
+    \longleftrightarrow
+    (a_0,a_1,\ldots,a_n).
+\end{align*}
+Unter dieser Zuordnung entsprechen die Basispolynome
+\begin{align*}
+    1,x,x^2,\ldots,x^n
+\end{align*}
+genau den Standardbasisvektoren
+\begin{align*}
+    (1,0,\ldots,0),\,
+    (0,1,0,\ldots,0),\,
+    \ldots,\,
+    (0,\ldots,0,1)
+\end{align*}
+von $\R^{n+1}$.
+
+\item Da die Basis $\{1,x,\ldots,x^n\}$ aus $n+1$ Vektoren besteht, hat der Raum $\R_{\leq n}[x]$ die Dimension
+\[
+\dim(\R_{\leq n}[x]) = n+1.
+\]
+\end{enumerate}
+
+
+}
+\end{document}
