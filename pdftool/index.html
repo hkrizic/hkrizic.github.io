@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Crop PDFs and download landscape pages with a blank half for notes. Your file stays on your device.">
+  <title>PDF with room for notes · PDF Tool</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a href="./">PDF Tool</a>
+  </header>
+  <main>
+    <div class="intro">
+      <h1>PDF with room for notes</h1>
+      <p>Your document on one half. Room for your thoughts on the other.</p>
+    </div>
+
+    <input id="file-input" type="file" accept=".pdf,application/pdf" hidden>
+    <section id="upload" class="upload" aria-label="Open a PDF">
+      <svg class="upload-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M12 5h16l9 9v29H12zM28 5v10h9M24 34V22m-5 5 5-5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2>One PDF. More room.</h2>
+      <p>Drop a PDF here or choose a file.</p>
+      <button id="choose-file" class="primary" type="button">Choose PDF</button>
+      <p class="small privacy">Stays on your device · Never uploaded to a server</p>
+    </section>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p id="error" class="error" role="alert" hidden></p>
+    <noscript><p class="error">Please enable JavaScript to edit PDFs.</p></noscript>
+
+    <section id="workspace" hidden aria-label="Edit PDF">
+      <div class="file-bar">
+        <div class="file-info"><strong id="filename"></strong><span id="file-meta" class="small"></span></div>
+        <button id="replace-file" class="quiet" type="button">Open another PDF</button>
+      </div>
+      <div class="editor-layout">
+        <aside class="settings">
+          <h2>Landscape layout</h2>
+          <fieldset>
+            <legend>PDF position</legend>
+            <div class="segments">
+              <label><input type="radio" name="side" value="left" checked><span><i class="side-icon left" aria-hidden="true"></i>Left</span></label>
+              <label><input type="radio" name="side" value="right"><span><i class="side-icon right" aria-hidden="true"></i>Right</span></label>
+            </div>
+          </fieldset>
+          <label class="field" for="paper">Paper size
+            <select id="paper"><option value="a4">A4 · Landscape</option><option value="a3">A3 · Landscape</option><option value="letter">Letter · Landscape</option></select>
+          </label>
+          <label class="field" for="margin">Page margin <span class="input-unit"><input id="margin" type="number" min="0" max="25" step="1" value="8"><span>mm</span></span></label>
+          <p class="small">These settings apply to all pages. The other half stays completely blank.</p>
+          <hr>
+          <h2>Crop margins</h2>
+          <p class="small">Adjust the crop for each page. The content scales to fit.</p>
+          <button id="open-crop" type="button">Crop current page</button>
+          <p id="crop-summary" class="small crop-summary"></p>
+          <hr>
+          <button id="download" class="primary download" type="button">Download PDF <span aria-hidden="true">↓</span></button>
+          <progress id="export-progress" max="100" value="0" hidden aria-label="Creating PDF"></progress>
+          <p class="small export-note">Text stays sharp and selectable. Pages with annotations or forms are saved as images; interactive features are removed.</p>
+        </aside>
+        <div class="preview-panel">
+          <div class="preview-toolbar">
+            <h2>Preview</h2>
+            <nav class="pagination" aria-label="PDF pages">
+              <button id="previous" type="button" aria-label="Previous page">←</button>
+              <label for="page-number">Page <input id="page-number" type="number" min="1" value="1" aria-label="Page number"></label><span id="page-count"></span>
+              <button id="next" type="button" aria-label="Next page">→</button>
+            </nav>
+          </div>
+          <div id="preview-stage" class="preview-stage" aria-busy="false">
+            <canvas id="preview" aria-label="Landscape preview of the current page"></canvas>
+            <div class="page-labels"><span id="left-label">Your PDF</span><span id="right-label">Room for notes</span></div>
+          </div>
+          <p class="small preview-caption">The preview matches the downloaded page. All pages stay in their original order.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="crop-dialog" aria-labelledby="crop-title">
+    <div class="dialog-heading"><h2 id="crop-title">Crop page</h2><button id="close-crop" class="quiet" aria-label="Close crop editor" type="button">✕</button></div>
+    <p class="small">Drag the corners or edges to resize. Drag inside to move the crop, or outside to draw a new one. Changes are saved as you edit.</p>
+    <div class="crop-layout">
+      <div class="crop-source-well">
+        <div id="crop-source" class="crop-source">
+          <canvas id="crop-canvas" aria-label="Original page"></canvas>
+          <div id="crop-overlay" class="crop-overlay" aria-label="Adjust the crop by dragging or using the margin fields">
+            <div id="crop-box" class="crop-box">
+              <span data-handle="nw"></span><span data-handle="n"></span><span data-handle="ne"></span><span data-handle="e"></span><span data-handle="se"></span><span data-handle="s"></span><span data-handle="sw"></span><span data-handle="w"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="crop-controls">
+        <h3>Landscape result</h3>
+        <canvas id="crop-preview" class="crop-preview" aria-label="Live landscape preview of the cropped PDF"></canvas>
+        <fieldset class="crop-fields"><legend>Remove margins <span class="small">in %</span></legend>
+          <label>Left<input id="crop-left" type="number" min="0" max="95" step="0.1" value="0"></label>
+          <label>Right<input id="crop-right" type="number" min="0" max="95" step="0.1" value="0"></label>
+          <label>Top<input id="crop-top" type="number" min="0" max="95" step="0.1" value="0"></label>
+          <label>Bottom<input id="crop-bottom" type="number" min="0" max="95" step="0.1" value="0"></label>
+        </fieldset>
+        <div class="crop-actions"><button id="auto-crop" type="button">Detect white margins</button><button id="reset-crop" class="quiet" type="button">Reset crop</button></div>
+        <p id="crop-status" class="small" role="status" aria-live="polite"></p>
+        <button id="apply-all" type="button">Apply crop to all pages</button>
+        <p class="small">Applies the same margin percentages. You can still adjust individual pages afterwards.</p>
+      </div>
+    </div>
+    <div class="dialog-footer"><span id="crop-page-info" class="small"></span><button id="done-crop" class="primary" type="button">Done</button></div>
+  </dialog>
+</body>
+</html>
