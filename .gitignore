@@ -49,3 +49,6 @@ $RECYCLE.BIN/
 node_modules/
 dist/
 build/
+
+# Keynote presentations (large binaries, not published)
+*.key
