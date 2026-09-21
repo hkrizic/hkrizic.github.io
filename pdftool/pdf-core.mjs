@@ -2,6 +2,9 @@
 export const FULL_CROP = Object.freeze({ left: 0, top: 0, right: 1, bottom: 1 });
 export const MIN_CROP = 0.05;
 export const PAPER_SIZES = Object.freeze({ a4: [841.89, 595.28], a3: [1190.55, 841.89], letter: [792, 612] });
+export const MM = 72 / 25.4;
+export const GRID_COLOR = Object.freeze([80, 100, 135]);
+export const GRID_LINE_WIDTH = 0.4;
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 export function normalizeCrop(crop) {
@@ -14,15 +17,44 @@ export function normalizeCrop(crop) {
 export function getLayout(viewport, crop, options) {
   crop = normalizeCrop(crop);
   const [width, height] = PAPER_SIZES[options.paper] || PAPER_SIZES.a4;
-  const margin = clamp(Number(options.margin) || 0, 0, 25) * 72 / 25.4;
+  const margin = clamp(Number(options.margin) || 0, 0, 25) * MM;
   const cropX = crop.left * viewport.width, cropY = crop.top * viewport.height;
   const cropWidth = (crop.right - crop.left) * viewport.width;
   const cropHeight = (crop.bottom - crop.top) * viewport.height;
   const scale = Math.min((width / 2 - 2 * margin) / cropWidth, (height - 2 * margin) / cropHeight);
   const contentWidth = cropWidth * scale, contentHeight = cropHeight * scale;
-  return { width, height, cropX, cropY, cropWidth, cropHeight, scale, contentWidth, contentHeight,
+  return { width, height, margin, cropX, cropY, cropWidth, cropHeight, scale, contentWidth, contentHeight,
     x: (options.side === 'right' ? width / 2 : 0) + (width / 2 - contentWidth) / 2,
     y: (height - contentHeight) / 2 };
+}
+
+// Squared paper for the notes half: whole squares only, centred inside the page
+// margin. Being centred, the same coordinates work top-down (canvas) and bottom-up (PDF).
+export function getGrid(layout, options) {
+  if (options.notes !== 'grid') return null;
+  const cell = clamp(Number(options.gridSize) || 2, 1, 20) * MM;
+  const { width, height, margin } = layout;
+  // The epsilon keeps a square that fits exactly from being lost to rounding.
+  const cols = Math.floor((width / 2 - 2 * margin) / cell + 1e-6);
+  const rows = Math.floor((height - 2 * margin) / cell + 1e-6);
+  if (cols < 1 || rows < 1) return null;
+  return { cell, cols, rows,
+    x: (options.side === 'right' ? 0 : width / 2) + (width / 2 - cols * cell) / 2,
+    y: (height - rows * cell) / 2 };
+}
+
+// Opacity is blended towards the white page rather than using PDF transparency,
+// so the lines look the same in every viewer and on every printer.
+export function gridColor(options) {
+  const opacity = clamp(Number(options.gridOpacity) || 20, 5, 100) / 100;
+  return GRID_COLOR.map(c => Math.round(255 - (255 - c) * opacity));
+}
+
+function gridOperators({ x, y, cell, cols, rows }, color, { pushGraphicsState, popGraphicsState, setLineWidth, setStrokingRgbColor, moveTo, lineTo, stroke }) {
+  const operators = [pushGraphicsState(), setLineWidth(GRID_LINE_WIDTH), setStrokingRgbColor(...color.map(c => c / 255))];
+  for (let i = 0; i <= cols; i++) operators.push(moveTo(x + i * cell, y), lineTo(x + i * cell, y + rows * cell));
+  for (let i = 0; i <= rows; i++) operators.push(moveTo(x, y + i * cell), lineTo(x + cols * cell, y + i * cell));
+  return [...operators, stroke(), popGraphicsState()];
 }
 
 export function getEmbedding(viewport, layout) {
@@ -63,6 +95,8 @@ export async function buildLandscape({ sourceDoc, previewDoc, crops, options, PD
     const viewport = page.getViewport({ scale: 1 });
     const layout = getLayout(viewport, crops[i], options);
     const target = output.addPage([layout.width, layout.height]);
+    const grid = getGrid(layout, options);
+    if (grid) target.pushOperators(...gridOperators(grid, gridColor(options), PDFLib));
     const annotations = await page.getAnnotations({ intent: 'display' });
     if (annotations.some(annotation => annotation.subtype !== 'Link')) {
       // Page embedding omits annotation appearances. Render these pages so that
