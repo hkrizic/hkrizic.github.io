@@ -368,3 +368,12 @@ html.motion-paused .publication-preview:hover .publication-paper:before,html.mot
  .publication-preview:hover .publication-paper:after,.publication-preview:focus-visible .publication-paper:after{transform:translate(12px,10px) rotate(4deg)}
  .publication-preview:hover .publication-paper:before,.publication-preview:focus-visible .publication-paper:before{transform:translate(20px,19px) rotate(7deg)}
 }
+
+/* Put the full quad below the introduction on phones, clear of text and links. */
+.home-hero .lens-fallback{inset:0;opacity:1}
+.home-hero .lens-fallback img{width:100%;height:100%;object-fit:contain;mask-image:none}
+@media(max-width:760px){
+ .home-hero{display:flex;flex-direction:column;align-items:stretch;padding-bottom:100px}
+ .home-hero .hero-copy{order:1}
+ .home-hero .lens-art{position:relative;inset:auto;order:2;z-index:0;flex:none;width:calc(100% + var(--pad) + var(--pad));height:clamp(330px,88vw,450px);margin:25px calc(-1 * var(--pad)) 0;mask-image:linear-gradient(transparent,black 10%,black 90%,transparent)}
+}

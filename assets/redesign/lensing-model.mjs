@@ -3,6 +3,17 @@ export const EINSTEIN_RADIUS = 0.7;
 export const SHEAR = 0.18;
 export const SIMULATED_DELAY_DAYS = 24;
 
+// The homepage keeps its moving source safely inside the four-image caustic.
+export const HERO_QUASAR = Object.freeze({
+  radius: 0.68,
+  shear: 0.18,
+  angle: 25 * Math.PI / 180,
+  sourceX: 0.02,
+  sourceY: 0.012,
+  limitX: 0.06,
+  limitY: 0.05
+});
+
 export function sourcePosition(x, y, radius = EINSTEIN_RADIUS, shear = SHEAR) {
   const r = Math.max(Math.hypot(x, y), 1e-10);
   return [(1 - shear) * x - radius * x / r, (1 + shear) * y - radius * y / r];

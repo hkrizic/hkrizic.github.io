@@ -27,25 +27,49 @@
  document.querySelectorAll('[data-reveal]').forEach(el=>{el.classList.add('will-reveal');observer.observe(el);});
  const canvases=[...document.querySelectorAll('.lens-canvas')];
  for(const canvas of canvases)initializeLens(canvas);
- function initializeLens(canvas){
+ async function initializeLens(canvas){
+  const isQuad=canvas.dataset.lens==='quad';
+  let quadModel=null;
+  if(isQuad){try{quadModel=await import('./lensing-model.mjs?v=2');}catch{return;}}
+  const quad=quadModel?.HERO_QUASAR;
   const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:'low-power'});
   if(!gl)return;
   const vertex=`attribute vec2 position;void main(){gl_Position=vec4(position,0.,1.);}`;
   const fragment=`precision highp float;
   uniform vec2 resolution;uniform vec2 source;uniform float time;uniform float radius;
+  uniform float quasarMode;uniform float shear;uniform float lensAngle;
+  uniform vec3 quasarImages[4];
   float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
   void main(){
    vec2 p=(gl_FragCoord.xy-.5*resolution)/min(resolution.x,resolution.y)*2.5;
-   float r=max(length(p),.001);vec2 beta=p-radius*p/r-vec2(.045*p.x,-.045*p.y);vec2 q=beta-source;
-   float ang=atan(p.y,p.x);float d=length(q*vec2(1.,1.3));
-   float core=exp(-d*d/0.005);float halo=exp(-d*d/0.035);float haze=exp(-d*d/0.115);
+   float c=cos(lensAngle),s=sin(lensAngle);
+   vec2 aligned=mat2(c,-s,s,c)*p;
+   float r=max(length(aligned),.001);vec2 beta=aligned-radius*aligned/r-shear*vec2(aligned.x,-aligned.y);vec2 q=beta-source;
+   float ang=atan(aligned.y,aligned.x);float d=length(q*vec2(1.,1.3));
+   float core=exp(-d*d/(quasarMode>.5?.0015:.005));
+   float halo=exp(-d*d/(quasarMode>.5?.008:.035));
+   float haze=exp(-d*d/(quasarMode>.5?.035:.115));
    float structure=.83+.17*sin(ang*43.+sin(ang*11.)*3.+time*.15);
    vec3 color=vec3(.031,.043,.063);
    float radialGlow=exp(-pow((r-radius)/.16,2.));
    color+=vec3(.008,.024,.065)*radialGlow;
-   color+=(vec3(.20,.46,.94)*halo*.78+vec3(.53,.78,1.)*core*2.3)*structure;
+   color+=(vec3(.20,.46,.94)*halo*(quasarMode>.5?.65:.78)+vec3(.53,.78,1.)*core*(quasarMode>.5?.4:2.3))*structure;
    color+=vec3(.022,.050,.12)*haze;
    float center=exp(-r*r/.004)*.90+exp(-r*r/.027)*.15+exp(-r*r/.17)*.025;
+   if(quasarMode>.5){
+    float galaxy=length(aligned*vec2(1.,1.25));
+    center=exp(-galaxy*galaxy/.012)*.55+exp(-galaxy*galaxy/.055)*.16+exp(-galaxy*galaxy/.2)*.025;
+    // Point images are blurred in the image plane, after solving the lens equation.
+    // Their positions follow the same deflection used to ray-trace the host above.
+    float psf=.014;
+    for(int i=0;i<4;i++){
+     vec2 offset=aligned-quasarImages[i].xy;float distance2=dot(offset,offset);
+     float point=exp(-distance2/(psf*psf));
+     float wings=pow(1.+distance2/(psf*psf*5.),-2.);
+     float glow=exp(-distance2/.0035);
+     color+=(vec3(.90,.96,1.)*point*5.+vec3(.48,.70,1.)*wings*.8+vec3(.16,.35,.70)*glow*.25)*quasarImages[i].z;
+    }
+   }
    color+=vec3(.80,.72,.57)*center;
    vec2 cell=floor(gl_FragCoord.xy/vec2(68.));vec2 inCell=fract(gl_FragCoord.xy/vec2(68.));
    vec2 starPos=vec2(hash(cell),hash(cell+23.7));float starDist=length((inCell-starPos)*68.);
@@ -59,23 +83,34 @@
   const vs=shader(gl.VERTEX_SHADER,vertex),fs=shader(gl.FRAGMENT_SHADER,fragment);if(!vs||!fs)return;
   const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))return;gl.useProgram(program);
   const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const location=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0);
-  const uniforms={};for(const name of ['resolution','source','time','radius'])uniforms[name]=gl.getUniformLocation(program,name);
-  let w=0,h=0,x=.035,y=.015,targetX=x,targetY=y,inside=false,visible=true,last=0,elapsed=0,frame=0;
+  const uniforms={};for(const name of ['resolution','source','time','radius','quasarMode','shear','lensAngle'])uniforms[name]=gl.getUniformLocation(program,name);
+  uniforms.quasarImages=gl.getUniformLocation(program,'quasarImages[0]');
+  const quasarPoints=new Float32Array(12);
+  gl.uniform1f(uniforms.quasarMode,isQuad?1:0);gl.uniform1f(uniforms.shear,quad?.shear??.045);gl.uniform1f(uniforms.lensAngle,quad?.angle??0);
+  let w=0,h=0,x=quad?.sourceX??.035,y=quad?.sourceY??.015,targetX=x,targetY=y,inside=false,visible=true,last=0,elapsed=0,frame=0;
   const section=canvas.closest('section')||canvas.parentElement;
   const radiusControl=section.querySelector('[data-lens-radius]');const alignment=section.querySelector('[data-lens-align]');
   const alignmentOutput=section.querySelector('[data-alignment-output]');
   function showAlignment(){if(alignmentOutput&&alignment)alignmentOutput.textContent=Number(alignment.value).toFixed(3);}
   const resize=new ResizeObserver(()=>{const bounds=canvas.getBoundingClientRect();const pixelRatio=Math.min(devicePixelRatio||1,1.5);w=Math.round(bounds.width*pixelRatio);h=Math.round(bounds.height*pixelRatio);canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);requestDraw();});resize.observe(canvas);
-  function pointer(e){if(e.target.closest('a,button,input,label,.lab-intro'))return;if(e.pointerType==='touch'&&!e.buttons)return;const b=canvas.getBoundingClientRect();targetX=((e.clientX-b.left)/b.width-.5)*.4;targetY=(.5-(e.clientY-b.top)/b.height)*.35;inside=true;if(alignment){targetX=Math.max(Number(alignment.min),Math.min(Number(alignment.max),targetX));targetY=0;alignment.value=String(targetX);showAlignment();}requestDraw();}
+  function pointer(e){if(e.target.closest('a,button,input,label,.lab-intro'))return;if(e.pointerType==='touch'&&!e.buttons)return;const b=canvas.getBoundingClientRect();targetX=((e.clientX-b.left)/b.width-.5)*.4;targetY=(.5-(e.clientY-b.top)/b.height)*.35;
+   if(quad){targetX=Math.max(-quad.limitX,Math.min(quad.limitX,targetX*.3));targetY=Math.max(-quad.limitY,Math.min(quad.limitY,targetY*.3));}
+   inside=true;if(alignment){targetX=Math.max(Number(alignment.min),Math.min(Number(alignment.max),targetX));targetY=0;alignment.value=String(targetX);showAlignment();}requestDraw();}
   section.addEventListener('pointermove',pointer,{passive:true});section.addEventListener('pointerleave',()=>{inside=Boolean(alignment);requestDraw();});
   radiusControl?.addEventListener('input',()=>{section.querySelector('[data-radius-output]').textContent=Number(radiusControl.value).toFixed(2);requestDraw();});
   alignment?.addEventListener('input',()=>{inside=true;targetX=Number(alignment.value);targetY=0;showAlignment();requestDraw();});
   section.querySelector('[data-lens-reset]')?.addEventListener('click',()=>{inside=true;targetX=0;targetY=0;if(alignment)alignment.value='0';showAlignment();requestDraw();});
   function requestDraw(){if(!frame&&visible&&!document.hidden)frame=requestAnimationFrame(draw);}
   function draw(now){frame=0;if(!visible||document.hidden||!w||!h)return;const delta=last?Math.min((now-last)/1000,.05):0;last=now;if(!paused)elapsed+=delta;
-   if(!inside&&!alignment&&!paused){targetX=Math.sin(elapsed*.19)*.045+.015;targetY=Math.cos(elapsed*.14)*.035;}
+   if(!inside&&!alignment&&!paused){targetX=Math.sin(elapsed*.19)*(quad ? .02 : .045)+.015;targetY=Math.cos(elapsed*.14)*(quad ? .018 : .035);}
    if(paused){x=targetX;y=targetY;}else{x+=(targetX-x)*.045;y+=(targetY-y)*.045;}
-   gl.useProgram(program);gl.uniform2f(uniforms.resolution,w,h);gl.uniform2f(uniforms.source,x,y);gl.uniform1f(uniforms.time,elapsed);gl.uniform1f(uniforms.radius,radiusControl?Number(radiusControl.value):.68);gl.drawArrays(gl.TRIANGLES,0,6);canvas.classList.add('ready');if(!paused)requestDraw();
+   gl.useProgram(program);
+   if(quad){
+    const images=quadModel.solveQuasarImages(x,y,quad.radius,quad.shear);
+    for(let i=0;i<4;i++){const image=images[i];quasarPoints[i*3]=image.x;quasarPoints[i*3+1]=image.y;quasarPoints[i*3+2]=Math.min(1.5,Math.sqrt(Math.abs(image.magnification)/4));}
+    gl.uniform3fv(uniforms.quasarImages,quasarPoints);
+   }
+   gl.uniform2f(uniforms.resolution,w,h);gl.uniform2f(uniforms.source,x,y);gl.uniform1f(uniforms.time,elapsed);gl.uniform1f(uniforms.radius,radiusControl?Number(radiusControl.value):(quad?.radius??.68));gl.drawArrays(gl.TRIANGLES,0,6);canvas.classList.add('ready');if(!paused)requestDraw();
   }
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){last=0;requestDraw();}else if(frame){cancelAnimationFrame(frame);frame=0;}},{rootMargin:'60px'}).observe(canvas);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=0;requestDraw();}else if(frame){cancelAnimationFrame(frame);frame=0;}});
