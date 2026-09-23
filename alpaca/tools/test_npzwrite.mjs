@@ -1,0 +1,13 @@
+import fs from "node:fs";
+import { parseNpz } from "../js/core/parsers/npy.js";
+import { encodeNpz } from "../js/core/parsers/npywrite.js";
+const src = process.argv[2], out = process.argv[3];
+const z = parseNpz(new Uint8Array(fs.readFileSync(src)));
+const arrays = { samples: { data: z.samples.data, shape: z.samples.shape }, param_names: { data: z.param_names.data, shape: z.param_names.shape }, log_likelihood: { data: z.log_likelihood.data, shape: z.log_likelihood.shape } };
+const t0 = performance.now();
+const bytes = encodeNpz(arrays, { level: 6 });
+fs.writeFileSync(out, bytes);
+console.log("wrote", out, bytes.length, "bytes in", (performance.now() - t0).toFixed(0), "ms");
+const back = parseNpz(new Uint8Array(fs.readFileSync(out)));
+let maxd = 0; for (let i = 0; i < back.samples.data.length; i++) maxd = Math.max(maxd, Math.abs(back.samples.data[i] - z.samples.data[i]));
+console.log("JS round trip: shape", back.samples.shape, "max|d|", maxd, "names ok", back.param_names.data.every((n, i) => n === z.param_names.data[i]));
