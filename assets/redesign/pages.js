@@ -36,7 +36,7 @@ const risers = [...document.querySelectorAll([
   '.cosmography-explanation', '.concert-list>.event-row', '.concert-archive', '.biography-grid figure', '.biography-prose',
   '.biography-grid .text-link', '.performance', '.audio-recording', '.press-photo', '.teach-lead', '.choice', '.book-figure', '.book-copy>p'
 ].join(','))];
-const book = document.querySelector('.book-figure img');
+const book = document.querySelector('.book-figure .book3d-body');
 risers.forEach(element => element.setAttribute('data-rise', ''));
 
 function refresh() {
@@ -47,7 +47,10 @@ function refresh() {
   }
   for (const element of risers) {
     const top = element.getBoundingClientRect().top;
-    element.style.setProperty('--in', motion.reduced ? '1' : easeOut(seg(top, vh * 1.02, vh * .78)).toFixed(3));
+    const fade = motion.reduced ? 1 : easeOut(seg(top, vh * 1.02, vh * .78));
+    element.style.setProperty('--in', fade.toFixed(3));
+    // Not clickable while (nearly) invisible.
+    element.style.pointerEvents = fade < .5 ? 'none' : '';
   }
   // The book turns towards the reader as it scrolls up the screen.
   if (book && !motion.reduced) {
@@ -80,7 +83,7 @@ addEventListener('pointermove', event => {
 document.documentElement.addEventListener('mouseleave', () => { pointer.active = false; });
 
 // Pictures tilt towards the pointer.
-const tilting = [['.publication-preview', '.publication-paper'], ['.biography-grid figure', 'img'], ['.press-photo', '.press-photo-frame'], ['.choice', null], ['.book-figure', 'img']];
+const tilting = [['.publication-preview', '.publication-paper'], ['.biography-grid figure', 'img'], ['.press-photo', '.press-photo-frame'], ['.choice', null], ['.book-figure', '.book3d-body']];
 for (const [selector, inner] of tilting) for (const element of document.querySelectorAll(selector)) {
   const host = inner ? element.querySelector(inner) : element;
   element.addEventListener('pointermove', event => {
@@ -121,6 +124,10 @@ function play(button, src, title) {
   frame.focus();
 }
 for (const button of document.querySelectorAll('[data-youtube]')) {
+  // Sharpest thumbnail first (1280 px); not every video has one, so fall back to smaller ones.
+  const thumbnail = button.querySelector('img'), id = button.dataset.youtube;
+  const fallbacks = [`https://i.ytimg.com/vi/${id}/sddefault.jpg`, `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];
+  thumbnail.addEventListener('error', () => { if (fallbacks.length) thumbnail.src = fallbacks.shift(); });
   // Warm up the connection as soon as the pointer comes close, so the player starts quickly.
   button.addEventListener('pointerenter', () => { preconnect('https://www.youtube-nocookie.com'); preconnect('https://i.ytimg.com'); }, { once: true });
   button.addEventListener('click', () => play(button, `https://www.youtube-nocookie.com/embed/${button.dataset.youtube}?autoplay=1&rel=0`, button.dataset.title));
@@ -206,7 +213,7 @@ if (lensHero) {
     pin.style.background = portal >= 1 ? 'var(--light)' : '';
     const intro = motion.reduced ? 1 : easeOut(clamp((now - loadedAt) / 1300));
     flipIn(title, intro * (1 - seg(p, .04, .3)));
-    for (const element of fades) element.style.opacity = (1 - seg(p, .03, .22)).toFixed(3);
+    for (const element of fades) { const fade = 1 - seg(p, .03, .22); element.style.opacity = fade.toFixed(3); element.style.pointerEvents = fade < .5 ? 'none' : ''; }
     const tilt = motion.reduced || !pointer.active ? [0, 0] : [(pointer.x / vw - .5) * 2, (pointer.y / vh - .5) * 2];
     lensCanvas.style.transform = `perspective(1500px) rotateY(${tilt[0] * 5}deg) rotateX(${-tilt[1] * 4}deg)`;
     const visible = lensHero.getBoundingClientRect().bottom > 0;
@@ -252,6 +259,14 @@ if (coverHero) {
 }
 
 /* ---------- Research: the arcs demonstration ---------- */
+
+// The expanding universe loads when it comes near.
+const expansion = document.querySelector('.expansion');
+if (expansion) new IntersectionObserver((entries, observer) => {
+  if (!entries[0].isIntersecting) return;
+  observer.disconnect();
+  import('./expansion.js?v=1').then(({ initExpansion }) => initExpansion(expansion)).catch(() => {});
+}, { rootMargin: '600px' }).observe(expansion);
 
 const arcs = document.querySelector('.lens-canvas');
 if (arcs) import('./lens-demo.js?v=3').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});

@@ -17,6 +17,7 @@ button.text-link{border-radius:0}
 .block{position:relative;padding:clamp(90px,14vh,170px) var(--pad);scroll-margin-top:40px}
 .block-title{font-size:clamp(2.7rem,8.2vw,9rem);line-height:.86;font-weight:780;font-stretch:122%;letter-spacing:-.035em;text-transform:uppercase;perspective:700px;margin:0 0 clamp(44px,8vh,100px);overflow-wrap:anywhere}
 .js [data-rise]{opacity:var(--in,0);transform:translate3d(0,calc((1 - var(--in,0))*36px),0)}
+.js [data-rise]:focus-within{opacity:1;transform:none}
 
 /* Heroes: a sticky scene at the top of the page. */
 .page-hero{position:relative}
@@ -34,7 +35,7 @@ button.text-link{border-radius:0}
 .hero-links{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:clamp(18px,3vh,30px);font-size:.875rem;font-weight:500}
 .hero-links a{text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;opacity:.85;transition:opacity .2s}
 .hero-links a:hover{opacity:1}
-.hero-hint{position:absolute;z-index:2;right:var(--pad);top:clamp(76px,11vh,110px);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
+.hero-hint{pointer-events:none;position:absolute;z-index:2;right:var(--pad);top:clamp(76px,11vh,110px);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
 @media (hover:none){.hero-hint{display:none}}
 
 .hero-cover{height:240vh}
@@ -43,6 +44,7 @@ button.text-link{border-radius:0}
 .hero-cover-canvas{z-index:1}
 .hero-cover-title{position:absolute;z-index:2;left:var(--pad);top:max(14svh,90px);font-size:min(24vw,40svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.035em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
 .js .hero-cover-title{width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hero-role{pointer-events:none}
 .hero-role,.hero-links-corner{position:absolute;z-index:2;bottom:calc(var(--pad) + var(--toolbar));margin:0;color:#fff;mix-blend-mode:difference}
 .hero-role{left:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
 .hero-role span+span{opacity:.65}
@@ -188,6 +190,24 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 .legend-b:before{border-top:2px dashed rgba(235,235,232,.6)}
 .cosmography-explanation p+p{margin-top:1.4em}
 
+/* The expanding universe (expansion.js) */
+.expansion{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:clamp(14px,2vw,28px);margin-top:clamp(20px,4vh,50px)}
+.expansion-stage{position:relative;height:clamp(380px,62vh,640px);border:1px solid var(--line);background:var(--dark);overflow:hidden;touch-action:pan-y}
+.expansion-canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.expansion-stage:after{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,var(--dark) 80%);pointer-events:none}
+.expansion-hint{position:absolute;z-index:1;left:18px;right:18px;bottom:14px;max-width:34em;font-size:.8125rem;line-height:1.5;color:var(--muted);pointer-events:none}
+.expansion-side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.hubble-canvas{display:block;width:100%;height:clamp(240px,34vh,340px);border:1px solid var(--line);background:var(--dark)}
+.expansion-controls{display:grid;gap:10px}
+.expansion-controls label{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:1rem;font-weight:600}
+.expansion-controls output{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
+.h0-presets{display:flex;flex-wrap:wrap;gap:6px 22px}
+.h0-presets button{padding:6px 0;font-size:.875rem;font-weight:500;border-bottom:1px solid transparent;opacity:.62;transition:opacity .2s,border-color .2s}
+.h0-presets button:hover{opacity:1}
+.h0-presets button[aria-pressed=true]{opacity:1;border-color:currentColor}
+.expansion-readout{font-size:.875rem;line-height:1.55;color:var(--muted);min-height:3em}
+.expansion figcaption{grid-column:1/-1;font-size:.8125rem;line-height:1.6;color:var(--muted);max-width:60em}
+
 /* Cello: concerts */
 .concert-heading{display:flex;justify-content:space-between;align-items:end;gap:40px}
 .concert-list{border-top:1px solid var(--line)}
@@ -267,7 +287,7 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 .choice-text{margin-top:1.1em;max-width:26em;font-size:clamp(.95rem,1.1vw,1.1rem);line-height:1.5;opacity:.8}
 .book-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,6vw,110px);align-items:center}
 .book-figure{perspective:1200px}
-.book-figure img{width:100%;max-width:520px;margin:0 auto;transform:rotateY(calc(var(--turn,0)*1deg + var(--tx,0)*10deg)) rotateX(calc(var(--ty,0)*-8deg));transition:transform .5s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 40px 50px rgba(0,0,0,.45))}
+.book-figure .book3d{max-width:430px;margin:0 auto}
 .book-copy .block-title{margin-bottom:.45em}
 .book-name{font-size:clamp(1.5rem,2.6vw,2.6rem);line-height:1.08;font-weight:680;font-stretch:112%;letter-spacing:-.025em;max-width:16em}
 .book-sub{margin-top:.8em;color:var(--muted);font-size:.9375rem}
@@ -277,8 +297,10 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 /* Narrow screens */
 @media (max-width:980px){
   .current-project,.study-body,.biography-grid,.lensing-applet,.cosmography-explanation,.sim-intro,.book-grid{grid-template-columns:minmax(0,1fr)}
-  .book-figure img{max-width:380px}
+  .book-figure .book3d{max-width:min(300px,70vw)}
   .sim-controls,.sim-reading{grid-template-columns:minmax(0,1fr)}
+  .expansion{grid-template-columns:minmax(0,1fr)}
+  .expansion-stage{height:clamp(340px,52svh,520px)}
   .publication-feature{grid-template-columns:minmax(0,1fr)}
   .publication-content{padding-right:0}
   .event-row{grid-template-columns:minmax(90px,.5fr) minmax(0,1.5fr) auto}
@@ -307,5 +329,5 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
   .concert-archive>summary>span:last-child{gap:14px}
 }
 @media (prefers-reduced-motion:reduce){
-  .publication-paper,.biography-grid img,.press-photo-frame,.study-project h3,.expand-icon,.choice,.choice:before,.choice-title,.book-figure img,.video-facade img,.play{transition:none}
+  .publication-paper,.biography-grid img,.press-photo-frame,.study-project h3,.expand-icon,.choice,.choice:before,.choice-title,.video-facade img,.play{transition:none}
 }

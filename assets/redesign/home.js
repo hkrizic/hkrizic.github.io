@@ -26,7 +26,7 @@ const copies = [...document.querySelectorAll('.scene-physics, .scene-cello')].ma
 }));
 const themeColor = document.querySelector('meta[name="theme-color"]');
 const teaching = document.querySelector('.home-teaching'), teachTitle = teaching.querySelector('[data-split]');
-const teachFades = [...teaching.querySelectorAll('.copy-text, .teach-links')], book = teaching.querySelector('.teach-book img');
+const teachFades = [...teaching.querySelectorAll('.copy-text, .teach-links')], book = teaching.querySelector('.book3d-body');
 // The book tilts towards the pointer.
 teaching.querySelector('.teach-book').addEventListener('pointermove', event => {
   if (event.pointerType !== 'mouse' || motion.reduced) return;
@@ -241,7 +241,7 @@ function render(now) {
   for (const copy of copies) {
     flipIn(copy.title, seg(T, copy.start, copy.start + .27));
     const fade = easeOut(seg(T, copy.start + .1, copy.start + .24));
-    for (const element of copy.rest) element.style.setProperty('--in', fade.toFixed(3));
+    for (const element of copy.rest) { element.style.setProperty('--in', fade.toFixed(3)); element.style.pointerEvents = fade < .5 ? 'none' : ''; }
   }
 
   // Physics: the source spirals in behind the lens: one image, two, four, then a ring.
@@ -263,7 +263,7 @@ function render(now) {
   // Teaching: the title flips in as the section rises; the book turns towards the reader.
   const teachTop = teaching.getBoundingClientRect().top;
   flipIn(teachTitle, seg(teachTop, vh * .85, vh * .3));
-  for (const element of teachFades) element.style.setProperty('--in', easeOut(seg(teachTop, vh * .7, vh * .15)).toFixed(3));
+  for (const element of teachFades) { const fade = easeOut(seg(teachTop, vh * .7, vh * .15)); element.style.setProperty('--in', fade.toFixed(3)); element.style.pointerEvents = fade < .5 ? 'none' : ''; }
   if (!motion.reduced) { const rect = book.getBoundingClientRect(); book.style.setProperty('--turn', mix(-38, 14, seg(rect.top, vh, -rect.height * .4)).toFixed(2)); }
 
   // Strings: the fundamental follows the scroll speed while they are on screen.

@@ -21,7 +21,7 @@ html:not(.js) canvas.stage{display:none}
 .intro-line{display:block}
 .js .intro-name{width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 /* Inside the top bar, so they invert against the page, the photograph and the dark scene alike. */
-.intro-role,.intro-cue{margin:0}
+.intro-role,.intro-cue{margin:0;pointer-events:none}
 .menu-open .intro-role,.menu-open .intro-cue{display:none}
 .intro-role{position:fixed;left:var(--pad);bottom:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
 .intro-role span+span{opacity:.6}
@@ -35,7 +35,8 @@ html:not(.js) canvas.stage{display:none}
 .copy-text{font-size:clamp(1rem,1.2vw,1.2rem);line-height:1.55;max-width:31em}
 .copy-link{display:inline-flex;margin-top:1.6em;font-weight:600;font-stretch:112%;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px}
 .js .copy-text,.js .copy-link{opacity:var(--in,1);transform:translateY(calc((1 - var(--in,1))*24px))}
-.caption{position:absolute;right:var(--pad);bottom:var(--pad);font-size:.8125rem;font-weight:500;letter-spacing:.02em;opacity:.6}
+.js .copy-link:focus-visible{opacity:1;transform:none}
+.caption{pointer-events:none;position:absolute;right:var(--pad);bottom:var(--pad);font-size:.8125rem;font-weight:500;letter-spacing:.02em;opacity:.6}
 .js .caption{opacity:calc(var(--in,1)*.6)}
 
 /* Teaching: a light section with the book, between the cello scene and the contact footer. */
@@ -45,7 +46,7 @@ html:not(.js) canvas.stage{display:none}
 .teach-copy em{font-style:italic}
 .teach-links{display:flex;flex-wrap:wrap;gap:0 30px}
 .teach-book{display:block;perspective:1200px}
-.teach-book img{width:100%;max-width:470px;margin:0 auto;transform:rotateY(calc(var(--turn,0)*1deg + var(--tx,0)*10deg)) rotateX(calc(var(--ty,0)*-8deg));filter:drop-shadow(0 36px 44px rgba(0,0,0,.28));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.teach-book .book3d{max-width:400px;margin:0 auto}
 
 /* Narrow and portrait screens */
 @media (max-aspect-ratio:1/1),(max-width:760px){
@@ -57,7 +58,7 @@ html:not(.js) canvas.stage{display:none}
   .caption{top:max(12svh,78px);bottom:auto}
   .scene-cello .caption{top:calc(50svh + 14px);right:auto;left:50%;translate:-50% 0;white-space:nowrap}
   .home-teaching{grid-template-columns:minmax(0,1fr);align-content:center}
-  .teach-book img{max-width:min(300px,70vw)}
+  .teach-book .book3d{max-width:min(260px,62vw)}
 }
 /* Short landscape screens (phones on their side). */
 @media (min-aspect-ratio:1/1) and (max-height:520px){
@@ -68,6 +69,5 @@ html:not(.js) canvas.stage{display:none}
   .intro-role{font-size:.75rem}
 }
 @media (prefers-reduced-motion:reduce){
-  .teach-book img{transition:none}
   .intro-cue:after{animation:none}
 }
