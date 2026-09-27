@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#ebebe8">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="assets/redesign/fonts/mona-sans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/redesign/images/home-person.webp" as="image" fetchpriority="high">
+<link rel="preload" as="image" imagesrcset="assets/redesign/images/home-portrait-760.webp 760w, assets/redesign/images/home-portrait.webp 1263w" imagesizes="100vw" fetchpriority="high">
 <link rel="stylesheet" href="assets/redesign/home.css?v=1">
 <script>document.documentElement.classList.add('js')</script>
 <script src="assets/i18n.js" defer></script>
@@ -26,19 +26,20 @@
     <a href="#contact"><span data-en="Contact" data-de="Kontakt">Contact</span></a>
   </nav>
   <div class="bar-lang" aria-label="Language"><button class="nav__lang-btn" data-lang="en" aria-label="English">EN</button><button class="nav__lang-btn" data-lang="de" aria-label="Deutsch">DE</button></div>
+  <p class="intro-role"><span data-en="Physicist &amp; Cellist" data-de="Physiker &amp; Cellist">Physicist &amp; Cellist</span><span data-en="Geneva" data-de="Genf">Geneva</span></p>
+  <p class="intro-cue" aria-hidden="true"><span data-en="Scroll" data-de="Scrollen">Scroll</span></p>
   <button class="bar-menu" aria-controls="menu" aria-expanded="false"><span class="when-closed" data-en="Menu" data-de="Menü">Menu</span><span class="when-open" data-en="Close" data-de="Schliessen">Close</span></button>
 </header>
 
-<canvas class="stage stage-person" aria-hidden="true"></canvas>
+<img class="stage stage-photo" src="assets/redesign/images/home-portrait.webp" srcset="assets/redesign/images/home-portrait-760.webp 760w, assets/redesign/images/home-portrait.webp 1263w" sizes="100vw" width="1263" height="1560" alt="Hrvoje Krizic, sitting against a sunlit concrete wall" data-i18n-attr="alt" data-en="Hrvoje Krizic, sitting against a sunlit concrete wall" data-de="Hrvoje Krizic, an eine sonnige Betonwand gelehnt sitzend">
+<canvas class="stage stage-cover" aria-hidden="true"></canvas>
+<canvas class="stage stage-lens" aria-hidden="true"></canvas>
 <canvas class="stage stage-lines" aria-hidden="true"></canvas>
 
 <main id="main">
   <section class="scene scene-intro" id="top" data-scene>
     <div class="pin">
       <h1 class="intro-name" aria-label="Hrvoje Krizic"><span class="intro-line" data-split>Hrvoje</span><span class="intro-line" data-split>Krizic</span></h1>
-      <img class="intro-person" src="assets/redesign/images/home-person.webp" width="1002" height="1329" alt="Hrvoje Krizic, sitting against a sunlit concrete wall" data-i18n-attr="alt" data-en="Hrvoje Krizic, sitting against a sunlit concrete wall" data-de="Hrvoje Krizic, an eine sonnige Betonwand gelehnt sitzend">
-      <p class="intro-role"><span data-en="Physicist &amp; Cellist" data-de="Physiker &amp; Cellist">Physicist &amp; Cellist</span><span data-en="Geneva" data-de="Genf">Geneva</span></p>
-      <p class="intro-cue" aria-hidden="true"><span data-en="Scroll" data-de="Scrollen">Scroll</span></p>
     </div>
   </section>
 

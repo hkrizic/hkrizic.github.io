@@ -26,25 +26,31 @@ a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offs
 .bar-lang button{opacity:.45}.bar-lang button.is-active{opacity:1}
 .bar-menu{display:none}.bar-menu .when-open,.menu-open .bar-menu .when-closed{display:none}.menu-open .bar-menu .when-open{display:inline}
 
-/* The stage: two fixed canvases behind the copy. */
+/* The stage: the photograph and three canvases, fixed behind the copy. */
 .stage{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.stage-photo{z-index:1;max-width:none;object-fit:cover;object-position:50% 24%;transform-origin:50% 38%;filter:grayscale(1)}
+.js:not(.cover-ready) .stage-photo{visibility:hidden}
+html:not(.js) .stage-photo{position:absolute;height:100vh;height:100svh}
+html:not(.js) canvas.stage{display:none}
 
 .scene{position:relative}
 .pin{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
-.scene-intro{height:230vh;z-index:1}
+.scene-intro{height:240vh;z-index:3}
 .scene-physics{height:330vh;z-index:3}
 .scene-cello{height:290vh;z-index:3}
 
-/* Intro */
-.intro-name{position:absolute;left:var(--pad);top:max(13svh,86px);font-size:min(15.2vw,27svh);line-height:.8;font-weight:780;font-stretch:118%;letter-spacing:-.035em;text-transform:uppercase;perspective:900px;white-space:nowrap}
-.intro-line{display:block;transform-style:preserve-3d}
-.intro-line+.intro-line{margin-top:.02em}
+/* Intro: the name is drawn cut out of the page (home.js); this heading is for screen readers and
+   for browsers without JavaScript, where it sits over the photograph. */
+.intro-name{position:absolute;left:var(--pad);top:max(13svh,86px);font-size:min(15.2vw,27svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.02em;text-transform:uppercase;color:#fff;mix-blend-mode:difference;white-space:nowrap}
+.intro-line{display:block}
+.js .intro-name{width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .ch{display:inline-block;transform-origin:50% 60%;backface-visibility:hidden}
-.intro-person{position:absolute;right:max(2vw,calc(50vw - 62svh));bottom:0;height:92svh;width:auto;max-width:none;filter:grayscale(1)}
-.webgl .intro-person{visibility:hidden}
-.intro-role{position:absolute;left:var(--pad);bottom:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
-.intro-role span+span{opacity:.55}
-.intro-cue{position:absolute;right:var(--pad);bottom:var(--pad);display:flex;align-items:center;gap:12px;font-size:.75rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase}
+/* Inside the top bar, so they invert against the page, the photograph and the dark scene alike. */
+.intro-role,.intro-cue{margin:0}
+.menu-open .intro-role,.menu-open .intro-cue{display:none}
+.intro-role{position:fixed;left:var(--pad);bottom:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
+.intro-role span+span{opacity:.6}
+.intro-cue{position:fixed;right:var(--pad);bottom:var(--pad);display:flex;align-items:center;gap:12px;font-size:.75rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase}
 .intro-cue:after{content:'';width:54px;height:1px;background:currentColor;transform-origin:left;animation:cue 2.4s cubic-bezier(.6,0,.2,1) infinite}
 @keyframes cue{0%{transform:scaleX(0)}45%{transform:scaleX(1);transform-origin:left}55%{transform:scaleX(1);transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
 
@@ -69,15 +75,10 @@ a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offs
 .contact-links a:hover{border-color:currentColor}
 .contact-foot{display:flex;justify-content:space-between;gap:20px;margin-top:clamp(24px,6vh,70px);padding-top:18px;border-top:1px solid rgba(235,235,232,.16);font-size:.8125rem;opacity:.6}
 
-/* Load: the name rises letter by letter. */
-.js .intro-name .ch{animation:rise 1.25s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(.25s + var(--i)*45ms)}
-@keyframes rise{from{transform:translate3d(0,.35em,0) rotateX(-80deg);opacity:0}}
-
 /* Narrow and portrait screens */
 @media (max-aspect-ratio:1/1),(max-width:760px){
-  .intro-name{top:max(12svh,78px);font-size:min(21vw,15svh);font-stretch:108%}
-  .intro-person{right:auto;left:50%;transform:translateX(-50%);height:min(60svh,120vw)}
-  .intro-role{bottom:auto;top:calc(max(12svh,78px) + min(21vw,15svh)*1.66 + 14px)}
+  .intro-name{top:max(12svh,78px);font-size:min(19vw,15svh)}
+  .stage-photo{object-position:66% 30%}
   .intro-cue{display:none}
   .copy{top:auto;bottom:calc(var(--pad) + 5svh);right:var(--pad);width:auto;transform:none}
   .copy-title{font-size:min(19vw,12svh)}
@@ -104,5 +105,5 @@ a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offs
   .intro-role{font-size:.75rem}
 }
 @media (prefers-reduced-motion:reduce){
-  .js .intro-name .ch,.intro-cue:after{animation:none}
+  .intro-cue:after{animation:none}
 }
