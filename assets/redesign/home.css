@@ -1,14 +1,14 @@
 /* Home: a portrait and a scroll-driven stage (see home.js). Shared parts are in mono.css. */
 /* The stage: the photograph and three canvases, fixed behind the copy. */
 .stage{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
-.stage-photo{z-index:1;max-width:none;object-fit:cover;object-position:50% 24%;transform-origin:50% 38%;filter:grayscale(1)}
+.stage-photo{z-index:1;max-width:none;object-fit:cover;object-position:50% 24%;filter:grayscale(1)}
 .js:not(.cover-ready) .stage-photo{visibility:hidden}
 html:not(.js) .stage-photo{position:absolute;height:100vh;height:100svh}
 html:not(.js) canvas.stage{display:none}
 
 .scene{position:relative}
 .pin{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
-.scene-intro{height:240vh;z-index:3}
+.scene-intro{height:150vh;z-index:3}
 .scene-physics{height:330vh;z-index:3}
 .scene-cello{height:290vh;z-index:3}
 

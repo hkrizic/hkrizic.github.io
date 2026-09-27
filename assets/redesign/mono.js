@@ -124,6 +124,8 @@ export function createCover(canvas, { lines, focus, heightShare = .62, bottomRes
   return {
     measure,
     get ready() { return readyAt > 0; },
+    // The point the zoom goes into, in canvas (CSS px) coordinates.
+    get point() { if (!layout) measure(); return layout.point; },
     get fading() { return readyAt > 0 && performance.now() - readyAt < 1200; },
     // Lay out again once the web font is ready (or after a timeout), then fade the letters in.
     whenFontReady(callback) {

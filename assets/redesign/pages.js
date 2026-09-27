@@ -5,7 +5,7 @@
 // - cello: CELLO cut out of the page over the concert photograph, zoomed through on scroll;
 // - both: titles flip in and blocks rise as they scroll into view, pictures tilt towards the
 //   pointer, and the lines between concerts ring like plucked strings.
-import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=1';
+import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=2';
 
 const root = document.documentElement;
 let vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
@@ -206,4 +206,4 @@ if (coverHero) {
 /* ---------- Research: the arcs demonstration ---------- */
 
 const arcs = document.querySelector('.lens-canvas');
-if (arcs) import('./lens-demo.js?v=1').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});
+if (arcs) import('./lens-demo.js?v=2').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});

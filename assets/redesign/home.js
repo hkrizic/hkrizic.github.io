@@ -6,7 +6,7 @@
 // ring. The ring opens into a light disc and unrolls into four cello strings (C, G, D, A) that swing
 // with the scroll speed, ring out when released and can be plucked with the pointer.
 
-import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=1';
+import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=2';
 
 const root = document.documentElement;
 matchMedia('(prefers-motion.reduced-motion: reduce)').addEventListener('change', () => kick());
@@ -194,7 +194,7 @@ function render(now) {
 
   // Colours: light, then dark for the physics, light again for the cello.
   // The light returns through the Einstein ring (see drawLines), so the switch back is a step.
-  const darkness = motion.reduced ? seg(T, .7, .9) * (1 - seg(T, 1.9, 2.0)) : T >= PORTAL[1] ? 0 : seg(T, .7, .9);
+  const darkness = motion.reduced ? seg(T, .6, .8) * (1 - seg(T, 1.9, 2.0)) : T >= PORTAL[1] ? 0 : seg(T, .6, .8);
   const bg = LIGHT.map((c, i) => Math.round(mix(c, DARK[i], darkness)));
   const fg = LIGHT.map((c, i) => Math.round(mix(DARK[i], c, clamp((darkness - .35) / .3))));
   const ink = `rgb(${fg})`;
@@ -202,17 +202,22 @@ function render(now) {
   root.style.setProperty('--fg', ink);
   themeColor?.setAttribute('content', `rgb(${bg})`);
 
-  // Intro: the photograph behind the page. It is seen through the letters, then fills the screen,
-  // gains its colour and finally fades to black for the physics.
-  const reveal = motion.reduced ? seg(T, .1, .4) : seg(T, .05, .5);
-  const photoScale = motion.reduced ? 1 : mix(1.16, 1, easeOut(reveal));
-  photo.style.transform = `scale(${photoScale}) translate3d(${-px * 14}px, ${-py * 10}px, 0)`;
-  photo.style.filter = `grayscale(${1 - seg(T, .42, .6)}) brightness(${1 - seg(T, .72, .95)})`;
-  photo.style.visibility = T > .97 ? 'hidden' : '';
-  cover.draw({ zoom: motion.reduced ? 0 : seg(T, .05, .5), alpha: motion.reduced ? 1 - seg(T, .1, .4) : 1, shift: [px * 10, py * 7] });
+  // Intro: the photograph behind the page, seen through the letters. Scrolling zooms into the stem
+  // of the "I"; the photograph pushes in and goes dark as the stem opens, so the zoom ends in the
+  // black of the physics scene rather than on the photograph.
+  const zoom = motion.reduced ? 0 : seg(T, .04, .86);
+  const dive = motion.reduced ? seg(T, .35, .75) : ease(seg(zoom, .3, .92));
+  const [fx, fy] = cover.point;
+  photo.style.transformOrigin = `${fx}px ${fy}px`;
+  photo.style.transform = `scale(${motion.reduced ? 1 : mix(1.06, 1.9, ease(zoom))}) translate3d(${-px * 14}px, ${-py * 10}px, 0)`;
+  photo.style.filter = `grayscale(1) brightness(${1 - .9 * dive})`;
+  // The page behind has turned dark by now; fading out avoids a step from pure black to the dark grey.
+  photo.style.opacity = String(1 - seg(T, .76, .88));
+  photo.style.visibility = T > .9 ? 'hidden' : '';
+  cover.draw({ zoom, alpha: motion.reduced ? 1 - seg(T, .1, .4) : 1, shift: [px * 10, py * 7] });
   coverCanvas.style.transform = motion.reduced ? '' : `perspective(1400px) rotateY(${px * 2}deg) rotateX(${-py * 1.6}deg) scale(1.04)`;
   introCue.style.opacity = 1 - seg(T, .02, .12);
-  introRole.style.opacity = 1 - seg(T, .7, .85);
+  introRole.style.opacity = 1 - seg(T, .4, .6);
 
   // Copy for physics and cello: the title flips in, the rest follows.
   for (const copy of copies) {
@@ -232,7 +237,7 @@ function render(now) {
     ];
     const shear = .14 * (1 - seg(u, .72, .95));
     const radius = ringRadius * mix(.075, .018, seg(u, .8, 1));
-    const opacity = seg(T, .92, 1.02) * (1 - seg(T, 1.66, 1.72));
+    const opacity = seg(T, .86, .98) * (1 - seg(T, 1.66, 1.72));
     lensLayer.draw({ center, thetaE: ringRadius, source, shear, radius, opacity });
     lensCanvas.style.transform = motion.reduced ? '' : `perspective(1600px) rotateY(${px * 6}deg) rotateX(${-py * 5}deg)`;
   }
