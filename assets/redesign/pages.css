@@ -211,7 +211,9 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 /* Cello: concerts */
 .concert-heading{display:flex;justify-content:space-between;align-items:end;gap:40px}
 .concert-list{border-top:1px solid var(--line)}
-.event-row{position:relative;display:grid;grid-template-columns:minmax(110px,.55fr) minmax(0,1.6fr) minmax(0,1fr) auto;gap:clamp(16px,3vw,48px);align-items:center;padding:clamp(22px,3.4vh,34px) 0;border-bottom:1px solid var(--line)}
+/* The last column has the same width in every row (it fits "Free admission"), so the columns line up
+   whether a row has a ticket link, a longer label or none. */
+.event-row{position:relative;display:grid;grid-template-columns:minmax(110px,.55fr) minmax(0,1.6fr) minmax(0,1fr) 8rem;gap:clamp(16px,3vw,48px);align-items:center;padding:clamp(22px,3.4vh,34px) 0;border-bottom:1px solid var(--line)}
 .js .event-row{border-bottom-color:transparent}
 .event-string{position:absolute;left:0;bottom:-1px;width:100%;height:24px;margin-bottom:-11.5px;overflow:visible;pointer-events:none;color:var(--fg);opacity:.2}
 .event-row:hover .event-string{opacity:.9}
@@ -303,7 +305,7 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
   .expansion-stage{height:clamp(340px,52svh,520px)}
   .publication-feature{grid-template-columns:minmax(0,1fr)}
   .publication-content{padding-right:0}
-  .event-row{grid-template-columns:minmax(90px,.5fr) minmax(0,1.5fr) auto}
+  .event-row{grid-template-columns:minmax(90px,.5fr) minmax(0,1.5fr) 8rem}
   .event-location{grid-column:2}
   .event-ticket{grid-column:3;grid-row:1}
   .press-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
