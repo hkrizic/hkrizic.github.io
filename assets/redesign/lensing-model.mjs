@@ -14,6 +14,24 @@ export const HERO_QUASAR = Object.freeze({
   limitY: 0.05
 });
 
+// On the homepage each image repeats the quasar's flickering after its own delay: seconds of
+// animation per unit of arrival-time (Fermat potential) difference. Illustrative, not physical days.
+export const HERO_DELAY_SECONDS = 22;
+
+// Smooth intrinsic brightness changes of the homepage quasar, relative to its mean.
+export function heroVariability(seconds) {
+  return 1 + 0.1 * Math.sin(seconds * 0.51 + 0.4) + 0.07 * Math.sin(seconds * 1.23 + 2.1)
+    + 0.05 * Math.sin(seconds * 0.19 + 4);
+}
+
+// Brightness of each image at a given time: magnified flux times the delayed intrinsic signal.
+// Images are sorted by arrival time, so the first image leads and the others follow.
+export function heroImageFluxes(images, seconds) {
+  const first = images[0]?.arrival ?? 0;
+  return images.map(image => Math.min(Math.abs(image.magnification), 20)
+    * heroVariability(seconds - (image.arrival - first) * HERO_DELAY_SECONDS));
+}
+
 export function sourcePosition(x, y, radius = EINSTEIN_RADIUS, shear = SHEAR) {
   const r = Math.max(Math.hypot(x, y), 1e-10);
   return [(1 - shear) * x - radius * x / r, (1 + shear) * y - radius * y / r];
