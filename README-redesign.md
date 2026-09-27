@@ -2,7 +2,7 @@
 
 The redesign is integrated into `hkrizic.github.io`. Local development and preview use this checkout.
 
-The redesigned pages are `index.html`, `research.html`, and `cellist.html`. Other pages, including teaching and Stringendo, remain available in this copy.
+The redesigned pages are `index.html`, `research.html`, `cellist.html` and `teaching.html`. The course sites (`teaching/` for Mathematik I–III, `Vorkurs/`) and Stringendo keep their own design.
 
 ## Run locally
 
@@ -21,6 +21,8 @@ Open http://localhost:4322. No install or build is required.
 - Research and Cello use the same design as the home page: light and dark sections, one typeface, huge uppercase titles whose letters flip in as they scroll into view, blocks that rise into place, and no arrows or pills. The Research hero is dark: the pointer moves a source behind a lens (seen as two or four images), and scrolling lines it up into an Einstein ring that opens into the page. It then shows current work, the ALPACA I preprint (the paper tilts towards the pointer), earlier projects, and three interactive explanations in black and white: extended-source arcs (rendered like a telescope image), the embedded EPL quasar simulator (adapted from `random/lensing_simulator.html`; dashed caustic, solid critical curve, a cross for the source) and the time-delay exercise.
 - The Cello hero is CELLO cut out of the page over the concert photograph (`Bild_2.jpeg`), zoomed through the first L on scroll, with the name running upwards on tall screens. It keeps all 31 concert entries, ticket links, the expandable archive, the biography, four videos, the SoundCloud recording and all five press-photo downloads. The line under each concert is a string that rings when the pointer crosses it; photos tilt towards the pointer.
 - The names cut out of the page (HRVOJE KRIZIC, CELLO) are justified: both lines run flush between the page margins and between the top bar and the caption. They are laid out on the part of the screen that stays visible with a phone's toolbars shown, so nothing jumps when the toolbars collapse while scrolling, and on touch screens the stage reaches under the toolbars so no strip of the photograph shows there. Canvas text uses width-pinned aliases of Mona Sans (`Mona Sans Wide`, `Mona Sans Narrow` in `mono.css`) because Safari's canvas ignores `fontStretch`.
+- Teaching (`teaching.html`, linked as "Teaching" everywhere) opens with two large choices, Mathematik I–III (`teaching/`) and Vorkurs (`Vorkurs/`), followed by the book (Springer link and errata). The home page has a Teaching section with the book between the cello scene and the contact footer; the book turns in 3D as it scrolls into view.
+- Videos and the SoundCloud recording on the Cello page load only when played: until then each is a thumbnail (from YouTube's image server) with a play button, and the connection is warmed up when the pointer comes close.
 - English and German, a phone menu, and reduced-motion support throughout. Big titles shrink until their longest word fits, so long German words never overflow.
 - Fonts and optimized display images are local. Original high-resolution press downloads remain intact. Video and audio embeds still require their external providers.
 

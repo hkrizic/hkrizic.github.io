@@ -28,12 +28,15 @@ addEventListener('resize', fitTitles);
 
 /* ---------- Titles and blocks as they scroll into view ---------- */
 
-const titles = [...document.querySelectorAll('.block [data-split]')];
+// The teaching page's title flips in when the page loads; the others as they scroll into view.
+const introTitle = document.querySelector('.teach-hero [data-split]');
+const titles = [...document.querySelectorAll('.block [data-split]')].filter(title => title !== introTitle);
 const risers = [...document.querySelectorAll([
   '.current-project', '.publication-feature', '.study-project', '.lensing-intro>p', '.lensing-applet', '.quasar-simulator',
   '.cosmography-explanation', '.concert-list>.event-row', '.concert-archive', '.biography-grid figure', '.biography-prose',
-  '.biography-grid .text-link', '.performance', '.audio-recording', '.press-photo'
+  '.biography-grid .text-link', '.performance', '.audio-recording', '.press-photo', '.teach-lead', '.choice', '.book-figure', '.book-copy>p'
 ].join(','))];
+const book = document.querySelector('.book-figure img');
 risers.forEach(element => element.setAttribute('data-rise', ''));
 
 function refresh() {
@@ -45,6 +48,11 @@ function refresh() {
   for (const element of risers) {
     const top = element.getBoundingClientRect().top;
     element.style.setProperty('--in', motion.reduced ? '1' : easeOut(seg(top, vh * 1.02, vh * .78)).toFixed(3));
+  }
+  // The book turns towards the reader as it scrolls up the screen.
+  if (book && !motion.reduced) {
+    const rect = book.getBoundingClientRect();
+    book.style.setProperty('--turn', mix(-38, 14, seg(rect.top, vh, -rect.height * .4)).toFixed(2));
   }
 }
 let refreshQueued = false;
@@ -72,19 +80,54 @@ addEventListener('pointermove', event => {
 document.documentElement.addEventListener('mouseleave', () => { pointer.active = false; });
 
 // Pictures tilt towards the pointer.
-for (const element of document.querySelectorAll('.publication-preview, .biography-grid figure, .press-photo')) {
-  const target = element.matches('.publication-preview') ? element.querySelector('.publication-paper') : element.querySelector('img, .press-photo-frame');
+const tilting = [['.publication-preview', '.publication-paper'], ['.biography-grid figure', 'img'], ['.press-photo', '.press-photo-frame'], ['.choice', null], ['.book-figure', 'img']];
+for (const [selector, inner] of tilting) for (const element of document.querySelectorAll(selector)) {
+  const host = inner ? element.querySelector(inner) : element;
   element.addEventListener('pointermove', event => {
     if (event.pointerType !== 'mouse' || motion.reduced) return;
     const rect = element.getBoundingClientRect();
-    const host = element.matches('.press-photo') ? element.querySelector('.press-photo-frame') : target;
     host.style.setProperty('--tx', ((event.clientX - rect.left) / rect.width * 2 - 1).toFixed(3));
     host.style.setProperty('--ty', ((event.clientY - rect.top) / rect.height * 2 - 1).toFixed(3));
   });
-  element.addEventListener('pointerleave', () => {
-    const host = element.matches('.press-photo') ? element.querySelector('.press-photo-frame') : target;
-    host.style.removeProperty('--tx'); host.style.removeProperty('--ty');
-  });
+  element.addEventListener('pointerleave', () => { host.style.removeProperty('--tx'); host.style.removeProperty('--ty'); });
+}
+
+if (introTitle) {
+  const start = performance.now();
+  const step = now => {
+    const t = motion.reduced ? 1 : clamp((now - start) / 1300);
+    flipIn(introTitle, easeOut(t));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  flipIn(introTitle, 0);
+  requestAnimationFrame(step);
+}
+
+/* ---------- Recordings load only when played ---------- */
+
+function preconnect(origin) {
+  if (document.querySelector(`link[rel=preconnect][href="${origin}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'preconnect'; link.href = origin;
+  document.head.append(link);
+}
+function play(button, src, title) {
+  const frame = document.createElement('iframe');
+  frame.src = src; frame.title = title;
+  frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  frame.allowFullscreen = true;
+  if (button.matches('.audio-facade')) { frame.scrolling = 'no'; frame.style.cssText = 'display:block;width:100%;height:166px;border:0'; }
+  button.replaceWith(frame);
+  frame.focus();
+}
+for (const button of document.querySelectorAll('[data-youtube]')) {
+  // Warm up the connection as soon as the pointer comes close, so the player starts quickly.
+  button.addEventListener('pointerenter', () => { preconnect('https://www.youtube-nocookie.com'); preconnect('https://i.ytimg.com'); }, { once: true });
+  button.addEventListener('click', () => play(button, `https://www.youtube-nocookie.com/embed/${button.dataset.youtube}?autoplay=1&rel=0`, button.dataset.title));
+}
+for (const button of document.querySelectorAll('[data-soundcloud]')) {
+  button.addEventListener('pointerenter', () => preconnect('https://w.soundcloud.com'), { once: true });
+  button.addEventListener('click', () => play(button, button.dataset.soundcloud, button.dataset.title));
 }
 
 /* ---------- Concert rows: the line under each one is a string ---------- */

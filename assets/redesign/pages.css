@@ -225,6 +225,19 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 .performances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,3vw,44px) clamp(16px,2vw,28px);margin-top:clamp(44px,8vh,90px)}
 .video-frame{position:relative;aspect-ratio:16/9;background:#1a1a1a;overflow:hidden}
 .video-frame iframe{display:block;width:100%;height:100%;border:0}
+/* Videos and the recording load only when played: a still with a play button until then. */
+.video-facade{position:absolute;inset:0;display:block;width:100%;height:100%;padding:0;border:0;background:#1a1a1a;cursor:pointer;overflow:hidden}
+.video-facade img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);transition:filter .5s,transform .8s cubic-bezier(.2,.8,.2,1)}
+.video-facade:hover img,.video-facade:focus-visible img{filter:none;transform:scale(1.03)}
+.video-facade:focus-visible{outline:2px solid var(--light);outline-offset:-4px}
+.play{position:relative;display:block;width:64px;height:64px;border-radius:50%;background:var(--light);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.play:after{content:'';position:absolute;left:54%;top:50%;transform:translate(-50%,-50%);border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent var(--dark)}
+.video-facade .play{position:absolute;left:50%;top:50%;width:clamp(56px,6vw,84px);height:auto;aspect-ratio:1;translate:-50% -50%}
+.video-facade:hover .play,.audio-facade:hover .play{transform:scale(1.12)}
+.audio-facade{display:flex;align-items:center;gap:22px;width:100%;padding:6px 0;text-align:left;cursor:pointer}
+.audio-facade .play{flex-shrink:0}
+.audio-label{display:flex;flex-direction:column;font-size:clamp(1.2rem,2vw,1.8rem);font-weight:700;font-stretch:115%;letter-spacing:-.02em;line-height:1.15}
+.audio-source{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:6px}
 .performance-caption{margin-top:12px;font-size:.8125rem}
 .performance-caption .text-link{font-weight:500}
 .audio-recording{margin-top:clamp(44px,8vh,90px);padding-top:30px;border-top:1px solid var(--line)}
@@ -239,9 +252,32 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
 .press-photo:nth-child(1) img{object-position:50% 40%}
 .press-photo>span{display:block;margin-top:12px;font-size:.8125rem;font-weight:600}
 
+/* Teaching: two big choices, then the book */
+.teach-hero{padding-top:clamp(110px,16vh,180px)}
+.teach-hero .hero-title{font-size:min(15.5vw,26svh)}
+.teach-lead{max-width:30em;margin-top:clamp(20px,3vh,34px);font-size:clamp(1.05rem,1.4vw,1.35rem);line-height:1.5}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,1.6vw,24px);margin-top:clamp(40px,7vh,80px);perspective:1400px}
+.choice{container-type:inline-size;position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:clamp(300px,46svh,520px);padding:clamp(22px,3vw,44px);border:1.5px solid var(--fg);color:var(--fg);text-decoration:none;overflow:hidden;transform:rotateY(calc(var(--tx,0)*7deg)) rotateX(calc(var(--ty,0)*-6deg));transition:transform .5s cubic-bezier(.2,.8,.2,1),color .45s cubic-bezier(.2,.8,.2,1)}
+.choice:before{content:'';position:absolute;inset:0;z-index:-1;background:var(--fg);transform:scaleY(0);transform-origin:bottom;transition:transform .55s cubic-bezier(.7,0,.2,1)}
+.choice:hover,.choice:focus-visible{color:var(--bg)}
+.choice:hover:before,.choice:focus-visible:before{transform:scaleY(1)}
+.choice-kicker{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.choice-title{margin-top:auto;font-size:2.6rem;font-size:min(12.4cqi,6.4rem);line-height:.86;font-weight:800;font-stretch:122%;letter-spacing:-.035em;text-transform:uppercase;transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.choice:hover .choice-title{transform:translateY(-8px)}
+.choice-text{margin-top:1.1em;max-width:26em;font-size:clamp(.95rem,1.1vw,1.1rem);line-height:1.5;opacity:.8}
+.book-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,6vw,110px);align-items:center}
+.book-figure{perspective:1200px}
+.book-figure img{width:100%;max-width:520px;margin:0 auto;transform:rotateY(calc(var(--turn,0)*1deg + var(--tx,0)*10deg)) rotateX(calc(var(--ty,0)*-8deg));transition:transform .5s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 40px 50px rgba(0,0,0,.45))}
+.book-copy .block-title{margin-bottom:.45em}
+.book-name{font-size:clamp(1.5rem,2.6vw,2.6rem);line-height:1.08;font-weight:680;font-stretch:112%;letter-spacing:-.025em;max-width:16em}
+.book-sub{margin-top:.8em;color:var(--muted);font-size:.9375rem}
+.book-text{margin-top:1.6em;max-width:34em;font-size:clamp(1rem,1.15vw,1.15rem);line-height:1.6}
+.book-links{display:flex;flex-wrap:wrap;gap:12px 30px;margin-top:2.2em}
+
 /* Narrow screens */
 @media (max-width:980px){
-  .current-project,.study-body,.biography-grid,.lensing-applet,.cosmography-explanation,.sim-intro{grid-template-columns:minmax(0,1fr)}
+  .current-project,.study-body,.biography-grid,.lensing-applet,.cosmography-explanation,.sim-intro,.book-grid{grid-template-columns:minmax(0,1fr)}
+  .book-figure img{max-width:380px}
   .sim-controls,.sim-reading{grid-template-columns:minmax(0,1fr)}
   .publication-feature{grid-template-columns:minmax(0,1fr)}
   .publication-content{padding-right:0}
@@ -265,9 +301,11 @@ input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
   .event-ticket{grid-column:2;grid-row:2;align-self:start}
   .event-day{font-size:2.6rem}
   .press-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .choices{grid-template-columns:minmax(0,1fr)}
+  .choice{min-height:clamp(220px,32svh,320px)}
   .hero-links-corner,.hero-hint{display:none}
   .concert-archive>summary>span:last-child{gap:14px}
 }
 @media (prefers-reduced-motion:reduce){
-  .publication-paper,.biography-grid img,.press-photo-frame,.study-project h3,.expand-icon{transition:none}
+  .publication-paper,.biography-grid img,.press-photo-frame,.study-project h3,.expand-icon,.choice,.choice:before,.choice-title,.book-figure img,.video-facade img,.play{transition:none}
 }

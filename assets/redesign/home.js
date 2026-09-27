@@ -25,6 +25,16 @@ const copies = [...document.querySelectorAll('.scene-physics, .scene-cello')].ma
   start: index === 0 ? 1.0 : 2.02
 }));
 const themeColor = document.querySelector('meta[name="theme-color"]');
+const teaching = document.querySelector('.home-teaching'), teachTitle = teaching.querySelector('[data-split]');
+const teachFades = [...teaching.querySelectorAll('.copy-text, .teach-links')], book = teaching.querySelector('.teach-book img');
+// The book tilts towards the pointer.
+teaching.querySelector('.teach-book').addEventListener('pointermove', event => {
+  if (event.pointerType !== 'mouse' || motion.reduced) return;
+  const rect = event.currentTarget.getBoundingClientRect();
+  book.style.setProperty('--tx', ((event.clientX - rect.left) / rect.width * 2 - 1).toFixed(3));
+  book.style.setProperty('--ty', ((event.clientY - rect.top) / rect.height * 2 - 1).toFixed(3));
+});
+teaching.querySelector('.teach-book').addEventListener('pointerleave', () => { book.style.removeProperty('--tx'); book.style.removeProperty('--ty'); });
 
 splitTitles(() => kick());
 
@@ -249,6 +259,12 @@ function render(now) {
     lensLayer.draw({ center: [center[0], center[1] + offsetY], thetaE: ringRadius, source, shear, radius, opacity });
     lensCanvas.style.transform = motion.reduced ? '' : `perspective(1600px) rotateY(${px * 6}deg) rotateX(${-py * 5}deg)`;
   }
+
+  // Teaching: the title flips in as the section rises; the book turns towards the reader.
+  const teachTop = teaching.getBoundingClientRect().top;
+  flipIn(teachTitle, seg(teachTop, vh * .85, vh * .3));
+  for (const element of teachFades) element.style.setProperty('--in', easeOut(seg(teachTop, vh * .7, vh * .15)).toFixed(3));
+  if (!motion.reduced) { const rect = book.getBoundingClientRect(); book.style.setProperty('--turn', mix(-38, 14, seg(rect.top, vh, -rect.height * .4)).toFixed(2)); }
 
   // Strings: the fundamental follows the scroll speed while they are on screen.
   const onStrings = seg(T, 2.1, 2.25) * (1 - seg(T, 2.75, 2.9));
