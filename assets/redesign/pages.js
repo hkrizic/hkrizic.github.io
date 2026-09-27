@@ -47,7 +47,10 @@ function refresh() {
   }
   for (const element of risers) {
     const top = element.getBoundingClientRect().top;
-    element.style.setProperty('--in', motion.reduced ? '1' : easeOut(seg(top, vh * 1.02, vh * .78)).toFixed(3));
+    const fade = motion.reduced ? 1 : easeOut(seg(top, vh * 1.02, vh * .78));
+    element.style.setProperty('--in', fade.toFixed(3));
+    // Not clickable while (nearly) invisible.
+    element.style.pointerEvents = fade < .5 ? 'none' : '';
   }
   // The book turns towards the reader as it scrolls up the screen.
   if (book && !motion.reduced) {
@@ -121,6 +124,10 @@ function play(button, src, title) {
   frame.focus();
 }
 for (const button of document.querySelectorAll('[data-youtube]')) {
+  // Sharpest thumbnail first (1280 px); not every video has one, so fall back to smaller ones.
+  const thumbnail = button.querySelector('img'), id = button.dataset.youtube;
+  const fallbacks = [`https://i.ytimg.com/vi/${id}/sddefault.jpg`, `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];
+  thumbnail.addEventListener('error', () => { if (fallbacks.length) thumbnail.src = fallbacks.shift(); });
   // Warm up the connection as soon as the pointer comes close, so the player starts quickly.
   button.addEventListener('pointerenter', () => { preconnect('https://www.youtube-nocookie.com'); preconnect('https://i.ytimg.com'); }, { once: true });
   button.addEventListener('click', () => play(button, `https://www.youtube-nocookie.com/embed/${button.dataset.youtube}?autoplay=1&rel=0`, button.dataset.title));
@@ -206,7 +213,7 @@ if (lensHero) {
     pin.style.background = portal >= 1 ? 'var(--light)' : '';
     const intro = motion.reduced ? 1 : easeOut(clamp((now - loadedAt) / 1300));
     flipIn(title, intro * (1 - seg(p, .04, .3)));
-    for (const element of fades) element.style.opacity = (1 - seg(p, .03, .22)).toFixed(3);
+    for (const element of fades) { const fade = 1 - seg(p, .03, .22); element.style.opacity = fade.toFixed(3); element.style.pointerEvents = fade < .5 ? 'none' : ''; }
     const tilt = motion.reduced || !pointer.active ? [0, 0] : [(pointer.x / vw - .5) * 2, (pointer.y / vh - .5) * 2];
     lensCanvas.style.transform = `perspective(1500px) rotateY(${tilt[0] * 5}deg) rotateX(${-tilt[1] * 4}deg)`;
     const visible = lensHero.getBoundingClientRect().bottom > 0;

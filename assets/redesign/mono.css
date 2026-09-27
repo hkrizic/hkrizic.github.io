@@ -32,7 +32,8 @@ a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offs
 
 
 .word{display:inline-block;white-space:nowrap;transform-style:preserve-3d}
-.ch{display:inline-block;transform-origin:50% 60%;backface-visibility:hidden}
+/* Letters are animated in 3D; they never take clicks (Safari hit-tests tilted elements generously). */
+.ch{display:inline-block;transform-origin:50% 60%;backface-visibility:hidden;pointer-events:none}
 .bar-nav a[aria-current]:after{transform:scaleX(1)}
 
 /* Contact */
@@ -64,7 +65,7 @@ a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offs
 /* A book in 3D, built from the flat cover: page edges, spine and back. --turn turns it (degrees),
    --tx and --ty tilt it towards the pointer. */
 .book3d{--d:clamp(20px,3vw,38px);display:block;width:100%;perspective:1800px;filter:drop-shadow(0 30px 36px rgba(0,0,0,.34))}
-.book3d-body{position:relative;display:block;aspect-ratio:827/1254;transform-style:preserve-3d;transform:rotateY(calc(var(--turn,-22)*1deg + var(--tx,0)*10deg)) rotateX(calc(var(--ty,0)*-8deg));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.book3d-body{pointer-events:none;position:relative;display:block;aspect-ratio:827/1254;transform-style:preserve-3d;transform:rotateY(calc(var(--turn,-22)*1deg + var(--tx,0)*10deg)) rotateX(calc(var(--ty,0)*-8deg));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 .book3d-body>*{position:absolute;display:block;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .book3d-cover{inset:0;width:100%;height:100%;max-width:none;transform:translateZ(calc(var(--d) / 2));border-radius:0 2px 2px 0}
 .book3d-body:after{content:'';position:absolute;inset:0;transform:translateZ(calc(var(--d) / 2 + .6px));background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.2) 1.6%,rgba(0,0,0,.08) 3.4%,rgba(0,0,0,0) 7%);pointer-events:none}

@@ -17,6 +17,7 @@ button.text-link{border-radius:0}
 .block{position:relative;padding:clamp(90px,14vh,170px) var(--pad);scroll-margin-top:40px}
 .block-title{font-size:clamp(2.7rem,8.2vw,9rem);line-height:.86;font-weight:780;font-stretch:122%;letter-spacing:-.035em;text-transform:uppercase;perspective:700px;margin:0 0 clamp(44px,8vh,100px);overflow-wrap:anywhere}
 .js [data-rise]{opacity:var(--in,0);transform:translate3d(0,calc((1 - var(--in,0))*36px),0)}
+.js [data-rise]:focus-within{opacity:1;transform:none}
 
 /* Heroes: a sticky scene at the top of the page. */
 .page-hero{position:relative}
@@ -34,7 +35,7 @@ button.text-link{border-radius:0}
 .hero-links{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:clamp(18px,3vh,30px);font-size:.875rem;font-weight:500}
 .hero-links a{text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;opacity:.85;transition:opacity .2s}
 .hero-links a:hover{opacity:1}
-.hero-hint{position:absolute;z-index:2;right:var(--pad);top:clamp(76px,11vh,110px);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
+.hero-hint{pointer-events:none;position:absolute;z-index:2;right:var(--pad);top:clamp(76px,11vh,110px);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
 @media (hover:none){.hero-hint{display:none}}
 
 .hero-cover{height:240vh}
@@ -43,6 +44,7 @@ button.text-link{border-radius:0}
 .hero-cover-canvas{z-index:1}
 .hero-cover-title{position:absolute;z-index:2;left:var(--pad);top:max(14svh,90px);font-size:min(24vw,40svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.035em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
 .js .hero-cover-title{width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hero-role{pointer-events:none}
 .hero-role,.hero-links-corner{position:absolute;z-index:2;bottom:calc(var(--pad) + var(--toolbar));margin:0;color:#fff;mix-blend-mode:difference}
 .hero-role{left:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
 .hero-role span+span{opacity:.65}
