@@ -36,7 +36,7 @@ const risers = [...document.querySelectorAll([
   '.cosmography-explanation', '.concert-list>.event-row', '.concert-archive', '.biography-grid figure', '.biography-prose',
   '.biography-grid .text-link', '.performance', '.audio-recording', '.press-photo', '.teach-lead', '.choice', '.book-figure', '.book-copy>p'
 ].join(','))];
-const book = document.querySelector('.book-figure img');
+const book = document.querySelector('.book-figure .book3d-body');
 risers.forEach(element => element.setAttribute('data-rise', ''));
 
 function refresh() {
@@ -80,7 +80,7 @@ addEventListener('pointermove', event => {
 document.documentElement.addEventListener('mouseleave', () => { pointer.active = false; });
 
 // Pictures tilt towards the pointer.
-const tilting = [['.publication-preview', '.publication-paper'], ['.biography-grid figure', 'img'], ['.press-photo', '.press-photo-frame'], ['.choice', null], ['.book-figure', 'img']];
+const tilting = [['.publication-preview', '.publication-paper'], ['.biography-grid figure', 'img'], ['.press-photo', '.press-photo-frame'], ['.choice', null], ['.book-figure', '.book3d-body']];
 for (const [selector, inner] of tilting) for (const element of document.querySelectorAll(selector)) {
   const host = inner ? element.querySelector(inner) : element;
   element.addEventListener('pointermove', event => {
@@ -252,6 +252,14 @@ if (coverHero) {
 }
 
 /* ---------- Research: the arcs demonstration ---------- */
+
+// The expanding universe loads when it comes near.
+const expansion = document.querySelector('.expansion');
+if (expansion) new IntersectionObserver((entries, observer) => {
+  if (!entries[0].isIntersecting) return;
+  observer.disconnect();
+  import('./expansion.js?v=1').then(({ initExpansion }) => initExpansion(expansion)).catch(() => {});
+}, { rootMargin: '600px' }).observe(expansion);
 
 const arcs = document.querySelector('.lens-canvas');
 if (arcs) import('./lens-demo.js?v=3').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});

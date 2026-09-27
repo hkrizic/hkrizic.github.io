@@ -26,7 +26,7 @@ const copies = [...document.querySelectorAll('.scene-physics, .scene-cello')].ma
 }));
 const themeColor = document.querySelector('meta[name="theme-color"]');
 const teaching = document.querySelector('.home-teaching'), teachTitle = teaching.querySelector('[data-split]');
-const teachFades = [...teaching.querySelectorAll('.copy-text, .teach-links')], book = teaching.querySelector('.teach-book img');
+const teachFades = [...teaching.querySelectorAll('.copy-text, .teach-links')], book = teaching.querySelector('.book3d-body');
 // The book tilts towards the pointer.
 teaching.querySelector('.teach-book').addEventListener('pointermove', event => {
   if (event.pointerType !== 'mouse' || motion.reduced) return;
