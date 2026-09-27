@@ -16,8 +16,9 @@ button.text-link{border-radius:0}
 /* Sections */
 .block{position:relative;padding:clamp(90px,14vh,170px) var(--pad);scroll-margin-top:40px}
 .block-title{font-size:clamp(2.7rem,8.2vw,9rem);line-height:.86;font-weight:780;font-stretch:122%;letter-spacing:-.035em;text-transform:uppercase;perspective:700px;margin:0 0 clamp(44px,8vh,100px);overflow-wrap:anywhere}
-.js [data-rise]{opacity:var(--in,0);transform:translate3d(0,calc((1 - var(--in,0))*36px),0)}
-.js [data-rise]:focus-within{opacity:1;transform:none}
+/* A 2D offset (not translate3d), so settled blocks do not each stay on their own GPU layer. */
+.js [data-rise]{opacity:var(--in,0);translate:0 calc((1 - var(--in,0))*36px)}
+.js [data-rise]:focus-within{opacity:1;translate:none}
 
 /* Heroes: a sticky scene at the top of the page. */
 .page-hero{position:relative}
@@ -39,7 +40,7 @@ button.text-link{border-radius:0}
 @media (hover:none){.hero-hint{display:none}}
 
 .hero-cover{height:240vh}
-.hero-photo{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 38%;transform-origin:50% 45%}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 38%;transform-origin:50% 45%;will-change:transform}
 .js:not(.cover-ready) .hero-cover .hero-photo{visibility:hidden}
 .hero-cover-canvas{z-index:1}
 .hero-cover-title{position:absolute;z-index:2;left:var(--pad);top:max(14svh,90px);font-size:min(24vw,40svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.035em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}

@@ -6,7 +6,7 @@
 // ring. The ring opens into a light disc and unrolls into four cello strings (C, G, D, A) that swing
 // with the scroll speed, ring out when released and can be plucked with the pointer.
 
-import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, viewport, pagePad, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=3';
+import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, viewport, pagePad, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=4';
 
 const root = document.documentElement;
 matchMedia('(prefers-motion.reduced-motion: reduce)').addEventListener('change', () => kick());

@@ -2,7 +2,7 @@
 // (lens-sky.mjs), with sliders for the lensing strength and the source alignment. Moving the
 // pointer over the section moves the source; left alone, it drifts slowly.
 import { createLensSky } from './lens-sky.mjs?v=1';
-import { motion } from './mono.js?v=3';
+import { motion } from './mono.js?v=4';
 
 function backgroundOf(element) {
   for (let node = element; node; node = node.parentElement) {
