@@ -208,7 +208,7 @@ export function renderBrightness(p,source,cache,sourceField=1.2){
  const denominator=Math.asinh(8),normalization=8/2.5;
  function colorize(values){const pixels=new Uint8ClampedArray(n*n*4);for(let k=0;k<values.length;k++){
   const f=Math.min(1,Math.asinh(values[k]*normalization)/denominator),i=k*4;
-  pixels[i]=Math.round(45*f+200*f*f*f);pixels[i+1]=Math.round(110*f+140*f*f);pixels[i+2]=Math.round(220*f+35*f*f);pixels[i+3]=Math.round(255*Math.min(1,3*f));
+  const grey=Math.round(235*(.55*f+.45*f*f));pixels[i]=pixels[i+1]=pixels[i+2]=grey;pixels[i+3]=Math.round(255*Math.min(1,3*f));
  }return pixels;}
  return {sourcePixels:colorize(src),imagePixels:colorize(img)};
 }

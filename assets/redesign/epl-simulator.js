@@ -12,7 +12,8 @@ const sourceBitmap=document.createElement('canvas'),imageBitmap=document.createE
 let {params,source}=preset('quad'),sourceField=1.2;
 let display={caustics:true,critical:true,host:true,points:true,grid:true};
 let selectedPreset='quad',worker=null,working=false,visible=false,latest=0,pending=null,frame=null,failed=false;
-const colors={background:'#0b111a',ink:'#e6edf8',muted:'#9cabbf',caustic:'#e0c17c',critical:'#79c5ab',source:'#eea274',host:'#87baff',positive:'#f0e5d4',negative:'#8cb8ff',lens:'#d5bc8b',satellite:'#eea274'};
+// Black and white, like the rest of the site: dashed caustic, solid critical curve, a cross for the source.
+const colors={background:'#0b0b0b',ink:'#ebebe8',muted:'#9a9a97',caustic:'#ebebe8',critical:'#b9b9b6',source:'#ffffff',host:'#ebebe8',positive:'#ebebe8',negative:'#9a9a97',lens:'#bdbdb9',satellite:'#ffffff'};
 
 function format(key,value){
  if(['thetaE','cx','cy','pertX','pertY','sx','sy','sourceView'].includes(key))return value.toFixed(2)+'″';
@@ -71,12 +72,12 @@ function surface(canvas){
  if(canvas.width!==pixels||canvas.height!==pixels){canvas.width=pixels;canvas.height=pixels;}
  const ctx=canvas.getContext('2d');if(!ctx)return null;
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=colors.background;ctx.fillRect(0,0,size,size);
- ctx.font='12px "DM Sans", Arial, sans-serif';ctx.lineCap='round';return {ctx,size};
+ ctx.font='12px "Mona Sans", system-ui, sans-serif';ctx.lineCap='round';return {ctx,size};
 }
 function xy(x,y,size,fov){return {x:size/2+x*size/(2*fov),y:size/2-y*size/(2*fov)};}
 function text(ctx,value,x,y,color=colors.muted,align='left'){ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(value,x,y);}
 function drawGrid(ctx,size,fov){
- const step=fov>1.5?1:.5;ctx.strokeStyle='#7c93b423';ctx.lineWidth=.7;
+ const step=fov>1.5?1:.5;ctx.strokeStyle='#ebebe81a';ctx.lineWidth=.7;
  for(let v=Math.ceil(-fov/step)*step;v<fov;v+=step){const p=xy(v,v,size,fov);ctx.beginPath();ctx.moveTo(p.x,0);ctx.lineTo(p.x,size);ctx.moveTo(0,p.y);ctx.lineTo(size,p.y);ctx.stroke();
   if(Math.abs(v)>.001){text(ctx,String(+v.toFixed(1))+'″',p.x,size-9,colors.muted,'center');text(ctx,String(+v.toFixed(1))+'″',9,p.y-5);}
  }

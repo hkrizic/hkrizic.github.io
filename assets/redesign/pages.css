@@ -1,0 +1,269 @@
+/* Research and cello pages: the home page's design (mono.css) applied to longer content. Each
+   section is light or dark (data-tone); titles flip in letter by letter as they scroll into view. */
+
+[data-tone=light]{--bg:var(--light);--fg:var(--dark);--muted:rgba(11,11,11,.58);--line:rgba(11,11,11,.14);background:var(--light);color:var(--dark)}
+[data-tone=dark]{--bg:var(--dark);--fg:var(--light);--muted:rgba(235,235,232,.6);--line:rgba(235,235,232,.16);background:var(--dark);color:var(--light)}
+h3,h4,figure,ul{margin:0}
+ul{padding:0;list-style:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.mt-1{margin-top:1em}.mt-2{margin-top:1.6em}.text-muted{color:var(--muted)}
+
+/* Links: underlined text, no arrows. */
+.text-link,.copy-link{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-stretch:112%;text-decoration:none;border-bottom:1px solid currentColor;padding:4px 0 2px;line-height:1.3;transition:opacity .2s}
+.text-link:hover{opacity:.62}
+button.text-link{border-radius:0}
+
+/* Sections */
+.block{position:relative;padding:clamp(90px,14vh,170px) var(--pad);scroll-margin-top:40px}
+.block-title{font-size:clamp(2.7rem,8.2vw,9rem);line-height:.86;font-weight:780;font-stretch:122%;letter-spacing:-.035em;text-transform:uppercase;perspective:700px;margin:0 0 clamp(44px,8vh,100px);overflow-wrap:anywhere}
+.js [data-rise]{opacity:var(--in,0);transform:translate3d(0,calc((1 - var(--in,0))*36px),0)}
+
+/* Heroes: a sticky scene at the top of the page. */
+.page-hero{position:relative}
+.pin{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+.hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-lens{height:230vh}
+.hero-lens .pin{background:var(--dark)}
+.hero-copy{position:absolute;left:var(--pad);right:var(--pad);bottom:clamp(28px,6vh,64px);z-index:2}
+.hero-title{font-size:min(15.5vw,30svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.035em;text-transform:uppercase;perspective:800px;margin-left:-.04em}
+.hero-text{max-width:28em;margin-top:clamp(18px,3vh,32px);font-size:clamp(1rem,1.25vw,1.2rem);line-height:1.5}
+.hero-links{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:clamp(18px,3vh,30px);font-size:.875rem;font-weight:500}
+.hero-links a{text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;opacity:.85;transition:opacity .2s}
+.hero-links a:hover{opacity:1}
+.hero-hint{position:absolute;z-index:2;right:var(--pad);top:clamp(76px,11vh,110px);font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
+@media (hover:none){.hero-hint{display:none}}
+
+.hero-cover{height:240vh}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 38%;transform-origin:50% 45%}
+.js:not(.cover-ready) .hero-cover .hero-photo{visibility:hidden}
+.hero-cover-canvas{z-index:1}
+.hero-cover-title{position:absolute;z-index:2;left:var(--pad);top:max(14svh,90px);font-size:min(24vw,40svh);line-height:.8;font-weight:800;font-stretch:125%;letter-spacing:-.035em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
+.js .hero-cover-title{width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hero-role,.hero-links-corner{position:absolute;z-index:2;bottom:var(--pad);margin:0;color:#fff;mix-blend-mode:difference}
+.hero-role{left:var(--pad);display:flex;flex-direction:column;font-size:.875rem;font-weight:500;line-height:1.45}
+.hero-role span+span{opacity:.65}
+.hero-links-corner{right:var(--pad);justify-content:flex-end}
+
+/* Research: current work */
+.current-project{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.3fr);gap:clamp(30px,7vw,120px);scroll-margin-top:90px}
+.project__label,.study-type,.publication-meta{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.project__date{margin:.5em 0 2.2em;color:var(--muted);font-size:.9375rem}
+.project__meta{font-size:.9375rem;line-height:1.55}
+.project__meta h4{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin:2em 0 .6em;color:var(--muted)}
+.project__supervisors:first-of-type h4{margin-top:0}
+.project__meta a{text-underline-offset:3px}
+.project__content h3{font-size:clamp(1.9rem,3.6vw,3.8rem);line-height:1.02;font-weight:680;font-stretch:112%;letter-spacing:-.035em;margin-bottom:.7em;max-width:18em}
+.project__content>p,.study-prose p{font-size:clamp(1rem,1.15vw,1.15rem);line-height:1.62;max-width:40em}
+.project__content .text-link{margin-top:2em;margin-right:28px}
+
+/* Research: publications */
+.publications{margin-top:clamp(110px,18vh,220px);scroll-margin-top:40px}
+.publication-feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.publication-content{padding:clamp(28px,4vw,56px) clamp(0px,3vw,48px) clamp(28px,4vw,56px) 0}
+.publication-meta{display:flex;gap:16px;color:var(--muted);margin-bottom:1.6em}
+.publication-feature h3{font-size:clamp(1.25rem,1.9vw,1.9rem);line-height:1.25;font-weight:560;letter-spacing:-.02em;max-width:26em}
+.publication-feature h3 a{text-decoration:none}
+.publication-title-name{display:block;font-size:clamp(3rem,7vw,7rem);line-height:.9;font-weight:800;font-stretch:125%;letter-spacing:-.04em;margin-bottom:.28em}
+.publication-authors{margin-top:1.6em;color:var(--muted);font-size:.9375rem}
+.publication-authors strong{color:var(--fg);font-weight:600}
+.publication-links{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;margin-top:2em}
+.publication-read{display:inline-flex;align-items:center;gap:12px;padding:14px 20px;background:var(--fg);color:var(--bg);font-weight:600;font-stretch:112%;text-decoration:none;transition:opacity .2s}
+.publication-read:hover{opacity:.8}
+.publication-preview{position:relative;display:grid;place-items:center;min-height:clamp(360px,44vw,560px);padding:48px;background:var(--dark);perspective:1100px;overflow:hidden}
+.publication-paper{display:block;width:min(100%,280px);transform:rotateY(calc(var(--tx,0)*14deg)) rotateX(calc(var(--ty,0)*-12deg)) rotateZ(-4deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.publication-paper img{width:100%;height:auto;box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.publication-pdf{position:absolute;right:18px;bottom:16px;color:var(--light);font-size:.75rem;font-weight:600;letter-spacing:.12em}
+
+/* Research: earlier work */
+.studies{border-top:1px solid var(--line)}
+.study-project{border-bottom:1px solid var(--line)}
+.study-project summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;padding:clamp(24px,4vh,40px) 0;cursor:pointer;list-style:none}
+.study-project summary::-webkit-details-marker{display:none}
+.study-type{display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--muted);margin-bottom:.9em}
+.study-project h3{font-size:clamp(1.5rem,3.4vw,3.4rem);line-height:1.02;font-weight:680;font-stretch:112%;letter-spacing:-.035em;max-width:22em;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.study-project summary:hover h3{transform:translateX(12px)}
+.expand-icon{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:300;line-height:1;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.study-project[open] .expand-icon,.concert-archive[open] .expand-icon{transform:rotate(45deg)}
+.study-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.3fr);gap:clamp(30px,7vw,120px);padding:0 0 clamp(36px,6vh,64px)}
+.study-body .project__label,.study-body .project__date{display:none}
+.study-prose figure{margin-top:2em}
+.study-prose img{width:100%;height:auto;background:#fff}
+.study-prose figcaption{margin-top:.8em;font-size:.8125rem;color:var(--muted)}
+
+/* Research: interactive lensing (dark) */
+.lensing-intro{max-width:46em}
+.lensing-intro>p{font-size:clamp(1rem,1.2vw,1.2rem);line-height:1.6;color:var(--muted);margin-top:-2.4em}
+.lensing-applet,.cosmography-explanation{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(30px,6vw,100px);align-items:center;padding:clamp(50px,9vh,100px) 0;border-top:1px solid var(--line);scroll-margin-top:60px}
+.lensing-section .lens-lab{margin-top:clamp(40px,7vh,80px)}
+.lensing-applet h3,.sim-intro h3,.cosmography-explanation h3{font-size:clamp(1.8rem,3.2vw,3.2rem);line-height:1;font-weight:720;font-stretch:118%;letter-spacing:-.035em;text-transform:uppercase}
+.lab-intro>p,.applet-explanation>p,.cosmography-explanation p,.sim-intro p{font-size:1rem;line-height:1.65;color:var(--muted);max-width:34em;margin-top:1.2em}
+.lab-controls,.applet-controls{display:grid;gap:10px;max-width:420px;margin-top:2em}
+.lab-controls label,.applet-controls label,.sim-control>label{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:.875rem;font-weight:500}
+.lab-controls output,.applet-controls output,.sim-control output{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.lab-controls .text-link{justify-self:start;margin-top:6px}
+.lab-display{position:relative;isolation:isolate;min-height:clamp(340px,40vw,560px);background:var(--dark);border:1px solid var(--line);overflow:hidden}
+.lab-display .lens-art{position:absolute;inset:0}
+.lens-canvas{display:block;width:100%;height:100%}
+.lens-fallback{position:absolute;inset:0;z-index:-1}
+.lens-fallback img{width:100%;height:100%;object-fit:cover}
+.lab-model{position:absolute;top:18px;right:20px;font-size:.9375rem;opacity:.75}
+.lab-disclaimer{position:absolute;left:20px;right:20px;bottom:16px;font-size:.75rem;line-height:1.6;opacity:.7}
+.lab-disclaimer a{text-underline-offset:3px}
+
+/* Range sliders: a hairline track and a small round thumb. */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:0;background:none;cursor:pointer;color:inherit}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:currentColor;opacity:.9}
+input[type=range]::-moz-range-track{height:1px;background:currentColor}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;margin-top:-7px;border-radius:50%;background:currentColor;border:0;transition:transform .2s}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:currentColor;border:0}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.35)}
+input[type=range]:focus-visible{outline:2px solid currentColor;outline-offset:4px}
+input[type=range]:disabled{opacity:.35;cursor:default}
+input[type=checkbox]{accent-color:var(--fg);width:16px;height:16px;margin:0}
+
+/* Lensed quasar simulator */
+.quasar-simulator{padding:clamp(50px,9vh,100px) 0;border-top:1px solid var(--line);scroll-margin-top:60px}
+.sim-intro{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(30px,6vw,100px);margin-bottom:clamp(30px,5vh,50px)}
+.sim-intro p:first-child{margin-top:0}
+.sim-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.sim-presets{display:flex;flex-wrap:wrap;gap:6px 22px}
+.sim-presets button{padding:8px 0;font-size:.9375rem;font-weight:500;border-bottom:1px solid transparent;opacity:.6;transition:opacity .2s,border-color .2s}
+.sim-presets button:hover{opacity:1}
+.sim-presets button[aria-pressed=true]{opacity:1;border-color:currentColor}
+.sim-planes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(12px,2vw,24px)}
+.sim-plane{border:1px solid var(--line);background:var(--dark);min-width:0;overflow:hidden}
+.sim-plane figcaption{display:flex;justify-content:space-between;gap:14px;padding:14px 18px;font-size:.875rem;font-weight:500;border-bottom:1px solid var(--line)}
+.sim-plane figcaption>span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+.sim-plane canvas{display:block;width:100%;height:auto;aspect-ratio:1;outline-offset:-3px}
+.sim-legend{display:flex;flex-wrap:wrap;gap:10px 20px;padding:14px 18px;border-top:1px solid var(--line);font-size:.8125rem;color:var(--muted)}
+.sim-legend>span{display:flex;align-items:center;gap:9px}
+.sim-line:before{content:'';width:20px;border-top:1.5px solid var(--light)}
+.sim-caustic:before{border-top-style:dashed}
+.sim-critical:before{opacity:.8}
+.sim-dot:before{content:'';width:7px;height:7px;border-radius:50%;background:var(--light)}
+.sim-host:before{background:rgba(235,235,232,.45)}
+.sim-lens:before{background:rgba(235,235,232,.6)}
+.sim-source-dot:before{border-radius:0;width:11px;height:1.5px;box-shadow:none;background:var(--light)}
+.sim-status-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:16px 0 28px;font-size:.875rem;min-height:1.6em}
+#sim-busy{color:var(--muted)}
+#sim-error{color:var(--muted);margin:20px 0}
+.sim-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(24px,4vw,56px);padding-top:30px;border-top:1px solid var(--line)}
+.sim-control-group{min-width:0}
+.sim-control-group h4{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:22px;color:var(--muted)}
+.sim-control{margin-bottom:16px}
+.sim-controls details{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.sim-controls summary,.sim-image-details summary{display:flex;justify-content:space-between;gap:10px;font-size:.875rem;font-weight:500;cursor:pointer;list-style:none}
+.sim-controls summary::-webkit-details-marker{display:none}
+.sim-controls summary:after{content:'+';font-size:1.1rem;line-height:1}
+.sim-controls details[open]>summary:after{content:'−'}
+.sim-controls details[open]>summary{margin-bottom:22px}
+.sim-checkbox{display:flex;align-items:center;gap:10px;font-size:.875rem;margin-bottom:14px;cursor:pointer}
+.sim-help{font-size:.8125rem;line-height:1.6;color:var(--muted)}
+.sim-help+.sim-checkbox{margin-top:18px}
+.sim-table-wrap{overflow-x:auto;margin-top:18px}
+.sim-table-wrap table{border-collapse:collapse;width:100%;font-size:.8125rem;font-variant-numeric:tabular-nums;text-align:right}
+.sim-table-wrap th{font-weight:500;color:var(--muted)}
+.sim-table-wrap th,.sim-table-wrap td{padding:8px 5px;border-bottom:1px solid var(--line);white-space:nowrap}
+.sim-table-wrap th:first-child,.sim-table-wrap td:first-child{text-align:left}
+.sim-table-wrap+.sim-help{margin-top:14px}
+.sim-reading{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(24px,4vw,56px);margin-top:44px;padding-top:32px;border-top:1px solid var(--line)}
+.sim-reading p{font-size:.9375rem;line-height:1.7;color:var(--muted)}
+.sim-reading strong{color:var(--fg);font-weight:600}
+.sim-reference-links{display:flex;flex-wrap:wrap;gap:12px 30px;margin-top:26px}
+
+/* Time delays */
+.delay-actions{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:8px}
+.applet-result{min-height:3em;margin-top:14px;font-size:.875rem;color:var(--muted)}
+.applet-result.aligned{color:var(--fg)}
+.applet-figure{border:1px solid var(--line);background:var(--dark);padding:16px 12px 18px;min-width:0}
+.applet-figure canvas{display:block;width:100%;height:clamp(260px,26vw,360px)}
+.applet-figure figcaption{margin:8px 10px 0;font-size:.8125rem;color:var(--muted)}
+.curve-legend{display:flex;gap:22px;margin:4px 10px 10px;font-size:.8125rem}
+.curve-legend>span{display:flex;align-items:center;gap:9px}
+.legend-a:before,.legend-b:before{content:'';width:24px;border-top:2px solid var(--light)}
+.legend-b:before{border-top:2px dashed rgba(235,235,232,.6)}
+.cosmography-explanation p+p{margin-top:1.4em}
+
+/* Cello: concerts */
+.concert-heading{display:flex;justify-content:space-between;align-items:end;gap:40px}
+.concert-list{border-top:1px solid var(--line)}
+.event-row{position:relative;display:grid;grid-template-columns:minmax(110px,.55fr) minmax(0,1.6fr) minmax(0,1fr) auto;gap:clamp(16px,3vw,48px);align-items:center;padding:clamp(22px,3.4vh,34px) 0;border-bottom:1px solid var(--line)}
+.js .event-row{border-bottom-color:transparent}
+.event-string{position:absolute;left:0;bottom:-1px;width:100%;height:24px;margin-bottom:-11.5px;overflow:visible;pointer-events:none;color:var(--fg);opacity:.2}
+.event-row:hover .event-string{opacity:.9}
+.event-date{display:flex;align-items:center;gap:14px}
+.event-day{font-size:clamp(2.6rem,4.6vw,4.8rem);line-height:.9;font-weight:780;font-stretch:122%;letter-spacing:-.04em;font-variant-numeric:tabular-nums;min-width:1.25em}
+.event-date>span:last-child{font-size:.75rem;font-weight:600;letter-spacing:.1em;line-height:1.35;color:var(--muted)}
+.event-program p{font-size:.9375rem;line-height:1.5;color:var(--muted);max-width:none}
+.event-program p::first-line{font-size:1.125rem;font-weight:600;color:var(--fg)}
+.event-location h4{font-size:1.0625rem;font-weight:600;line-height:1.3}
+.event-location p{font-size:.875rem;color:var(--muted)}
+.event-location .concert__time{display:block;margin-top:4px;font-size:.8125rem;color:var(--muted)}
+.event-ticket{font-size:.875rem;font-weight:600;font-stretch:112%;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;justify-self:end}
+.event-past{font-size:.75rem;color:var(--muted)}
+.concert-archive{margin-top:clamp(50px,8vh,90px)}
+.concert-archive>summary{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 0;border-top:1px solid var(--line);cursor:pointer;list-style:none;font-size:clamp(1.3rem,2.4vw,2.2rem);font-weight:700;font-stretch:115%;letter-spacing:-.02em;text-transform:uppercase}
+.concert-archive>summary::-webkit-details-marker{display:none}
+.concert-archive>summary>span:last-child{display:flex;align-items:center;gap:26px;font-size:.875rem;font-weight:500;letter-spacing:.04em;color:var(--muted)}
+.concert-archive .event-day{font-size:clamp(2rem,3.4vw,3.4rem)}
+
+/* Cello: biography */
+.biography-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(30px,7vw,120px);align-items:start}
+.biography-grid figure{position:sticky;top:90px;perspective:1100px}
+.biography-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:50% 45%;filter:grayscale(1);transform:rotateY(calc(var(--tx,0)*8deg)) rotateX(calc(var(--ty,0)*-6deg));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.biography-grid .block-title{font-size:clamp(2.4rem,5.6vw,6.4rem);margin-bottom:.5em}
+.biography-prose p{font-size:clamp(1rem,1.15vw,1.15rem);line-height:1.65;max-width:36em}
+.biography-grid .text-link{margin:2.2em 28px 0 0}
+
+/* Cello: recordings (dark) */
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap}
+.section-heading .block-title{margin-bottom:0}
+.performances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,3vw,44px) clamp(16px,2vw,28px);margin-top:clamp(44px,8vh,90px)}
+.video-frame{position:relative;aspect-ratio:16/9;background:#1a1a1a;overflow:hidden}
+.video-frame iframe{display:block;width:100%;height:100%;border:0}
+.performance-caption{margin-top:12px;font-size:.8125rem}
+.performance-caption .text-link{font-weight:500}
+.audio-recording{margin-top:clamp(44px,8vh,90px);padding-top:30px;border-top:1px solid var(--line)}
+.audio-recording iframe{display:block;width:100%;height:166px;border:0}
+
+/* Cello: press photos */
+.press-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,1.6vw,22px)}
+.press-photo{display:block;text-decoration:none;perspective:900px}
+.press-photo-frame{aspect-ratio:3/4;overflow:hidden;background:#d9d9d6;transform:rotateY(calc(var(--tx,0)*12deg)) rotateX(calc(var(--ty,0)*-10deg));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.press-photo-frame img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);transition:filter .5s}
+.press-photo:hover img{filter:none}
+.press-photo:nth-child(1) img{object-position:50% 40%}
+.press-photo>span{display:block;margin-top:12px;font-size:.8125rem;font-weight:600}
+
+/* Narrow screens */
+@media (max-width:980px){
+  .current-project,.study-body,.biography-grid,.lensing-applet,.cosmography-explanation,.sim-intro{grid-template-columns:minmax(0,1fr)}
+  .sim-controls,.sim-reading{grid-template-columns:minmax(0,1fr)}
+  .publication-feature{grid-template-columns:minmax(0,1fr)}
+  .publication-content{padding-right:0}
+  .event-row{grid-template-columns:minmax(90px,.5fr) minmax(0,1.5fr) auto}
+  .event-location{grid-column:2}
+  .event-ticket{grid-column:3;grid-row:1}
+  .press-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .biography-grid figure{position:relative;top:0;max-width:520px}
+}
+@media (max-width:760px){
+  .block{padding-top:clamp(70px,11vh,110px);padding-bottom:clamp(70px,11vh,110px)}
+  .block-title,.biography-grid .block-title{font-size:9.4vw;font-stretch:112%}
+  .hero-lens{height:210vh}
+  .hero-title{font-size:min(17vw,20svh)}
+  .hero-links{gap:8px 20px}
+  .sim-planes{grid-template-columns:minmax(0,1fr)}
+  .performances{grid-template-columns:minmax(0,1fr)}
+  .event-row{grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:start}
+  .event-date{grid-column:1/-1}
+  .event-program,.event-location{grid-column:1}
+  .event-ticket{grid-column:2;grid-row:2;align-self:start}
+  .event-day{font-size:2.6rem}
+  .press-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero-links-corner,.hero-hint{display:none}
+  .concert-archive>summary>span:last-child{gap:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .publication-paper,.biography-grid img,.press-photo-frame,.study-project h3,.expand-icon{transition:none}
+}
