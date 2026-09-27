@@ -5,7 +5,7 @@
 // - cello: CELLO cut out of the page over the concert photograph, zoomed through on scroll;
 // - both: titles flip in and blocks rise as they scroll into view, pictures tilt towards the
 //   pointer, and the lines between concerts ring like plucked strings.
-import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=2';
+import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, motion, viewport, pagePad, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=3';
 
 const root = document.documentElement;
 let vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
@@ -128,7 +128,8 @@ if (lensHero) {
   const run = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
   function frame(now) {
     const dt = last ? Math.min((now - last) / 1000, .05) : 1 / 60; last = now; clock += dt;
-    const W = lensCanvas.clientWidth, H = lensCanvas.clientHeight, narrow = W <= 760 || W <= H;
+    // The canvas reaches under the phone's toolbars; place the lens in the part that stays visible.
+    const W = lensCanvas.clientWidth, H = viewport().height, narrow = W <= 760 || W <= H;
     const center = narrow ? [W * .5, H * .32] : [W * .7, H * .42];
     const radius = narrow ? Math.min(W * .27, H * .15) : Math.min(W * .15, H * .24);
     const p = heroProgress(lensHero);
@@ -148,10 +149,10 @@ if (lensHero) {
       radius: radius * mix(.08, .02, seg(p, .38, .54)), opacity: 1 - seg(p, .52, .6)
     });
     // The ring takes over, then opens into a light disc that fills the screen.
-    const width = Math.round(W * dpr), height = Math.round(H * dpr);
+    const fullHeight = ringCanvas.clientHeight, width = Math.round(W * dpr), height = Math.round(fullHeight * dpr);
     if (ringCanvas.width !== width || ringCanvas.height !== height) { ringCanvas.width = width; ringCanvas.height = height; }
-    rings.setTransform(dpr, 0, 0, dpr, 0, 0); rings.clearRect(0, 0, W, H);
-    const portal = seg(p, .62, .9), disc = drawPortal(rings, center, portal, W, H);
+    rings.setTransform(dpr, 0, 0, dpr, 0, 0); rings.clearRect(0, 0, W, fullHeight);
+    const portal = seg(p, .62, .9), disc = drawPortal(rings, center, portal, W, fullHeight);
     const ringAlpha = seg(p, .5, .58) * (1 - seg(p, .9, .97));
     if (ringAlpha > 0) {
       rings.globalAlpha = ringAlpha; rings.lineWidth = 1.5;
@@ -184,7 +185,11 @@ const coverHero = document.querySelector('.hero-cover');
 if (coverHero) {
   const canvas = coverHero.querySelector('.hero-cover-canvas'), photo = coverHero.querySelector('.hero-photo');
   // The zoom goes into the stem of the first L.
-  const cover = createCover(canvas, { lines: ['CELLO'], focus: [0, 2, .26], heightShare: .5, bottomReserve: 60 });
+  const role = coverHero.querySelector('.hero-role');
+  const cover = createCover(canvas, {
+    lines: ['CELLO'], focus: [0, 2, .26], heightShare: .5,
+    insets: () => [document.querySelector('.bar').offsetHeight + 10, pagePad(viewport().width) + role.offsetHeight + 18]
+  });
   let running = false;
   const run = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
   function frame() {
@@ -206,4 +211,4 @@ if (coverHero) {
 /* ---------- Research: the arcs demonstration ---------- */
 
 const arcs = document.querySelector('.lens-canvas');
-if (arcs) import('./lens-demo.js?v=2').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});
+if (arcs) import('./lens-demo.js?v=3').then(({ initArcsDemo }) => initArcsDemo(arcs)).catch(() => {});

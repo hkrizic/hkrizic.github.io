@@ -1,9 +1,12 @@
 /* Home: a portrait and a scroll-driven stage (see home.js). Shared parts are in mono.css. */
 /* The stage: the photograph and three canvases, fixed behind the copy. */
-.stage{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
-.stage-photo{z-index:1;max-width:none;object-fit:cover;object-position:50% 24%;filter:grayscale(1)}
+/* On touch screens the stage reaches beyond the screen, under the browser's toolbars (--os). */
+:root{--os:0px}
+@media (pointer:coarse){:root{--os:12vh}}
+.stage{position:fixed;left:0;top:calc(-1 * var(--os));width:100%;height:calc(100vh + 2 * var(--os));height:calc(100lvh + 2 * var(--os));z-index:2;pointer-events:none}
+.stage-photo{z-index:1;max-width:none;object-fit:cover;object-position:50% 24%;filter:grayscale(1);will-change:transform}
 .js:not(.cover-ready) .stage-photo{visibility:hidden}
-html:not(.js) .stage-photo{position:absolute;height:100vh;height:100svh}
+html:not(.js) .stage-photo{position:absolute;top:0;height:100vh;height:100svh}
 html:not(.js) canvas.stage{display:none}
 
 .scene{position:relative}

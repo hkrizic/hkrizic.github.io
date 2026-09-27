@@ -6,7 +6,7 @@
 // ring. The ring opens into a light disc and unrolls into four cello strings (C, G, D, A) that swing
 // with the scroll speed, ring out when released and can be plucked with the pointer.
 
-import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=2';
+import { clamp, seg, mix, ease, easeOut, LIGHT, DARK, FONT, motion, viewport, pagePad, initBar, splitTitles, flipIn, createCover, createLensLayer, drawPortal } from './mono.js?v=3';
 
 const root = document.documentElement;
 matchMedia('(prefers-motion.reduced-motion: reduce)').addEventListener('change', () => kick());
@@ -30,11 +30,14 @@ splitTitles(() => kick());
 
 /* ---------- Layout ---------- */
 
-let vw = innerWidth, vh = innerHeight, dpr = 1, narrow = false, sceneTops = [], sceneHeights = [];
+// vw, vh: the visible screen (small viewport on phones); offsetY: how far the fixed canvases reach
+// above it (they reach under the browser's toolbars on touch screens).
+let vw = innerWidth, vh = innerHeight, offsetY = 0, dpr = 1, narrow = false, sceneTops = [], sceneHeights = [];
 let center = [0, 0], ringRadius = 0, strings = [];
 
 function measure() {
-  vw = innerWidth; vh = innerHeight;
+  ({ width: vw, height: vh } = viewport());
+  offsetY = -linesCanvas.offsetTop;
   dpr = Math.min(devicePixelRatio || 1, 2);
   narrow = vw <= 760 || vw <= vh;
   sceneTops = scenes.map(scene => scene.getBoundingClientRect().top + scrollY);
@@ -68,7 +71,11 @@ function targetTime() {
 /* ---------- Intro: the name cut out of the page, the photograph behind it ---------- */
 
 // The zoom goes into the stem of the "I" in KRIZIC.
-const cover = createCover(coverCanvas, { lines: ['HRVOJE', 'KRIZIC'], focus: [1, 2, .45] });
+const cover = createCover(coverCanvas, {
+  lines: ['HRVOJE', 'KRIZIC'], focus: [1, 2, .45],
+  // Keep clear of the top bar and of the caption at the bottom.
+  insets: () => [document.querySelector('.bar').offsetHeight + 10, pagePad(vw) + introRole.offsetHeight + 18]
+});
 
 const lensLayer = createLensLayer(lensCanvas);
 
@@ -107,8 +114,9 @@ function stringX(string, y) {
 }
 
 function drawLines(t, time, ink) {
-  lines.setTransform(dpr, 0, 0, dpr, 0, 0);
-  lines.clearRect(0, 0, vw, vh);
+  lines.setTransform(1, 0, 0, 1, 0, 0);
+  lines.clearRect(0, 0, linesCanvas.width, linesCanvas.height);
+  lines.setTransform(dpr, 0, 0, dpr, 0, dpr * offsetY);
   const ringAlpha = seg(t, 1.64, 1.7);
   const alpha = ringAlpha * (1 - seg(t, 2.8, 2.98));
   if (alpha <= 0) return;
@@ -119,7 +127,7 @@ function drawLines(t, time, ink) {
   // Portal: a light disc grows from the centre of the ring until it covers the screen.
   const portal = motion.reduced ? 0 : seg(t, PORTAL[0], PORTAL[1]);
   lines.globalAlpha = 1;
-  const discRadius = drawPortal(lines, center, portal, vw, vh);
+  const discRadius = drawPortal(lines, center, portal, vw, vh + 2 * offsetY);
   if (portal >= 1 || discRadius > ringRadius * .8) ink = `rgb(${DARK})`;
   lines.strokeStyle = lines.fillStyle = ink;
   lines.lineCap = 'round';
@@ -208,13 +216,13 @@ function render(now) {
   const zoom = motion.reduced ? 0 : seg(T, .04, .86);
   const dive = motion.reduced ? seg(T, .35, .75) : ease(seg(zoom, .3, .92));
   const [fx, fy] = cover.point;
-  photo.style.transformOrigin = `${fx}px ${fy}px`;
+  photo.style.transformOrigin = `${fx}px ${fy - photo.offsetTop}px`;
   photo.style.transform = `scale(${motion.reduced ? 1 : mix(1.06, 1.9, ease(zoom))}) translate3d(${-px * 14}px, ${-py * 10}px, 0)`;
-  photo.style.filter = `grayscale(1) brightness(${1 - .9 * dive})`;
-  // The page behind has turned dark by now; fading out avoids a step from pure black to the dark grey.
-  photo.style.opacity = String(1 - seg(T, .76, .88));
   photo.style.visibility = T > .9 ? 'hidden' : '';
-  cover.draw({ zoom, alpha: motion.reduced ? 1 - seg(T, .1, .4) : 1, shift: [px * 10, py * 7] });
+  // The darkening is painted on the cover canvas (behind the letters), which is cheaper than
+  // changing a CSS filter on the photograph every frame. By T = .9 the page behind is dark too.
+  const coverOn = T < .9;
+  cover.draw({ zoom, alpha: coverOn ? (motion.reduced ? 1 - seg(T, .1, .4) : 1) : 0, shift: [px * 10, py * 7], shade: coverOn ? dive : 0 });
   coverCanvas.style.transform = motion.reduced ? '' : `perspective(1400px) rotateY(${px * 2}deg) rotateX(${-py * 1.6}deg) scale(1.04)`;
   introCue.style.opacity = 1 - seg(T, .02, .12);
   introRole.style.opacity = 1 - seg(T, .4, .6);
@@ -238,7 +246,7 @@ function render(now) {
     const shear = .14 * (1 - seg(u, .72, .95));
     const radius = ringRadius * mix(.075, .018, seg(u, .8, 1));
     const opacity = seg(T, .86, .98) * (1 - seg(T, 1.66, 1.72));
-    lensLayer.draw({ center, thetaE: ringRadius, source, shear, radius, opacity });
+    lensLayer.draw({ center: [center[0], center[1] + offsetY], thetaE: ringRadius, source, shear, radius, opacity });
     lensCanvas.style.transform = motion.reduced ? '' : `perspective(1600px) rotateY(${px * 6}deg) rotateX(${-py * 5}deg)`;
   }
 
