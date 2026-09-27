@@ -9,10 +9,11 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="assets/redesign/fonts/mona-sans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" imagesrcset="assets/redesign/images/home-portrait-760.webp 760w, assets/redesign/images/home-portrait.webp 1263w" imagesizes="100vw" fetchpriority="high">
-<link rel="stylesheet" href="assets/redesign/home.css?v=1">
+<link rel="stylesheet" href="assets/redesign/mono.css?v=3">
+<link rel="stylesheet" href="assets/redesign/home.css?v=5">
 <script>document.documentElement.classList.add('js')</script>
 <script src="assets/i18n.js" defer></script>
-<script type="module" src="assets/redesign/home.js?v=1"></script>
+<script type="module" src="assets/redesign/home.js?v=5"></script>
 </head>
 <body>
 <a class="skip" href="#main"><span data-en="Skip to content" data-de="Zum Inhalt">Skip to content</span></a>
@@ -22,7 +23,7 @@
   <nav class="bar-nav" id="menu" aria-label="Main navigation">
     <a href="research.html"><span data-en="Research" data-de="Forschung">Research</span></a>
     <a href="cellist.html"><span data-en="Cello" data-de="Cello">Cello</span></a>
-    <a href="teaching/"><span data-en="Teaching" data-de="Lehre">Teaching</span></a>
+    <a href="teaching.html"><span data-en="Teaching" data-de="Lehre">Teaching</span></a>
     <a href="#contact"><span data-en="Contact" data-de="Kontakt">Contact</span></a>
   </nav>
   <div class="bar-lang" aria-label="Language"><button class="nav__lang-btn" data-lang="en" aria-label="English">EN</button><button class="nav__lang-btn" data-lang="de" aria-label="Deutsch">DE</button></div>
@@ -58,21 +59,29 @@
     <div class="pin">
       <div class="copy">
         <h2 class="copy-title" data-split>Cello</h2>
-        <p class="copy-text" data-en="I play the cello and give concerts across Switzerland, as a soloist and with different ensembles." data-de="Ich spiele Cello und gebe Konzerte in der ganzen Schweiz, als Solist und mit verschiedenen Ensembles.">I play the cello and give concerts across Switzerland, as a soloist and with different ensembles.</p>
+        <p class="copy-text" data-en="I&#x27;m a cellist and give concerts across Switzerland, as a soloist and with different ensembles." data-de="Ich bin Cellist und gebe Konzerte in der ganzen Schweiz, als Solist und mit verschiedenen Ensembles.">I&#x27;m a cellist and give concerts across Switzerland, as a soloist and with different ensembles.</p>
         <a class="copy-link" href="cellist.html"><span data-en="Concerts" data-de="Konzerte">Concerts</span></a>
       </div>
       <p class="caption" aria-hidden="true"><span data-en="Pluck the strings" data-de="Zupf die Saiten">Pluck the strings</span></p>
     </div>
   </section>
 
+  <section class="home-teaching" id="teaching">
+    <div class="teach-copy">
+      <h2 class="copy-title" data-split data-en="Teaching" data-de="Lehre">Teaching</h2>
+      <p class="copy-text" data-en="I studied physics at ETH Zurich, where I have taught mathematics as a teaching assistant since 2021, and wrote the textbook &lt;em&gt;Tutorium Mathematik für Naturwissenschaften&lt;/em&gt; (Springer, 2024)." data-de="Ich habe an der ETH Zürich Physik studiert, unterrichte dort seit 2021 Mathematik als Teaching Assistant und habe das Lehrbuch &lt;em&gt;Tutorium Mathematik für Naturwissenschaften&lt;/em&gt; geschrieben (Springer, 2024).">I studied physics at ETH Zurich, where I have taught mathematics as a teaching assistant since 2021, and wrote the textbook <em>Tutorium Mathematik für Naturwissenschaften</em> (Springer, 2024).</p>
+      <p class="teach-links"><a class="copy-link" href="teaching.html"><span data-en="Mathematik I–III &amp; Vorkurs" data-de="Mathematik I–III &amp; Vorkurs">Mathematik I–III &amp; Vorkurs</span></a><a class="copy-link" href="teaching.html#book"><span data-en="The book" data-de="Das Buch">The book</span></a></p>
+    </div>
+    <a class="teach-book" href="teaching.html#book" aria-label="The book: Tutorium Mathematik für Naturwissenschaften" data-i18n-attr="aria-label" data-en="The book: Tutorium Mathematik für Naturwissenschaften" data-de="Das Buch: Tutorium Mathematik für Naturwissenschaften"><img src="assets/redesign/images/book.webp" width="715" height="900" loading="lazy" alt=""></a>
+  </section>
+
   <footer class="contact" id="contact">
     <p class="contact-label"><span data-en="Contact" data-de="Kontakt">Contact</span></p>
     <a class="contact-mail" href="mailto:hrvoje.krizic@unige.ch">hrvoje.krizic@unige.ch</a>
-    <p class="contact-note" data-en="I studied physics at ETH Zurich, where I taught as a teaching assistant, and wrote the textbook &lt;a href=&quot;https://link.springer.com/book/10.1007/978-3-662-69221-9&quot;&gt;Tutorium Mathematik für Naturwissenschaften&lt;/a&gt; (Springer, 2024)." data-de="Ich habe an der ETH Zürich Physik studiert, dort als Teaching Assistant unterrichtet und das Lehrbuch &lt;a href=&quot;https://link.springer.com/book/10.1007/978-3-662-69221-9&quot;&gt;Tutorium Mathematik für Naturwissenschaften&lt;/a&gt; geschrieben (Springer, 2024).">I studied physics at ETH Zurich, where I taught as a teaching assistant, and wrote the textbook <a href="https://link.springer.com/book/10.1007/978-3-662-69221-9">Tutorium Mathematik für Naturwissenschaften</a> (Springer, 2024).</p>
     <nav class="contact-links" aria-label="Links">
       <a href="research.html"><span data-en="Research" data-de="Forschung">Research</span></a>
       <a href="cellist.html"><span data-en="Concerts" data-de="Konzerte">Concerts</span></a>
-      <a href="teaching/"><span data-en="Teaching" data-de="Lehre">Teaching</span></a>
+      <a href="teaching.html"><span data-en="Teaching" data-de="Lehre">Teaching</span></a>
       <a href="https://github.com/hkrizic" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a href="https://www.linkedin.com/in/hrvoje-krizic/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <a href="https://www.instagram.com/harrykrizic" target="_blank" rel="noopener noreferrer">Instagram</a>
