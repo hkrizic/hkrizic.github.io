@@ -80,10 +80,27 @@ addEventListener('resize', () => { vw = innerWidth; vh = innerHeight; dpr = Math
 document.fonts?.ready.then(() => refresh(true));
 refresh(true);
 
-// Scroll progress through a sticky hero: 0 at the top, 1 when it lets go.
-function heroProgress(section) {
-  const rect = section.getBoundingClientRect();
-  return clamp(-rect.top / Math.max(1, rect.height - vh));
+// Scroll progress through a sticky hero: 0 at the top, 1 when it lets go. As on the home page, the
+// scroll only sets a target and the progress eases towards it every frame, so the animation glides
+// between the steps of a mouse wheel instead of jumping with them. The hero is measured on resize
+// only, so a frame reads no layout.
+function heroTimeline(section) {
+  let top = 0, height = 0, value = null;
+  const timeline = {
+    measure() { top = section.getBoundingClientRect().top + scrollY; height = section.offsetHeight; },
+    get target() { return clamp((scrollY - top) / Math.max(1, height - vh)); },
+    get visible() { return scrollY < top + height; },
+    get settled() { return value === timeline.target; },
+    // Advance by dt seconds and return the eased progress (off screen it jumps to the target).
+    step(dt) {
+      const target = timeline.target;
+      value = value === null || motion.reduced || !timeline.visible ? target : value + (target - value) * (1 - Math.exp(-dt * 7.5));
+      if (Math.abs(target - value) < 1e-4) value = target;
+      return value;
+    }
+  };
+  timeline.measure();
+  return timeline;
 }
 function whileVisible(element, start) {
   new IntersectionObserver(entries => { if (entries[0].isIntersecting) start(); }).observe(element);
@@ -193,8 +210,10 @@ if (lensHero) {
   // Sizes are measured on resize only, not every frame. The canvases reach under the phone's
   // toolbars; the lens is placed in the part of the screen that stays visible (H).
   let W = 0, H = 0, fullHeight = 0;
+  const timeline = heroTimeline(lensHero);
   function measureHero() {
     W = lensCanvas.clientWidth; H = viewport().height; fullHeight = ringCanvas.clientHeight;
+    timeline.measure();
     lens?.resize(dpr);
     const width = Math.round(W * dpr), height = Math.round(fullHeight * dpr);
     if (ringCanvas.width !== width || ringCanvas.height !== height) { ringCanvas.width = width; ringCanvas.height = height; ringsDrawn = true; }
@@ -211,9 +230,7 @@ if (lensHero) {
   const run = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
   function frame(now) {
     const dt = last ? Math.min((now - last) / 1000, .05) : 1 / 60; last = now; clock += dt;
-    // One read per frame, before any writes.
-    const rect = lensHero.getBoundingClientRect();
-    const p = clamp(-rect.top / Math.max(1, rect.height - vh)), visible = rect.bottom > 0;
+    const p = timeline.step(dt), visible = timeline.visible;
     const narrow = W <= 760 || W <= H;
     const center = narrow ? [W * .5, H * .32] : [W * .7, H * .42];
     const radius = narrow ? Math.min(W * .27, H * .15) : Math.min(W * .15, H * .24);
@@ -254,7 +271,7 @@ if (lensHero) {
     const tilt = motion.reduced || !pointer.active ? [0, 0] : [(pointer.x / vw - .5) * 2, (pointer.y / vh - .5) * 2];
     write(lensCanvas, 'transform', `perspective(1500px) rotateY(${(tilt[0] * 5).toFixed(2)}deg) rotateX(${(-tilt[1] * 4).toFixed(2)}deg)`);
     const moving = !motion.reduced && (p < .5 || now - loadedAt < 1400);
-    if (visible && !document.hidden && (moving || Math.abs(target[0] - source[0]) + Math.abs(target[1] - source[1]) > .05)) requestAnimationFrame(frame);
+    if (visible && !document.hidden && (moving || !timeline.settled || Math.abs(target[0] - source[0]) + Math.abs(target[1] - source[1]) > .05)) requestAnimationFrame(frame);
     else { running = false; last = 0; }
   }
   addEventListener('resize', () => { measureHero(); run(); });
@@ -276,20 +293,31 @@ if (coverHero) {
     lines: ['CELLO'], focus: [0, 2, .26], heightShare: .5,
     insets: () => [document.querySelector('.bar').offsetHeight + 10, pagePad(viewport().width) + role.offsetHeight + 18]
   });
-  let running = false;
+  // The same loop as the home page: the zoom eases towards the scroll position and the letters drift
+  // with the pointer, frame by frame, until both have caught up.
+  const timeline = heroTimeline(coverHero), shift = [0, 0];
+  let running = false, last = 0, transform = '';
   const run = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
-  function frame() {
-    const p = heroProgress(coverHero), zoom = motion.reduced ? 0 : seg(p, .04, .62);
-    const shift = motion.reduced || !pointer.active ? [0, 0] : [(pointer.x / vw - .5) * 20, (pointer.y / vh - .5) * 14];
-    cover.draw({ zoom, alpha: motion.reduced ? 1 - seg(p, .1, .45) : 1, shift });
-    photo.style.transform = `scale(${motion.reduced ? 1 : mix(1.14, 1, easeOut(zoom))}) translate3d(${-shift[0] * 1.3}px, ${-shift[1] * 1.3}px, 0)`;
-    const visible = coverHero.getBoundingClientRect().bottom > 0;
-    if (visible && !document.hidden && cover.fading) requestAnimationFrame(frame);
-    else running = false;
+  function frame(now) {
+    const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 1 / 60; last = now;
+    const p = timeline.step(dt), zoom = motion.reduced ? 0 : seg(p, .04, .62);
+    const aim = motion.reduced || !pointer.active ? [0, 0] : [(pointer.x / vw - .5) * 20, (pointer.y / vh - .5) * 14];
+    const follow = motion.reduced ? 1 : 1 - Math.exp(-dt * 5);
+    let drift = 0;
+    for (const i of [0, 1]) { shift[i] += (aim[i] - shift[i]) * follow; drift += Math.abs(aim[i] - shift[i]); }
+    if (timeline.visible) {
+      cover.draw({ zoom, alpha: motion.reduced ? 1 - seg(p, .1, .45) : 1, shift });
+      const next = `scale(${(motion.reduced ? 1 : mix(1.14, 1, easeOut(zoom))).toFixed(4)}) translate3d(${(-shift[0] * 1.3).toFixed(2)}px, ${(-shift[1] * 1.3).toFixed(2)}px, 0)`;
+      if (next !== transform) photo.style.transform = transform = next;
+    }
+    if (timeline.visible && !document.hidden && (!timeline.settled || drift > .01 || cover.fading)) requestAnimationFrame(frame);
+    else { running = false; last = 0; }
   }
-  addEventListener('resize', () => { cover.measure(); run(); });
+  addEventListener('resize', () => { cover.measure(); timeline.measure(); run(); });
   addEventListener('scroll', run, { passive: true });
   addEventListener('pointermove', run, { passive: true });
+  document.documentElement.addEventListener('mouseleave', run);
+  document.addEventListener('visibilitychange', run);
   cover.whenFontReady(() => { root.classList.add('cover-ready'); run(); });
   run();
 }
