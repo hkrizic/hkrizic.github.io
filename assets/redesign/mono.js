@@ -235,9 +235,12 @@ float brightness(vec2 theta){
 }
 void main(){
  vec2 p=vec2(gl_FragCoord.x,resolution.y-gl_FragCoord.y)/dpr-center;
- float o=.25/dpr,b=0.;
- b+=brightness(p+vec2(-o,-o));b+=brightness(p+vec2(o,-o));b+=brightness(p+vec2(-o,o));b+=brightness(p+vec2(o,o));
- b=min(1.,b*.25);
+ // On high-density screens every CSS pixel already has several device pixels: one sample is enough.
+ // On standard screens four samples smooth the thin arcs.
+ float b;
+ if(dpr>1.4)b=brightness(p);
+ else{float o=.25/dpr;b=.25*(brightness(p+vec2(-o,-o))+brightness(p+vec2(o,-o))+brightness(p+vec2(-o,o))+brightness(p+vec2(o,o)));}
+ b=min(1.,b);
  // The lens galaxy itself: a faint point at the centre.
  b=max(b,.35*exp(-dot(p,p)/(thetaE*thetaE*.0025)));
  gl_FragColor=vec4(ink*b,b)*opacity;
