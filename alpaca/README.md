@@ -56,7 +56,7 @@ experiment folder containing both `data/` and `run/` so multi-plane redshifts an
 ## Forward model
 
 `js/physics` is a port of the exact model ALPACA samples (herculens + ALPACA patches): EPL (Tessore & Metcalf series),
-external shear, SIS/SIE perturbers, multi-plane ray shooting with the fiducial eta matrix, adaptive correlated-field
+external shear, SIS/SIE perturbers and their Sérsic lens light, multi-plane ray shooting with the fiducial eta matrix, adaptive correlated-field
 source grid, supersampled rendering, PSF convolution on the supersampled grid and average pooling, sub-pixel point sources.
 `test/verify_physics.mjs` compares it against reference arrays dumped from Python (`tools/dump_reference.py`);
 on the bundled example run all components agree to ~1e-8 relative.

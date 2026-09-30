@@ -80,7 +80,7 @@ const ops = {
     const fm = models.get(runId);
     if (!fm) throw new Error("forward model not initialised");
     const r = fm.render(params, sourcePixels, opts || {});
-    const out = { total: r.total, source: r.source, lensLight: r.lensLight, ps: r.ps, sourceGrid: r.sourceGrid, timings: r.timings };
+    const out = { total: r.total, source: r.source, lensLight: r.lensLight, pertLight: r.pertLight, ps: r.ps, sourceGrid: r.sourceGrid, timings: r.timings };
     if (opts?.keepSS) { out.sourceSS = r.sourceSS; out.lensLightSS = r.lensLightSS; }
     return out;
   },

@@ -172,6 +172,31 @@ export class ForwardModel {
     return out;
   }
 
+  // Lens light of the perturbers: one chunk of Sersics per light-carrying perturber, centred on
+  // its mass centre. Lensed light lives on the perturber's own plane (ray-traced through the
+  // foreground), unlensed light on plane 0 (image coordinates), as in build_light_structure.
+  perturberLightKwargs(params) {
+    const out = [];
+    for (const p of this.perturbers || []) {
+      if (!p.nLightSersic) continue;
+      const cx = params[p.name + "_center_x"] ?? p.center_x;
+      const cy = params[p.name + "_center_y"] ?? p.center_y;
+      if (cx === undefined || cy === undefined) continue;
+      const tag = p.name + "_light";
+      const comps = [];
+      for (let i = 1; i <= p.nLightSersic; i++) {
+        comps.push({
+          amp: Math.exp(params[`${tag}_log_amp_L${i}`]), R_sersic: params[`${tag}_Re_L${i}`], n_sersic: params[`${tag}_n_L${i}`],
+          e1: params[`${tag}_e1_L${i}`], e2: params[`${tag}_e2_L${i}`], center_x: cx, center_y: cy,
+        });
+      }
+      let plane = 0;
+      if (this.geo.isMultiplane && p.lightLensed !== false) plane = p.plane === "main" ? this.geo.mainIdx : this.geo.planeRedshifts.indexOf(Number(p.z));
+      out.push({ name: p.name, plane: Math.max(0, plane), comps });
+    }
+    return out;
+  }
+
   convolver() {
     if (!this._conv) {
       const k = this.psfHr;
@@ -245,6 +270,7 @@ export class ForwardModel {
     const {
       lensLight = true, source = true, pointSources = true, unconvolved = false,
       lensLightComponents = null, includeSky = true, psWhich = null,
+      perturberLight = lensLight, pertLightWhich = null,
     } = opts;
     const t0 = performance.now();
     const { xs, ys } = this.rayShootSS(params);
@@ -266,14 +292,23 @@ export class ForwardModel {
       result.lensLightSS = ll;
       ssSum = ssSum ? ssSum.map((v, i) => v + ll[i]) : ll;
     }
+    if (perturberLight) {
+      const chunks = this.perturberLightKwargs(params).filter((c) => !pertLightWhich || pertLightWhich.includes(c.name));
+      if (chunks.length) {
+        const pl = new Float64Array(this.nxs * this.nxs);
+        for (const c of chunks) for (const kw of c.comps) sersicLight(xs[c.plane], ys[c.plane], kw, pl);
+        result.pertLightSS = pl;
+      }
+    }
     const t1 = performance.now();
+    if (result.pertLightSS) result.pertLight = this.toNative(result.pertLightSS, { unconvolved });
     if (result.sourceSS) result.source = this.toNative(result.sourceSS, { unconvolved });
     if (result.lensLightSS) result.lensLight = this.toNative(result.lensLightSS, { unconvolved });
     result.timings.convolve = performance.now() - t1;
     if (pointSources && this.nPs > 0) result.ps = this.renderPointSources(params, { which: psWhich, unconvolved });
     const n = this.nx * this.nx;
     const total = new Float64Array(n);
-    for (const key of ["source", "lensLight", "ps"]) {
+    for (const key of ["source", "lensLight", "pertLight", "ps"]) {
       const a = result[key];
       if (!a) continue;
       for (let i = 0; i < n; i++) total[i] += a[i];

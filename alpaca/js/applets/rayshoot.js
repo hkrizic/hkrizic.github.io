@@ -2,6 +2,10 @@ import { el, section, row, select, checkbox, cmapSelect, stretchSelect, button, 
 import { ImageView } from "../ui/imagecanvas.js";
 import { runOf, runRow, paramSourceControls, resolveParams, NeedsKeyError, unblindUI, busy, errorBox, residualNorm, maskFrom, pointSourcePositions, fmtNum, effectiveSigma } from "./common.js";
 
+// bright, mutually distinct colours that read on magma and on the diverging residual map
+const POINT_COLORS = ["#00e5ff", "#7CFC00", "#ff4dff", "#ffe600", "#ff8c1a", "#6ea8ff", "#ff4d4d", "#00ffb3", "#ff9ecb"];
+const POINT_HALO = "rgba(0,0,0,0.85)";
+
 const LAYERS = [
   { value: "resid", label: "(data − model) / σ" },
   { value: "data", label: "Data" },
@@ -10,10 +14,10 @@ const LAYERS = [
 ];
 
 export default {
-  id: "rayshoot", title: "Ray-shooting lab", icon: "⇢", description: "Click a feature in the data, model or residual to trace it to the source reconstruction through the full (multi-plane) lens model; every other image of that source point is found and shown in grey. Click the source plane to find all its images.", defaultSize: "xl",
+  id: "rayshoot", title: "Ray-shooting lab", icon: "⇢", description: "Click a feature in the data, model or residual to trace it to the source reconstruction through the full (multi-plane) lens model; every other image of that source point is found and circled in the same colour. Click the source plane to find all its images.", defaultSize: "xl",
   available: (run) => run.features.map || run.features.posterior,
   create(ctx, state, panel) {
-    Object.assign(state, { layer: state.layer || "resid", cmap: state.cmap || "magma", stretch: state.stretch || "log", showCurves: state.showCurves ?? true, showPs: state.showPs ?? true, counter: state.counter ?? true, srcCmap: state.srcCmap || "magma", srcStretch: state.srcStretch || "log", psfBoost: state.psfBoost ?? true });
+    Object.assign(state, { layer: state.layer || "resid", cmap: state.cmap || "magma", stretch: state.stretch || "log", showCurves: state.showCurves ?? true, showPs: state.showPs ?? true, counter: state.counter ?? true, srcCmap: state.srcCmap || "magma", srcStretch: state.srcStretch || "log", psfBoost: state.psfBoost ?? true, colorPoints: state.colorPoints ?? true, numbers: state.numbers ?? true });
     const left = el("div", { class: "view-cell" });
     const right = el("div", { class: "view-cell" });
     const gridEl = el("div", { class: "view-grid two" }, left, right);
@@ -22,7 +26,8 @@ export default {
     const vImg = new ImageView(left, { cmap: state.cmap, stretch: state.stretch, pmin: 0.5, pmax: 99.8, label: "image plane" });
     const vSrc = new ImageView(right, { cmap: state.srcCmap, stretch: state.srcStretch, pmin: 0.5, pmax: 99.8, label: "source plane" });
     let cache = null; // { run, resolved, render, data, sigma, mask, lensing }
-    let points = []; // { label, theta:[x,y] | null, beta:[bx,by], images:[{x,y,mu}] }
+    let points = []; // { label, color, theta:[x,y] | null, beta:[bx,by], images:[{x,y,mu}] }
+    let seq = 0; // running point number (labels stay unique when old points drop out)
     let hoverBeta = null;
     let hoverPending = false;
 
@@ -43,7 +48,7 @@ export default {
       const mask = maskFrom(lm);
       const lensing = await run.lensing(resolved.stageKey, resolved.params, { oversample: 1 });
       cache = { run, resolved, spec, render: r, data, sigma, sigmaNote, mask, lensing };
-      points = [];
+      points = []; seq = 0;
       panel.setStatus(`${resolved.label}` + (spec.approxPlanes ? " · ⚠ no catalog: perturbers on the main plane" : ` · ${spec.geo.perturbers.length} perturber(s), ${spec.geo.isMultiplane ? "multi-plane" : "single-plane"}`) + ` · ${sigmaNote}`);
       settings();
       showLeft();
@@ -94,12 +99,14 @@ export default {
         ovs.push({ type: "points", points: pts, marker: "circle", radius: 6 });
       }
       for (const p of points) {
-        if (p.theta) ovs.push({ type: "points", points: [[p.theta[0], p.theta[1], p.label]], marker: "cross", radius: 7, width: 2 });
+        // colour mode: a point, its counter images and its source position share one colour
+        const st = { labels: state.numbers, ...(state.colorPoints ? { color: p.color, halo: POINT_HALO } : {}) };
+        if (p.theta) ovs.push({ type: "points", points: [[p.theta[0], p.theta[1], p.label]], marker: "cross", radius: 7, width: 2, ...st });
         if (state.counter && p.images.length) {
           const others = p.images.filter((im) => !p.theta || Math.hypot(im.x - p.theta[0], im.y - p.theta[1]) > 0.5 * cache.spec.pix);
-          ovs.push({ type: "points", points: others.map((im) => [im.x, im.y, `${p.label}′`]), marker: "circle", radius: 7, width: 2, color: "#bfbfbf" });
+          ovs.push({ type: "points", points: others.map((im) => [im.x, im.y, `${p.label}′`]), marker: "circle", radius: 7, width: 2, color: "#bfbfbf", ...st });
         }
-        srcOvs.push({ type: "points", points: [[p.beta[0], p.beta[1], p.label]], marker: "cross", radius: 7, width: 2 });
+        srcOvs.push({ type: "points", points: [[p.beta[0], p.beta[1], p.label]], marker: "cross", radius: 7, width: 2, ...st });
       }
       if (hoverBeta) srcOvs.push({ type: "points", points: [[hoverBeta[0], hoverBeta[1], ""]], marker: "cross", radius: 5, width: 1 });
       vImg.setOverlays(ovs);
@@ -116,8 +123,9 @@ export default {
       let b = beta;
       if (theta) { const rs = await run.rayShoot(resolved.stageKey, resolved.params, [theta[0]], [theta[1]]); b = [rs.bx[0], rs.by[0]]; }
       const images = state.counter ? await run.findImages(resolved.stageKey, resolved.params, b[0], b[1]) : [];
-      const label = String(points.length + 1);
-      points.push({ label, theta, beta: b, images });
+      const color = POINT_COLORS[seq % POINT_COLORS.length];
+      const label = String(++seq);
+      points.push({ label, color, theta, beta: b, images });
       if (points.length > 9) points.shift();
       info.textContent = describe(points[points.length - 1]);
       drawOverlays();
@@ -168,8 +176,10 @@ export default {
         section("Overlays",
           checkbox("Critical curves & caustics", state.showCurves, (v) => { state.showCurves = v; drawOverlays(); }),
           checkbox("Point-source images", state.showPs, (v) => { state.showPs = v; drawOverlays(); }),
-          checkbox("Find counter images (grey)", state.counter, (v) => { state.counter = v; drawOverlays(); }),
-          el("div", { class: "ctl-row" }, button("Clear points", () => { points = []; info.textContent = ""; drawOverlays(); }, { small: true }), button("Export PNGs", () => { downloadPNG(vImg.toPNG(), "rayshoot_image.png"); downloadPNG(vSrc.toPNG(), "rayshoot_source.png"); }, { small: true })),
+          checkbox("Find counter images (circles)", state.counter, (v) => { state.counter = v; drawOverlays(); }),
+          checkbox("One colour per clicked point", state.colorPoints, (v) => { state.colorPoints = v; drawOverlays(); }),
+          checkbox("Number labels", state.numbers, (v) => { state.numbers = v; drawOverlays(); }),
+          el("div", { class: "ctl-row" }, button("Clear points", () => { points = []; seq = 0; info.textContent = ""; drawOverlays(); }, { small: true }), button("Export PNGs", () => { downloadPNG(vImg.toPNG(), "rayshoot_image.png"); downloadPNG(vSrc.toPNG(), "rayshoot_source.png"); }, { small: true })),
           el("div", { class: "muted small" }, "Counter images are found by Newton iterations on the exact multi-plane mapping; μ is the signed magnification at each image."),
         ),
       );

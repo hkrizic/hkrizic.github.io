@@ -249,7 +249,7 @@ export class ImageView {
     const blank = !!(this.img && this.img.blank);
     const dark = blank || this.opts.overlayDark;
     const color = ov.color || (dark ? THEME.overlayDark : THEME.overlay);
-    const halo = ov.halo === false || blank ? null : (dark ? "rgba(255,255,255,0.75)" : THEME.halo);
+    const halo = typeof ov.halo === "string" ? ov.halo : ov.halo === false || blank ? null : (dark ? "rgba(255,255,255,0.75)" : THEME.halo);
     const width = ov.width || 1.2;
     const passes = halo ? [[halo, width + 2.4, true], [color, width, false]] : [[color, width, false]];
     ctx.save();
@@ -366,12 +366,17 @@ export class ImageView {
       v.scale = ns;
       this.draw();
     }, { passive: false });
-    c.addEventListener("pointerdown", (e) => { if (!this.img) return; drag = { x: e.clientX, y: e.clientY, cx: this.view.cx, cy: this.view.cy }; c.setPointerCapture(e.pointerId); });
+    // a press that moves more than a few pixels is a pan, not a click
+    let dragged = false;
+    c.addEventListener("pointerdown", (e) => { if (!this.img) return; dragged = false; drag = { x: e.clientX, y: e.clientY, cx: this.view.cx, cy: this.view.cy }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener("click", (e) => { if (dragged) { dragged = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
     c.addEventListener("pointermove", (e) => {
       if (!this.img) return;
       const rect = c.getBoundingClientRect();
       const px = e.clientX - rect.left, py = e.clientY - rect.top;
       if (drag) {
+        if (!dragged && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 4) return;
+        dragged = true;
         this.view.cx = drag.cx - (e.clientX - drag.x) / this.view.scale;
         this.view.cy = drag.cy + (e.clientY - drag.y) / this.view.scale;
         this.draw();

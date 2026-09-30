@@ -17,6 +17,7 @@ export default {
     Object.assign(state, {
       output: state.output || "model", cmap: state.cmap || "magma", stretch: state.stretch || "log", unconvolved: !!state.unconvolved, group: state.group ?? "main",
       comps: state.comps || ["L1", "L2", "L3", "sky", "source", "ps0", "ps1", "ps2", "ps3", "ps4", "ps5"], showCaustics: state.showCaustics ?? true, showPs: state.showPs ?? true,
+      known: state.known || ["L1", "L2", "L3", "sky", "source", "ps0", "ps1", "ps2", "ps3", "ps4", "ps5"],
       lockScale: state.lockScale ?? true, pmin: state.pmin ?? 0.5, pmax: state.pmax ?? 99.8, psfBoost: state.psfBoost ?? true,
     });
     const viewWrap = el("div", { class: "view-wrap" });
@@ -34,6 +35,9 @@ export default {
       if (params.sky_amp !== undefined) items.push({ value: "sky", label: "Sky", color: "#aaa" });
       items.push({ value: "source", label: "Lensed source", color: "#8fd3ff" });
       for (let i = 0; params[`x_image_${i}`] !== undefined; i++) items.push({ value: "ps" + i, label: `PS ${String.fromCharCode(65 + i)}`, color: "#7CFC00" });
+      for (const p of spec?.perturbers || []) {
+        if (p.nLightSersic && (params[p.name + "_center_x"] ?? p.center_x) !== undefined) items.push({ value: "pl:" + p.name, label: `${p.name} light`, color: "#ff9ecb" });
+      }
       return items;
     };
 
@@ -49,23 +53,27 @@ export default {
       if (!viewWrap.isConnected) panel.body.replaceChildren(viewWrap, info);
       const { spec } = await run.ensureForwardModel(resolved.stageKey);
       const items = compItems(spec, resolved.params);
+      // components first seen for this run (perturber light) start switched on
+      for (const it of items) if (!state.known.includes(it.value)) { state.known.push(it.value); if (!state.comps.includes(it.value)) state.comps.push(it.value); }
       const sel = new Set(state.comps);
       const nS = items.filter((i) => /^L\d$/.test(i.value)).length;
       const lensLightComponents = Array.from({ length: nS }, (_, i) => sel.has("L" + (i + 1)));
       const psWhich = Array.from({ length: spec.nPs }, (_, i) => sel.has("ps" + i));
-      const opts = { lensLight: lensLightComponents.some(Boolean), includeSky: sel.has("sky"), source: sel.has("source") && !!resolved.source, pointSources: psWhich.some(Boolean), unconvolved: state.unconvolved, lensLightComponents, psWhich };
+      const pertAll = items.filter((i) => i.value.startsWith("pl:")).map((i) => i.value.slice(3));
+      const pertLightWhich = pertAll.filter((nm) => sel.has("pl:" + nm));
+      const opts = { perturberLight: pertLightWhich.length > 0, pertLightWhich, lensLight: lensLightComponents.some(Boolean), includeSky: sel.has("sky"), source: sel.has("source") && !!resolved.source, pointSources: psWhich.some(Boolean), unconvolved: state.unconvolved, lensLightComponents, psWhich };
       const t0 = performance.now();
       const r = await run.render(resolved.stageKey, resolved.params, resolved.source, opts);
       const dt = performance.now() - t0;
       // full model (all components, PSF-convolved): reference for the locked colour scale and for chi2
-      const isFull = lensLightComponents.every(Boolean) && sel.has("sky") && sel.has("source") && psWhich.every(Boolean) && !state.unconvolved;
-      const rFull = isFull ? r : await run.render(resolved.stageKey, resolved.params, resolved.source, { ...opts, lensLight: true, includeSky: true, source: !!resolved.source, pointSources: spec.nPs > 0, lensLightComponents: null, psWhich: null, unconvolved: false });
+      const isFull = lensLightComponents.every(Boolean) && sel.has("sky") && sel.has("source") && psWhich.every(Boolean) && pertLightWhich.length === pertAll.length && !state.unconvolved;
+      const rFull = isFull ? r : await run.render(resolved.stageKey, resolved.params, resolved.source, { ...opts, lensLight: true, includeSky: true, source: !!resolved.source, pointSources: spec.nPs > 0, lensLightComponents: null, psWhich: null, perturberLight: true, pertLightWhich: null, unconvolved: false });
       const [data, lm] = await Promise.all([run.image(), run.likelihoodMask()]);
       const { sigma, note: sigmaNote } = await effectiveSigma(run, resolved, rFull.ps, { boost: state.psfBoost });
       const mask = maskFrom(lm);
       const c2 = chi2Reduced(data.data, rFull.total, sigma, mask);
       cache = { run, resolved, spec, items, render: r, renderFull: rFull, data, sigma, mask, c2, dt };
-      lastStatus = `${resolved.label} · ${opts.unconvolved ? "unconvolved (point sources as sub-pixel deltas)" : "PSF-convolved"} · full-model χ²ᵥ=${c2.red.toFixed(3)} (${c2.n} px, ${sigmaNote}) · ${dt.toFixed(0)} ms` + (spec.approxPlanes ? " · ⚠ no catalog: perturbers on the main plane" : "");
+      lastStatus = `${resolved.label} · ${opts.unconvolved ? "unconvolved (point sources as sub-pixel deltas)" : "PSF-convolved"} · full-model χ²ᵥ=${c2.red.toFixed(3)} (${c2.n} px, ${sigmaNote}) · ${dt.toFixed(0)} ms` + (spec.approxPlanes ? " · ⚠ no catalog: perturbers on the main plane" : "") + (spec.perturbers.some((p) => p.lightMge) ? " · ⚠ MGE perturber light is not rendered" : "");
       info.textContent = lastStatus;
       panel.setStatus(`χ²ᵥ = ${c2.red.toFixed(3)}`);
       settings();

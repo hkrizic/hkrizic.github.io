@@ -481,7 +481,11 @@ export class Run {
       let plane = "main";
       if (z != null && zLens != null && Math.abs(z - zLens) > zTol) plane = z < zLens ? "foreground" : "background";
       const prof = params[`pert${id}_gamma`] !== undefined ? "EPL" : params[`pert${id}_e1`] !== undefined ? "SIE" : "SIS";
-      list.push({ name: `pert${id}`, id, z, plane, profiles: [prof], notes: c?.notes || c?.name || "" });
+      // lens light (alpaca.models.perturber_profiles): Sersic components pert{id}_light_*_L{i}
+      let nLightSersic = 0;
+      while (params[`pert${id}_light_log_amp_L${nLightSersic + 1}`] !== undefined) nLightSersic++;
+      const lightMge = Object.keys(params).some((k) => k.startsWith(`pert${id}_light_`) && /mge/.test(k));
+      list.push({ name: `pert${id}`, id, z, plane, profiles: [prof], nLightSersic, lightLensed: c?.lens_light?.lensed ?? true, lightMge, notes: c?.notes || c?.name || "" });
     }
     list.sort((a, b) => (a.z ?? 0) - (b.z ?? 0) || a.id - b.id);
     return list;
