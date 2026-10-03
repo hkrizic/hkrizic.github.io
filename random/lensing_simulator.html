@@ -242,7 +242,7 @@
 
   .image-info { margin-top: 12px; }
 
-  .image-info .img-entry {
+  .image-info .img-entry, .ref-table .img-entry {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -305,6 +305,50 @@
     z-index: 10;
   }
 
+  .pert-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--pc, #ffb450);
+    border-radius: 5px;
+    padding: 8px 10px 4px;
+    margin-bottom: 8px;
+  }
+  .pert-card.selected { border-color: var(--pc, #ffb450); }
+  .pert-card .pert-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .pert-card .pert-name { font-weight: 600; color: var(--pc, #ffb450); }
+  .pert-card .pert-pos { color: var(--text-dim); font-size: 11px; margin-left: auto; }
+  .pert-card .pert-del {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 3px;
+    width: 20px; height: 20px;
+    line-height: 16px;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .pert-card .pert-del:hover { color: #fff; border-color: var(--accent); background: var(--accent); }
+  .pert-card input[type="checkbox"] { accent-color: var(--pc, #ffb450); width: 13px; height: 13px; }
+
+  .ref-table { margin-top: 8px; }
+  .ref-table .img-entry span { min-width: 0; }
+  .ref-summary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .ref-summary .good { color: var(--critical); }
+  .ref-summary .bad { color: var(--accent); }
+
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: var(--surface); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -351,13 +395,26 @@
     </div>
 
     <div class="control-section">
-      <h3>Perturber (SIS satellite)</h3>
-      <div class="checkbox-row"><input type="checkbox" id="perturberOn"><label for="perturberOn">Enable perturber</label></div>
-      <div class="control-row"><label>Einstein radius θ<sub>E,p</sub></label><span class="val" id="val-pertThetaE">0.10″</span></div>
-      <input type="range" id="pertThetaE" min="0" max="0.5" step="0.005" value="0.1">
-      <div class="control-row"><label>Position</label><span class="val" id="val-pertPos">(0.80, 0.80)″</span></div>
+      <h3>Perturbers (SIS)</h3>
+      <div id="pertList"></div>
+      <button class="preset-btn" id="addPerturber">+ Add SIS</button>
+      <button class="preset-btn" id="clearPerturbers">Remove all</button>
       <div class="info-box">
-        <p>Drag the orange dot on the <span class="hl2">image plane</span> to move the perturber. Shift-click anywhere on the image plane to drop it there. Place near a critical curve to see image splitting.</p>
+        <p>Each perturber is a singular isothermal sphere, α = θ<sub>E,p</sub>·(θ−θ<sub>p</sub>)/|θ−θ<sub>p</sub>|. Drag a dot on the <span class="hl2">image plane</span> to move it; shift-click to drop a new one. Deflections add linearly, so several deflectors can produce the same image configuration.</p>
+      </div>
+    </div>
+
+    <div class="control-section">
+      <h3>Degeneracy check</h3>
+      <button class="preset-btn" id="pinRef">Pin current images</button>
+      <button class="preset-btn" id="clearRef">Clear pin</button>
+      <button class="preset-btn" id="refitMain" title="Refit the main EPL + external shear (and source) so they reproduce the pinned image positions, keeping the perturbers fixed">Refit main lens → pin</button>
+      <div class="checkbox-row" style="margin-top:4px;"><input type="checkbox" id="fitSlope"><label for="fitSlope">Let slope γ vary in the refit</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="showRefCurves" checked><label for="showRefCurves">Show pinned critical curves / caustics</label></div>
+      <div class="ref-summary" id="refSummary"></div>
+      <div class="ref-table" id="refTable"></div>
+      <div class="info-box">
+        <p>Pin the images of one lens model, then change it: move or delete a perturber, add a second one, or click <em>Refit</em> to make the main lens compensate (it fits the bright, μ≥1, images). Hollow rings show the pinned images. The table compares positions (Δθ) and normalised fluxes (f = μ/Σμ). When positions match but fluxes or caustics differ, the two models are degenerate in astrometry alone.</p>
       </div>
     </div>
 
@@ -391,7 +448,7 @@
       <div class="checkbox-row"><input type="checkbox" id="showGrid" checked><label for="showGrid">Grid</label></div>
       <div class="checkbox-row"><input type="checkbox" id="showExtended" checked><label for="showExtended">Ray-traced host</label></div>
       <div class="checkbox-row"><input type="checkbox" id="showPointImages" checked><label for="showPointImages">Point-source images</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showLensLabels" checked><label for="showLensLabels">Lens labels (G, G1)</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="showLensLabels" checked><label for="showLensLabels">Lens labels (G, G1, G2…)</label></div>
       <div class="control-row"><label>Ray-trace resolution</label><span class="val" id="val-rtRes">200</span></div>
       <input type="range" id="rtRes" min="80" max="400" step="10" value="200">
       <div class="control-row"><label>Caustic resolution</label><span class="val" id="val-causticRes">500</span></div>
@@ -404,6 +461,8 @@
       <button class="preset-btn" onclick="setPreset('cusp')">Cusp triple</button>
       <button class="preset-btn" onclick="setPreset('fold')">Fold double</button>
       <button class="preset-btn" onclick="setPreset('einstein')">Einstein ring</button>
+      <button class="preset-btn" onclick="setPreset('binary')">Two deflectors</button>
+      <button class="preset-btn" onclick="setPreset('satellite')">Quad + satellite</button>
     </div>
 
     <div class="control-section">
@@ -436,7 +495,8 @@
       <div class="legend-item"><div class="legend-dot" style="background:#64a0ff;"></div> QSO image — saddle (− parity)</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(140,200,255,0.45);"></div> Lensed host (extended)</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(255,235,180,0.95);"></div> G — main lens</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,180,80,0.95);"></div> G1 — perturber</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,180,80,0.95);"></div> G1, G2, … — SIS perturbers</div>
+      <div class="legend-item"><div class="legend-dot" style="background:transparent;border:1.5px solid rgba(255,255,255,0.85);"></div> Pinned reference images</div>
     </div>
     <div class="coords-display" id="imgCoords">θ = (0.00, 0.00)</div>
     <div class="perf-display" id="perfDisplay"></div>
@@ -457,10 +517,23 @@ const imgCtx = imgCanvas.getContext('2d');
 let params = {
   thetaE: 1.2, gamma: 2.0, q: 0.7, phi: 0, cx: 0, cy: 0,
   shear: 0.0, shearAngle: 0,
-  perturberOn: false, pertThetaE: 0.1, pertX: 0.8, pertY: 0.8,
   qsoFlux: 1.0,
   galReff: 0.15, galN: 1.0, galQ: 0.7, galPA: 30, galFlux: 0.5,
 };
+
+// SIS perturbers: { thetaE, x, y, on }. Labelled G1, G2, … by index.
+let perturbers = [];
+let selectedPert = -1;
+const PERT_COLORS = [
+  [255,180, 80], [190,130,255], [ 80,220,200], [255,120,190], [160,220, 90], [120,170,255],
+];
+function pertColor(i, a=0.95) {
+  const c = PERT_COLORS[i % PERT_COLORS.length];
+  return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+}
+
+// Pinned reference (degeneracy check): images + curves from an earlier lens model
+let refPin = null;
 
 let sourcePos = { x: 0.1, y: -0.1 };
 let showCaustics = true, showCritical = true, showGrid = true;
@@ -609,15 +682,16 @@ function eplDeflection(theta_x, theta_y) {
   ax_sky += g1*dx + g2*dy;
   ay_sky += g2*dx - g1*dy;
 
-  // Perturber: softened isothermal sphere — α = θ_E,p · (θ−θ_p) / √(|θ−θ_p|² + r_c²)
-  // Deflections add linearly, so dropping a satellite at θ_p just sums into α.
-  if (params.perturberOn && params.pertThetaE > 0) {
-    const px = theta_x - params.pertX;
-    const py = theta_y - params.pertY;
-    const rc2 = 1e-4; // small core to avoid singularity at the perturber centre
+  // Perturbers: softened isothermal spheres — α = θ_E,p · (θ−θ_p) / √(|θ−θ_p|² + r_c²)
+  // Deflections add linearly, so each SIS just sums into α.
+  const rc2 = 1e-4; // small core to avoid singularity at the perturber centre
+  for (const p of perturbers) {
+    if (!p.on || p.thetaE <= 0) continue;
+    const px = theta_x - p.x;
+    const py = theta_y - p.y;
     const pr = Math.sqrt(px*px + py*py + rc2);
-    ax_sky += params.pertThetaE * px / pr;
-    ay_sky += params.pertThetaE * py / pr;
+    ax_sky += p.thetaE * px / pr;
+    ay_sky += p.thetaE * py / pr;
   }
 
   return { ax: ax_sky, ay: ay_sky };
@@ -686,7 +760,8 @@ function computeCurves() {
   for (let k = 0; k < nPts; k++) {
     const ang = 2*Math.PI*k/nPts;
     let prevDet = null;
-    const nR = 80;
+    // Perturbers add small closed critical curves; sample radially finer so they aren't skipped
+    const nR = perturbers.some(p => p.on) ? 160 : 80;
     const rMin = 0.01, rMax = fieldOfView*0.95;
     for (let ir = 0; ir <= nR; ir++) {
       const r = rMin + (rMax-rMin)*ir/nR;
@@ -826,6 +901,9 @@ function drawGrid(ctx, canvas) {
   ctx.beginPath(); ctx.moveTo(o.px,o.py-8); ctx.lineTo(o.px,o.py+8); ctx.stroke();
 }
 
+const IMG_LABELS = ['A','B','C','D','E','F'];
+let lastImages = [];
+let showRefCurves = true;
 let cachedCurves = null, curvesDirty = true;
 let renderPending = false;
 
@@ -902,32 +980,70 @@ function _render() {
     imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.stroke();
   }
 
-  // Perturber "G1"
-  if (params.perturberOn && params.pertThetaE > 0) {
-    const pp = a2p(params.pertX, params.pertY, imgCanvas);
+  // Perturbers "G1", "G2", …
+  const sPx = imgCanvas.width / (2 * fieldOfView);
+  perturbers.forEach((p, i) => {
+    const pp = a2p(p.x, p.y, imgCanvas);
+    const alpha = p.on ? 1 : 0.35;
     // Influence radius ~ θ_E,p, faint dashed circle showing reach
-    const s = imgCanvas.width / (2 * fieldOfView);
-    imgCtx.strokeStyle = 'rgba(255,200,100,0.35)';
+    imgCtx.strokeStyle = pertColor(i, 0.35 * alpha);
     imgCtx.setLineDash([3, 3]);
     imgCtx.lineWidth = 1;
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, params.pertThetaE * s, 0, 2*Math.PI); imgCtx.stroke();
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, Math.max(p.thetaE * sPx, 1), 0, 2*Math.PI); imgCtx.stroke();
     imgCtx.setLineDash([]);
-    // Solid centre dot
-    imgCtx.fillStyle = 'rgba(255,180,80,0.95)';
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI); imgCtx.fill();
-    imgCtx.strokeStyle = 'rgba(0,0,0,0.6)'; imgCtx.lineWidth = 1;
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI); imgCtx.stroke();
+    // Solid centre dot (hollow when disabled)
+    imgCtx.fillStyle = pertColor(i, 0.95 * alpha);
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI);
+    if (p.on) imgCtx.fill();
+    imgCtx.strokeStyle = p.on ? 'rgba(0,0,0,0.6)' : pertColor(i, 0.6);
+    imgCtx.lineWidth = i === selectedPert ? 2 : 1;
+    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, i === selectedPert ? 6 : 4, 0, 2*Math.PI); imgCtx.stroke();
     if (showLensLabels) {
       imgCtx.font = 'bold 12px JetBrains Mono';
-      imgCtx.fillStyle = 'rgba(255,180,80,0.95)';
+      imgCtx.fillStyle = pertColor(i, 0.95 * alpha);
       imgCtx.textAlign = 'left';
-      imgCtx.fillText('G1', pp.px + 7, pp.py - 5);
+      imgCtx.fillText('G' + (i+1), pp.px + 7, pp.py - 5);
     }
-  }
+  });
 
   // Point-source images
   const images = findImages(sourcePos.x, sourcePos.y);
-  const labels = ['A','B','C','D','E','F'];
+  lastImages = images;
+  const labels = IMG_LABELS;
+
+  // Pinned reference: ghost critical curves / caustics + hollow image rings
+  if (refPin) {
+    if (showRefCurves && refPin.curves) {
+      if (showCritical) {
+        imgCtx.fillStyle = 'rgba(255,255,255,0.22)';
+        for (const p of refPin.curves.criticalCurves) {
+          const {px,py} = a2p(p.x,p.y,imgCanvas);
+          imgCtx.fillRect(px-0.6,py-0.6,1.2,1.2);
+        }
+      }
+      if (showCaustics) {
+        srcCtx.fillStyle = 'rgba(255,255,255,0.22)';
+        for (const p of refPin.curves.caustics) {
+          const {px,py} = a2p(p.x,p.y,srcCanvas);
+          srcCtx.fillRect(px-0.6,py-0.6,1.2,1.2);
+        }
+      }
+    }
+    imgCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+    imgCtx.lineWidth = 1.5;
+    imgCtx.font = '11px JetBrains Mono';
+    imgCtx.textAlign = 'right';
+    refPin.images.forEach((img, i) => {
+      const {px,py} = a2p(img.x, img.y, imgCanvas);
+      imgCtx.beginPath(); imgCtx.arc(px, py, 9, 0, 2*Math.PI); imgCtx.stroke();
+      imgCtx.fillStyle = 'rgba(255,255,255,0.8)';
+      imgCtx.fillText((labels[i]||''+(i+1)) + '′', px - 11, py + 14);
+    });
+    const sp0 = a2p(refPin.source.x, refPin.source.y, srcCanvas);
+    srcCtx.strokeStyle = 'rgba(255,255,255,0.7)'; srcCtx.lineWidth = 1;
+    srcCtx.beginPath(); srcCtx.arc(sp0.px, sp0.py, 7, 0, 2*Math.PI); srcCtx.stroke();
+  }
+  updateRefComparison(images);
   let infoHTML = '';
 
   if (showPointImages) {
@@ -987,7 +1103,6 @@ const allSliders = {
   cy:        { key:'cy',        fmt: v=>v.toFixed(2)+'″' },
   shear:     { key:'shear',     fmt: v=>v.toFixed(3) },
   shearAngle:{ key:'shearAngle',fmt: v=>v.toFixed(0)+'°' },
-  pertThetaE:{ key:'pertThetaE',fmt: v=>v.toFixed(2)+'″' },
   qsoFlux:   { key:'qsoFlux',   fmt: v=>v.toFixed(2) },
   galReff:   { key:'galReff',   fmt: v=>v.toFixed(3)+'″' },
   galN:      { key:'galN',      fmt: v=>v.toFixed(1) },
@@ -996,7 +1111,7 @@ const allSliders = {
   galFlux:   { key:'galFlux',   fmt: v=>v.toFixed(2) },
 };
 
-const lensParams = new Set(['thetaE','gamma','cx','cy','shear','shearAngle','pertThetaE']);
+const lensParams = new Set(['thetaE','gamma','cx','cy','shear','shearAngle']);
 
 for (const [id, cfg] of Object.entries(allSliders)) {
   const el = document.getElementById(id);
@@ -1053,13 +1168,6 @@ for (const [id, setter] of [
   document.getElementById(id).addEventListener('change', e => { setter(e.target.checked); render(); });
 }
 
-// Perturber toggle (affects critical curves, so mark them dirty)
-document.getElementById('perturberOn').addEventListener('change', e => {
-  params.perturberOn = e.target.checked;
-  curvesDirty = true;
-  render();
-});
-
 // Source dragging on source plane
 srcCanvas.addEventListener('mousedown', e => {
   dragging = true;
@@ -1099,7 +1207,7 @@ srcCanvas.addEventListener('touchmove', e => {
 srcCanvas.addEventListener('touchend', () => dragging=false);
 
 // --- Image plane: cursor tracking + perturber drag/shift-click ---
-let perturberDragging = false;
+let draggingPert = -1;
 
 function imgPlanePos(e) {
   const rect = imgCanvas.getBoundingClientRect();
@@ -1107,81 +1215,386 @@ function imgPlanePos(e) {
   return p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, imgCanvas);
 }
 
-function setPerturberPos(x, y) {
-  params.pertX = x;
-  params.pertY = y;
-  document.getElementById('val-pertPos').textContent = `(${x.toFixed(2)}, ${y.toFixed(2)})″`;
-  curvesDirty = true;
+// Index of the perturber under the cursor (within a few pixels), or -1
+function perturberAt(pos) {
+  const tolArcsec = 12 / (imgCanvas.width / (2 * fieldOfView));
+  let best = -1, bestD = tolArcsec;
+  perturbers.forEach((p, i) => {
+    const d = Math.hypot(pos.x - p.x, pos.y - p.y);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  return best;
 }
 
-function nearPerturber(pos) {
-  if (!params.perturberOn) return false;
-  const tolPx = 12; // hit radius in pixels
-  const sPxPerArcsec = imgCanvas.width / (2 * fieldOfView);
-  const tolArcsec = tolPx / sPxPerArcsec;
-  return Math.hypot(pos.x - params.pertX, pos.y - params.pertY) < tolArcsec;
+function movePerturber(i, x, y) {
+  perturbers[i].x = Math.max(-fieldOfView, Math.min(fieldOfView, x));
+  perturbers[i].y = Math.max(-fieldOfView, Math.min(fieldOfView, y));
+  const card = document.getElementById('pertList').children[i];
+  if (card) card.querySelector('.pert-pos').textContent = `(${perturbers[i].x.toFixed(2)}, ${perturbers[i].y.toFixed(2)})″`;
+  if (perturbers[i].on) curvesDirty = true;
+}
+
+function startPertDrag(i) {
+  draggingPert = i;
+  selectPerturber(i);
+  imgCanvas.style.cursor = 'grabbing';
 }
 
 imgCanvas.addEventListener('mousemove', e => {
   const pos = imgPlanePos(e);
   document.getElementById('imgCoords').textContent = `θ = (${pos.x.toFixed(3)}, ${pos.y.toFixed(3)})`;
-  if (perturberDragging) {
-    setPerturberPos(pos.x, pos.y);
+  if (draggingPert >= 0) {
+    movePerturber(draggingPert, pos.x, pos.y);
     render();
   } else {
-    imgCanvas.style.cursor = nearPerturber(pos) ? 'grab' : 'crosshair';
+    imgCanvas.style.cursor = perturberAt(pos) >= 0 ? 'grab' : 'crosshair';
   }
 });
 
 imgCanvas.addEventListener('mousedown', e => {
   const pos = imgPlanePos(e);
-  if (e.shiftKey) {
-    // Shift-click drops (and enables) perturber here
-    params.perturberOn = true;
-    document.getElementById('perturberOn').checked = true;
-    setPerturberPos(pos.x, pos.y);
-    perturberDragging = true;
-    imgCanvas.style.cursor = 'grabbing';
-    render();
-  } else if (nearPerturber(pos)) {
-    perturberDragging = true;
-    imgCanvas.style.cursor = 'grabbing';
+  const hit = perturberAt(pos);
+  if (hit >= 0) {
+    startPertDrag(hit);
+  } else if (e.shiftKey) {
+    // Shift-click drops a new SIS perturber here
+    addPerturber(pos.x, pos.y);
+    startPertDrag(perturbers.length - 1);
   }
+  render();
 });
 
 window.addEventListener('mouseup', () => {
-  if (perturberDragging) {
-    perturberDragging = false;
+  if (draggingPert >= 0) {
+    draggingPert = -1;
     imgCanvas.style.cursor = 'crosshair';
   }
 });
 
-// Touch support for the perturber on the image plane
+// Touch support for perturbers on the image plane
 imgCanvas.addEventListener('touchstart', e => {
   if (!e.touches.length) return;
   const t = e.touches[0];
-  const fakeEvt = { clientX: t.clientX, clientY: t.clientY };
-  const pos = imgPlanePos(fakeEvt);
-  if (nearPerturber(pos) || e.shiftKey) {
+  const pos = imgPlanePos({ clientX: t.clientX, clientY: t.clientY });
+  const hit = perturberAt(pos);
+  if (hit >= 0) {
     e.preventDefault();
-    if (!nearPerturber(pos)) {
-      params.perturberOn = true;
-      document.getElementById('perturberOn').checked = true;
-    }
-    setPerturberPos(pos.x, pos.y);
-    perturberDragging = true;
+    startPertDrag(hit);
     render();
   }
 }, {passive:false});
 imgCanvas.addEventListener('touchmove', e => {
-  if (!perturberDragging || !e.touches.length) return;
+  if (draggingPert < 0 || !e.touches.length) return;
   e.preventDefault();
   const t = e.touches[0];
   const pos = imgPlanePos({ clientX: t.clientX, clientY: t.clientY });
-  setPerturberPos(pos.x, pos.y);
+  movePerturber(draggingPert, pos.x, pos.y);
   render();
 }, {passive:false});
-imgCanvas.addEventListener('touchend', () => { perturberDragging = false; });
+imgCanvas.addEventListener('touchend', () => { draggingPert = -1; });
+
+// --- Perturber list (sidebar) ---
+function addPerturber(x, y, thetaE = 0.15) {
+  perturbers.push({ x, y, thetaE, on: true });
+  selectedPert = perturbers.length - 1;
+  curvesDirty = true;
+  buildPertList();
+}
+
+function removePerturber(i) {
+  perturbers.splice(i, 1);
+  if (selectedPert === i) selectedPert = -1;
+  else if (selectedPert > i) selectedPert--;
+  curvesDirty = true;
+  buildPertList();
+  render();
+}
+
+function selectPerturber(i) {
+  selectedPert = i;
+  [...document.getElementById('pertList').querySelectorAll('.pert-card')]
+    .forEach((c, k) => c.classList.toggle('selected', k === i));
+}
+
+function buildPertList() {
+  const list = document.getElementById('pertList');
+  list.innerHTML = '';
+  if (!perturbers.length) {
+    list.innerHTML = '<p style="font-size:11px;color:var(--text-dim);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px;">No perturbers. Add one, or shift-click the image plane.</p>';
+    return;
+  }
+  perturbers.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'pert-card' + (i === selectedPert ? ' selected' : '');
+    card.style.setProperty('--pc', pertColor(i, 1));
+    card.innerHTML = `
+      <div class="pert-head">
+        <input type="checkbox" ${p.on ? 'checked' : ''} title="Enable this deflector">
+        <span class="pert-name">G${i+1}</span>
+        <span class="pert-pos">(${p.x.toFixed(2)}, ${p.y.toFixed(2)})″</span>
+        <button class="pert-del" title="Remove G${i+1}">×</button>
+      </div>
+      <div class="control-row"><label>Einstein radius θ<sub>E,${i+1}</sub></label><span class="val">${p.thetaE.toFixed(3)}″</span></div>
+      <input type="range" min="0" max="1.5" step="0.005" value="${p.thetaE}">`;
+    const val = card.querySelector('.val');
+    card.querySelector('input[type="range"]').addEventListener('input', e => {
+      p.thetaE = parseFloat(e.target.value);
+      val.textContent = p.thetaE.toFixed(3) + '″';
+      curvesDirty = true;
+      render();
+    });
+    card.querySelector('input[type="checkbox"]').addEventListener('change', e => {
+      p.on = e.target.checked;
+      curvesDirty = true;
+      render();
+    });
+    card.querySelector('.pert-del').addEventListener('click', () => removePerturber(i));
+    card.addEventListener('mousedown', () => { selectPerturber(i); render(); });
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('addPerturber').addEventListener('click', () => {
+  // Drop new deflectors around the Einstein ring so they do something visible
+  const ang = (0.25 + 0.37 * perturbers.length) * 2 * Math.PI;
+  const r = params.thetaE;
+  addPerturber(params.cx + r*Math.cos(ang), params.cy + r*Math.sin(ang));
+  render();
+});
+document.getElementById('clearPerturbers').addEventListener('click', () => {
+  perturbers = [];
+  selectedPert = -1;
+  curvesDirty = true;
+  buildPertList();
+  render();
+});
+
+// --- Degeneracy check: pin images of one model, compare against another ---
+function pinReference() {
+  if (curvesDirty) { cachedCurves = computeCurves(); curvesDirty = false; }
+  refPin = {
+    images: lastImages.map(im => ({ ...im })),
+    source: { ...sourcePos },
+    curves: cachedCurves,
+  };
+  render();
+}
+
+// Greedy nearest-neighbour match of current images to pinned ones
+function matchToPin(images) {
+  const used = new Set();
+  return refPin.images.map(ref => {
+    let best = -1, bestD = Infinity;
+    images.forEach((img, k) => {
+      if (used.has(k)) return;
+      const d = Math.hypot(img.x - ref.x, img.y - ref.y);
+      if (d < bestD) { bestD = d; best = k; }
+    });
+    if (best >= 0 && bestD < 0.5) { used.add(best); return { ref, img: images[best], d: bestD }; }
+    return { ref, img: null, d: null };
+  });
+}
+
+function updateRefComparison(images) {
+  const summary = document.getElementById('refSummary');
+  const table = document.getElementById('refTable');
+  if (!refPin) {
+    summary.innerHTML = '<span style="color:var(--text-dim)">No reference pinned.</span>';
+    table.innerHTML = '';
+    return;
+  }
+  const pairs = matchToPin(images);
+  const sumRef = refPin.images.reduce((s, im) => s + im.mu, 0) || 1;
+  const sumNow = images.reduce((s, im) => s + im.mu, 0) || 1;
+  const matched = pairs.filter(p => p.img);
+  const rms = matched.length ? Math.sqrt(matched.reduce((s, p) => s + p.d*p.d, 0) / matched.length) : NaN;
+  const fluxRms = matched.length ? Math.sqrt(matched.reduce((s, p) => {
+    const df = p.img.mu/sumNow - p.ref.mu/sumRef; return s + df*df;
+  }, 0) / matched.length) : NaN;
+
+  // Verdict uses the bright (μ ≥ 1) images; demagnified central images are rarely observed
+  const nBrightNow = images.filter(im => im.mu >= 1).length;
+  const brightPairs = pairs.filter(p => p.ref.mu >= 1);
+  const countOk = nBrightNow === brightPairs.length && brightPairs.every(p => p.img);
+  const brightMatched = brightPairs.filter(p => p.img);
+  const brightRms = brightMatched.length ? Math.sqrt(brightMatched.reduce((s, p) => s + p.d*p.d, 0) / brightMatched.length) : NaN;
+  const posOk = countOk && brightRms < 0.01;
+  const faintDiff = (images.length - nBrightNow) !== (pairs.length - brightPairs.length);
+  summary.innerHTML =
+    `Bright images (μ≥1): <span class="${countOk ? 'good' : 'bad'}">${nBrightNow} now / ${brightPairs.length} pinned</span>` +
+    (faintDiff ? `<br><span style="color:var(--text-dim)">Faint images: ${images.length - nBrightNow} now / ${pairs.length - brightPairs.length} pinned</span>` : '') + '<br>' +
+    `rms Δθ: <span class="${posOk ? 'good' : 'bad'}">${isNaN(rms) ? '—' : (rms*1000).toFixed(1) + ' mas'}</span>` +
+    ` · rms Δf: <span class="${fluxRms < 0.02 ? 'good' : 'bad'}">${isNaN(fluxRms) ? '—' : fluxRms.toFixed(3)}</span>` +
+    (posOk && fluxRms >= 0.02 ? '<br><span style="color:var(--caustic)">Positions degenerate; flux ratios differ.</span>' : '') +
+    (posOk && fluxRms < 0.02 ? '<br><span class="good">Indistinguishable from the pinned model.</span>' : '');
+
+  table.innerHTML = pairs.map((p, i) => {
+    const lab = (IMG_LABELS[i] || ''+(i+1)) + '′';
+    const fRef = (p.ref.mu/sumRef).toFixed(3);
+    if (!p.img) return `<div class="img-entry"><span class="img-label">${lab}</span><span class="img-pos bad" style="color:var(--accent)">missing</span><span class="img-mag">f ${fRef} → —</span></div>`;
+    return `<div class="img-entry"><span class="img-label">${lab}</span><span class="img-pos">Δθ=${(p.d*1000).toFixed(1)} mas</span><span class="img-mag">f ${fRef} → ${(p.img.mu/sumNow).toFixed(3)}</span></div>`;
+  }).join('');
+}
+
+// Set a main-lens slider + readout from code
+function syncSlider(id, v) {
+  const el = document.getElementById(id);
+  el.value = v;
+  document.getElementById('val-'+id).textContent = allSliders[id].fmt(v);
+}
+
+// Refit main EPL + external shear + source so the pinned image positions are reproduced,
+// with the perturbers held fixed. Minimises the image-plane-weighted source-plane χ²,
+//   χ² = Σ_i |A_i⁻¹ (β(θ_i) − β_s)|²,
+// with Nelder–Mead.  Positions alone (2 per image) rarely pin down all the parameters.
+function refitMainLens() {
+  if (!refPin || refPin.images.length < 2) return;
+  const fitSlope = document.getElementById('fitSlope').checked;
+  const saved = { ...params };
+  // Demagnified (μ < 1) central images are usually unobservable; fit only the bright ones
+  const pts = refPin.images.filter(im => im.mu >= 1).map(im => ({ x: im.x, y: im.y }));
+  if (pts.length < 2) return;
+
+  const sh = params.shearAngle * Math.PI / 180;
+  const eps0 = qPhiToEps(params.q, params.phi);
+  // x = [θE, ε1, ε2, x0, y0, γ1, γ2, βx, βy, (γ)]
+  const x0 = [params.thetaE, eps0.e1, eps0.e2, params.cx, params.cy,
+              params.shear*Math.cos(2*sh), params.shear*Math.sin(2*sh),
+              refPin.source.x, refPin.source.y];
+  if (fitSlope) x0.push(params.gamma);
+
+  function apply(x) {
+    params.thetaE = x[0];
+    const qp = epsToQPhi(x[1], x[2]);
+    params.q = qp.q; params.phi = qp.phi;
+    params.cx = x[3]; params.cy = x[4];
+    params.shear = Math.hypot(x[5], x[6]);
+    params.shearAngle = 0.5 * Math.atan2(x[6], x[5]) * 180 / Math.PI;
+    if (fitSlope) params.gamma = x[9];
+  }
+
+  function cost(x) {
+    let pen = 0;
+    const clamp = (v, lo, hi) => { if (v < lo) pen += (lo-v)*1e3; if (v > hi) pen += (v-hi)*1e3; };
+    clamp(x[0], 0.3, 2.5); clamp(Math.hypot(x[1], x[2]), 0, 0.69);
+    clamp(x[3], -1, 1); clamp(x[4], -1, 1); clamp(Math.hypot(x[5], x[6]), 0, 0.3);
+    if (fitSlope) clamp(x[9], 1.2, 2.8);
+    if (pen > 0) return 1e3 + pen;
+    apply(x);
+    let chi2 = 0;
+    const h = 1e-5;
+    for (const p of pts) {
+      const s = lensEquation(p.x, p.y);
+      const s1 = lensEquation(p.x+h, p.y), s2 = lensEquation(p.x, p.y+h);
+      const A11=(s1.bx-s.bx)/h, A12=(s2.bx-s.bx)/h, A21=(s1.by-s.by)/h, A22=(s2.by-s.by)/h;
+      const det = A11*A22 - A12*A21;
+      const dbx = s.bx - x[7], dby = s.by - x[8];
+      if (Math.abs(det) < 1e-6) { chi2 += 1e2*(dbx*dbx + dby*dby); continue; }
+      const ex = ( A22*dbx - A12*dby)/det;
+      const ey = (-A21*dbx + A11*dby)/det;
+      chi2 += ex*ex + ey*ey;
+    }
+    return chi2;
+  }
+
+  function optimise(start) {
+    let best = start, bestF = cost(start);
+    for (let restart = 0; restart < 5; restart++) {
+      const r = nelderMead(cost, best, restart < 2 ? 0.08 : 0.02, 3000);
+      if (r.f < bestF) { best = r.x; bestF = r.f; }
+    }
+    return { x: best, f: bestF };
+  }
+
+  // Starting points: the current model, and a round lens centred on the image centroid
+  const n = pts.length;
+  const gx = pts.reduce((a, p) => a + p.x, 0) / n, gy = pts.reduce((a, p) => a + p.y, 0) / n;
+  const rMean = pts.reduce((a, p) => a + Math.hypot(p.x - gx, p.y - gy), 0) / n;
+  const clampC = v => Math.max(-1, Math.min(1, v));
+  const starts = [x0];
+  for (const [e1, e2] of [[0, 0], [0.15, 0], [0, 0.15], [-0.15, 0]]) {
+    const st = [Math.max(0.3, Math.min(2.5, rMean)), e1, e2, clampC(gx), clampC(gy), 0, 0, 0, 0];
+    if (fitSlope) st.push(2.0);
+    apply(st);
+    const b = pts.map(p => lensEquation(p.x, p.y));
+    st[7] = b.reduce((a, q) => a + q.bx, 0) / n;
+    st[8] = b.reduce((a, q) => a + q.by, 0) / n;
+    starts.push(st);
+  }
+
+  // A small source-plane χ² can still hide extra images (source parked on a caustic),
+  // so judge every candidate by solving for its actual images.
+  const nBrightPin = pts.length;
+  let best = null, bestScore = Infinity;
+  for (const st of starts) {
+    const r = optimise(st);
+    if (r.f >= 1e3) continue;
+    apply(r.x);
+    const imgs = findImages(r.x[7], r.x[8]);
+    const bright = imgs.filter(im => im.mu >= 1);
+    let rms = 0;
+    for (const p of pts) {
+      const d = Math.min(...imgs.map(im => Math.hypot(im.x - p.x, im.y - p.y)), 1);
+      rms += d*d;
+    }
+    rms = Math.sqrt(rms / pts.length);
+    const score = rms + 0.5 * Math.abs(bright.length - nBrightPin);
+    if (score < bestScore) { bestScore = score; best = r.x; }
+  }
+
+  if (!best) { Object.assign(params, saved); render(); return; }
+  apply(best);
+  sourcePos.x = best[7]; sourcePos.y = best[8];
+  ['thetaE','cx','cy','shear','shearAngle','gamma'].forEach(id => syncSlider(id, params[id]));
+  const eps = qPhiToEps(params.q, params.phi);
+  document.getElementById('e1').value = eps.e1;
+  document.getElementById('e2').value = eps.e2;
+  document.getElementById('val-e1').textContent = eps.e1.toFixed(3);
+  document.getElementById('val-e2').textContent = eps.e2.toFixed(3);
+  syncEpsDerivedDisplay();
+  curvesDirty = true;
+  render();
+}
+
+function nelderMead(f, x0, step, maxIter) {
+  const n = x0.length;
+  let simplex = [x0.slice()];
+  for (let i = 0; i < n; i++) { const x = x0.slice(); x[i] += step; simplex.push(x); }
+  let fs = simplex.map(f);
+  for (let it = 0; it < maxIter; it++) {
+    const order = fs.map((v, i) => i).sort((a, b) => fs[a] - fs[b]);
+    simplex = order.map(i => simplex[i]); fs = order.map(i => fs[i]);
+    if (Math.abs(fs[n] - fs[0]) < 1e-14) break;
+    const c = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let k = 0; k < n; k++) c[k] += simplex[i][k] / n;
+    const pt = (t) => c.map((ck, k) => ck + t*(simplex[n][k] - ck));
+    const xr = pt(-1), fr = f(xr);
+    if (fr < fs[0]) {
+      const xe = pt(-2), fe = f(xe);
+      if (fe < fr) { simplex[n] = xe; fs[n] = fe; } else { simplex[n] = xr; fs[n] = fr; }
+    } else if (fr < fs[n-1]) {
+      simplex[n] = xr; fs[n] = fr;
+    } else {
+      const xc = fr < fs[n] ? pt(-0.5) : pt(0.5), fc = f(xc);
+      if (fc < Math.min(fr, fs[n])) { simplex[n] = xc; fs[n] = fc; }
+      else {
+        for (let i = 1; i <= n; i++) {
+          simplex[i] = simplex[i].map((v, k) => simplex[0][k] + 0.5*(v - simplex[0][k]));
+          fs[i] = f(simplex[i]);
+        }
+      }
+    }
+  }
+  return { x: simplex[0], f: fs[0] };
+}
+
+document.getElementById('pinRef').addEventListener('click', pinReference);
+document.getElementById('clearRef').addEventListener('click', () => { refPin = null; render(); });
+document.getElementById('refitMain').addEventListener('click', () => {
+  if (!refPin) pinReference();
+  refitMainLens();
+});
+document.getElementById('showRefCurves').addEventListener('change', e => { showRefCurves = e.target.checked; render(); });
 
 // --- Presets ---
 function setPreset(name) {
@@ -1190,6 +1603,12 @@ function setPreset(name) {
     cusp:     { thetaE:1.2, gamma:2.0, q:0.55, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.12, galN:1.5, galQ:0.6, galPA:45, galFlux:0.6, sx:0.0, sy:0.22 },
     fold:     { thetaE:1.0, gamma:2.0, q:0.8, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.18, galN:1.0, galQ:0.8, galPA:0, galFlux:0.4, sx:0.4, sy:0.3 },
     einstein: { thetaE:1.2, gamma:2.0, q:0.95, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:0.5, galReff:0.08, galN:1.0, galQ:0.9, galPA:0, galFlux:1.0, sx:0.0, sy:0.0 },
+    // Two comparable galaxies (G + G1): pin, delete G1, and refit to see a single EPL+shear mimic them
+    binary:   { thetaE:0.85, gamma:2.0, q:0.9, phi:0, cx:-0.4, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.1, galN:1.0, galQ:0.8, galPA:20, galFlux:0.5, sx:0.08, sy:0.05,
+                perts:[{ x:0.75, y:0.1, thetaE:0.55 }] },
+    // Quad with a small satellite just outside one image: astrometry barely moves, flux ratio does
+    satellite:{ thetaE:1.2, gamma:2.0, q:0.65, phi:30, cx:0, cy:0, shear:0.05, shearAngle:15, qsoFlux:1.0, galReff:0.15, galN:1.0, galQ:0.7, galPA:30, galFlux:0.5, sx:0.05, sy:0.02,
+                perts:[{ x:1.27, y:1.0, thetaE:0.08 }] },
   };
   const p = P[name]; if (!p) return;
 
@@ -1209,6 +1628,12 @@ function setPreset(name) {
   document.getElementById('val-e1').textContent = eps.e1.toFixed(3);
   document.getElementById('val-e2').textContent = eps.e2.toFixed(3);
   syncEpsDerivedDisplay();
+
+  // Each preset defines the full deflector set (and starts a fresh comparison)
+  refPin = null;
+  perturbers = (p.perts || []).map(q => ({ ...q, on: true }));
+  selectedPert = -1;
+  buildPertList();
 
   sourcePos.x = p.sx; sourcePos.y = p.sy;
   curvesDirty = true;
