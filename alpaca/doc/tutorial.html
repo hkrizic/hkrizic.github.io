@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALPACA tutorials</title>
+  <meta name="description" content="Two step-by-step ALPACA tutorials on real data: the lensed quasar HE0435-1223 (JWST) and the galaxy-galaxy lens COSMOS 5921+0638 (HST)." />
+  <link rel="stylesheet" href="../css/app.css" />
+  <link rel="stylesheet" href="doc.css" />
+  <link rel="icon" type="image/png" sizes="64x64" href="../assets/favicon-64.png" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../"><img src="../assets/logo-mark.png" alt="ALPACA" /><span>Alpaca</span><span class="sub">tutorial</span></a>
+    <nav class="navlinks">
+      <a class="btn primary" href="tutorial.html">Tutorial</a>
+      <a class="btn" href="documentation.html">Documentation</a>
+      <a class="btn" href="../app.html">Analysis</a>
+      <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
+    </nav>
+  </header>
+  <main class="doc-main" style="margin: 0 auto;">
+    <h1>Tutorials</h1>
+    <p class="sub">Two real lenses, from the raw image to a model you can judge. Pick the kind of lens you work on;
+      both follow the same steps, so you can read the other one afterwards for the differences.</p>
+    <div class="tut-cards">
+      <a class="tut-card" href="tutorial-quasar.html">
+        <img src="img/card_quasar.png" alt="HE0435-1223" />
+        <div class="b"><span class="k muted small" style="letter-spacing:.14em;text-transform:uppercase">Lensed quasar · JWST/NIRCam F150W</span>
+          <div class="t">HE0435−1223</div>
+          <div class="muted">Four quasar images, a lensed host ring, five perturbers, time delays. PSF from stars, the
+            PSF-error term, blinding.</div></div>
+      </a>
+      <a class="tut-card" href="tutorial-galaxy.html">
+        <img src="img/card_galaxy.png" alt="COSMOS 5921+0638" />
+        <div class="b"><span class="k muted small" style="letter-spacing:.14em;text-transform:uppercase">Galaxy–galaxy · HST/ACS F814W</span>
+          <div class="t">COSMOS 5921+0638</div>
+          <div class="muted">A compact elliptical with an Einstein ring, from public archive data. Building every input
+            yourself: noise, masks, a PSF from stars, the θ<sub>E</sub> prior.</div></div>
+      </a>
+    </div>
+    <h2 id="before"><span class="step">Before you start</span>What you need</h2>
+    <ul>
+      <li>ALPACA installed (<a href="documentation.html#install">installation</a>); <code>alpaca-device</code> shows your device;</li>
+      <li>about an hour; the runs take minutes (a quick look on a laptop) to hours (a production budget);</li>
+      <li>no prior knowledge of ALPACA; some lensing background helps.</li>
+    </ul>
+    <div class="callout ai"><span class="k">Prefer to let an AI assistant drive?</span>
+      <p>The repository's <code>llm/</code> folder has instruction files for Claude Code, Codex or the Gemini CLI. The
+        assistant sets up the environment, prepares your data and starts a first model with you (see the
+        <a href="documentation.html#ai">AI-assisted workflow</a>). The tutorials explain what it does and why.</p></div>
+  </main>
+</body>
+</html>

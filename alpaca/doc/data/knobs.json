@@ -1,0 +1,3043 @@
+{
+ "alpaca_version": "0.4.2",
+ "knobs": [
+  {
+   "key": "blinding.blind_stored_samples",
+   "type": "bool",
+   "default": true,
+   "code_doc": "If ``True`` (default), blind the columns written to ``posterior_samples.npz`` / ``samples.h5`` so no stored artifact holds an absolute value. If ``False``, only human-facing summaries/plots are blinded and the raw samples remain absolute.",
+   "runtime": "BlindingConfig.blind_stored_samples",
+   "shipped": true,
+   "curated_html": "<p>If <code>true</code>, the blinded columns are also blinded <em>in the stored artifacts</em> (<code>posterior_samples.npz</code> / <code>samples.h5</code>) so no file on disk holds an absolute value. If <code>false</code>, only human-facing summaries and plots are blinded and raw samples stay absolute.</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.enabled",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Master switch. When ``False`` the pipeline behaves exactly as before.",
+   "runtime": "BlindingConfig.enabled",
+   "shipped": true,
+   "curated_html": "<p>Master switch. Blinding subtracts the posterior location (mean/median) of each blinded parameter, so the analyst sees only shape and width \u2014 never the absolute value \u2014 until the collaboration unblinds. The subtracted offsets are sealed (see <code>encrypt</code>); an offset-free <code>blinding_manifest.json</code> records the frozen conventions. When <code>false</code> the pipeline behaves exactly as before.</p>",
+   "warnings": [
+    "mode and reference are chosen once and frozen per project \u2014 the pipeline refuses to mix conventions across runs sharing an output dir (TDCOSMO policy)."
+   ],
+   "level": "essential",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.encrypt",
+   "type": "bool",
+   "default": true,
+   "code_doc": "If ``True`` (default), the offsets are ENCRYPTED under a secret key and sealed to ``blinding_key.json`` (ciphertext only \u2014 safe to leave in the run directory; unblinding is impossible without the key). If ``False``, the legacy plaintext ``blinding_offsets.json`` is written instead.",
+   "runtime": "BlindingConfig.encrypt",
+   "curated_html": "<p>If <code>true</code>, the offsets are encrypted under a secret key and sealed to <code>blinding_key.json</code> (ciphertext only \u2014 safe to leave in the run directory; unblinding is impossible without the key). If <code>false</code>, the legacy plaintext <code>blinding_offsets.json</code> is written instead.</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.key",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Secret key/passphrase for encryption. If ``None`` (default), the key is read from the ``key_env_var`` environment variable, and if that is unset a fresh random key is generated. Providing the key here is discouraged (it lands in the config file); prefer the env var.",
+   "runtime": "BlindingConfig.key",
+   "curated_html": "<p>Secret key/passphrase for offset encryption. When <code>null</code>, the key is read from the <code>key_env_var</code> environment variable; if that is unset, a fresh random key is generated.</p>",
+   "warnings": [
+    "Providing the key here is discouraged \u2014 it lands in the config file, which typically gets copied into the run directory. Prefer the environment variable."
+   ],
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.key_env_var",
+   "type": "str | None",
+   "default": "ALPACA_BLINDING_KEY",
+   "code_doc": "Environment variable to read the secret key from when ``key`` is None. Default ``\"ALPACA_BLINDING_KEY\"``. Set to ``None`` to disable.",
+   "runtime": "BlindingConfig.key_env_var",
+   "curated_html": "<p>Environment variable to read the secret key from when <code>key</code> is <code>null</code>. Set to <code>null</code> to disable env lookup entirely.</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.mode",
+   "type": "one of ['absolute', 'fractional']",
+   "default": "absolute",
+   "code_doc": "``\"absolute\"``  -> view ``x - mean(x)`` (physical units). ``\"fractional\"`` -> view ``(x - mean(x)) / mean(x)`` (dimensionless).",
+   "runtime": "BlindingConfig.mode",
+   "shipped": "absolute",
+   "curated_html": "<p><code>\"absolute\"</code> shows <code>x \u2212 mean(x)</code> (physical units, zero-centred); <code>\"fractional\"</code> shows <code>(x \u2212 mean(x)) / mean(x)</code> (dimensionless relative deviations).</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.parameters",
+   "type": "list[str] | None",
+   "default": null,
+   "code_doc": "Explicit blind-set, overriding ``scenario`` when not ``None``.",
+   "runtime": "BlindingConfig.parameters",
+   "shipped": null,
+   "curated_html": "<p>Explicit blind-set, overriding <code>scenario</code> when not <code>null</code>.</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.reference",
+   "type": "one of ['mean', 'median']",
+   "default": "mean",
+   "code_doc": "Location statistic to subtract. Policy default is ``\"mean\"``.",
+   "runtime": "BlindingConfig.reference",
+   "shipped": "mean",
+   "curated_html": "<p>Location statistic subtracted from the blinded parameters. Policy default is <code>\"mean\"</code>.</p>",
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.scenario",
+   "type": "one of ['first', 'previously_analyzed', 'no_delays'] | None",
+   "default": "previously_analyzed",
+   "code_doc": "Preset blind-set (see ``alpaca.utils.blinding.SCENARIO_PARAMS``). Ignored when ``parameters`` is given. For systems already modelled in the literature (e.g. WFI2033-4723) use ``\"previously_analyzed\"``.",
+   "runtime": "BlindingConfig.scenario",
+   "shipped": "previously_analyzed",
+   "curated_html": "<p>Preset blind-set (see <code>alpaca.utils.blinding.SCENARIO_PARAMS</code>). For systems already modelled in the literature (e.g. WFI2033\u22124723) use <code>\"previously_analyzed\"</code>. Ignored when <code>parameters</code> is given.</p>",
+   "level": "common",
+   "section": "blinding"
+  },
+  {
+   "key": "blinding.write_key_file",
+   "type": "bool",
+   "default": true,
+   "code_doc": "When a key is GENERATED (not supplied via ``key``/env), also dump it to ``blinding_secret.key`` next to the sealed blob (default ``True``). This file IS the secret \u2014 relocate it out of the run directory. When the key is supplied by the user it is never written to disk.",
+   "runtime": "BlindingConfig.write_key_file",
+   "curated_html": "<p>When a key is <em>generated</em> (not supplied via <code>key</code> or the env var), also dump it to <code>blinding_secret.key</code> next to the sealed blob. When the key is supplied by the user it is never written to disk.</p>",
+   "warnings": [
+    "blinding_secret.key IS the secret \u2014 relocate it out of the run directory (to the analysis lead) or anyone with directory access can unblind."
+   ],
+   "level": "advanced",
+   "section": "blinding"
+  },
+  {
+   "key": "config_version",
+   "type": "int",
+   "default": 2,
+   "code_doc": "Layout version of the file; written automatically.",
+   "level": "advanced",
+   "section": "config_version"
+  },
+  {
+   "key": "data.cutout_size",
+   "type": "int | None",
+   "default": null,
+   "code_doc": "If set (< the loaded image size), the pipeline CENTER-CROPS the loaded image/noise to this size for ALL normal modelling (stages 1/2/3, sampling). The full loaded image is retained ONLY for the lens-light refit (LensLightRefitConfig), which fits the parametric lens light on the larger frame for better outer-profile / sky constraints; its cutout-invariant parameters transfer back to the cropped model unchanged. None = use the loaded image at its native size everywhere.",
+   "runtime": "DataConfig.cutout_size",
+   "shipped": 219,
+   "curated_html": "<p>If set (and smaller than the loaded image), the pipeline center-crops the loaded image and noise map to this many pixels per side for every normal modelling stage and sampling. A full-frame <code><a class=\"xref\" href=\"#k-data-likelihood-mask-path\">data.likelihood_mask_path</a></code> is center-cropped with the same offset; an already cutout-sized likelihood mask is accepted unchanged.</p><p>The full loaded frame is retained for the lens-light refit, which fits the parametric light on the larger frame for better outer-profile and sky constraints. Its cutout-invariant parameters transfer back to the cropped model unchanged, and its separate mask must match the full frame.</p>",
+   "related": [
+    "data.likelihood_mask_path",
+    "light.lens.refit.mask_path"
+   ],
+   "level": "essential",
+   "section": "data"
+  },
+  {
+   "key": "data.lens_center_search_radius",
+   "type": "float",
+   "default": 0.35,
+   "code_doc": "Radius (arcsec) within which the lens-galaxy centre is refined from the seed position. Shrink for asymmetric lenses where a bright point-source image lies within the default 0.5\" of the seed (otherwise the refinement locks onto the PS image instead of the lens galaxy).",
+   "runtime": "DataConfig.lens_center_search_radius",
+   "shipped": 0.35,
+   "curated_html": "<p>Radius within which the lens-galaxy centre is refined from the seed position. Shrink it for asymmetric systems where a bright point-source image lies within the search radius \u2014 otherwise the refinement locks onto the quasar image instead of the galaxy.</p>",
+   "level": "advanced",
+   "section": "data"
+  },
+  {
+   "key": "data.likelihood_mask_path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Optional path to a boolean mask file (``.npy`` or ``.fits``). When provided, only ``True`` pixels contribute to the likelihood.",
+   "runtime": "DataConfig.likelihood_mask_path",
+   "shipped": "data/mask_likelihood.fits",
+   "curated_html": "<p>Optional boolean mask for the main lens-model likelihood \u2014 companions, diffraction spikes, cosmic-ray residuals, and detector defects. Only <code>True</code> pixels contribute; <code>null</code> disables the mask.</p><p>The <code>.npy</code> or <code>.fits</code> array may match either the modelling cutout or the original full science frame. When <code><a class=\"xref\" href=\"#k-data-cutout-size\">data.cutout_size</a></code> is active and a full-frame mask is supplied, ALPACA center-crops it with exactly the same offset as the image and noise map. A cutout-sized mask is used directly.</p><p>This mask belongs to the main fit and is distinct from the full-frame <code><a class=\"xref\" href=\"#k-light-lens-refit-mask-path\">light.lens.refit.mask_path</a></code>. The same full-frame file may be used for both paths only when its pixel selection is intentionally suitable for both fits.</p>",
+   "warnings": [
+    "A line-of-sight perturber's LIGHT is modelled only when its catalog entry has a lens_light block \u2014 mask every other perturber galaxy here or its flux is fitted by the lens light / source and biases the fit."
+   ],
+   "related": [
+    "data.cutout_size",
+    "light.lens.refit.mask_path"
+   ],
+   "level": "essential",
+   "section": "data"
+  },
+  {
+   "key": "data.pix_scale",
+   "type": "float",
+   "default": 0.031,
+   "code_doc": "Detector pixel scale in arcsec/pixel.",
+   "runtime": "DataConfig.pix_scale",
+   "shipped": 0.031228698402951588,
+   "curated_html": "<p>Detector pixel scale of the science image. Read it from your FITS header (<code>CD1_1</code>/<code>CD2_2</code> or <code>D001SCAL</code>). Common values: drizzled HST/WFC3 = 0.04, JWST/NIRCam short-wave = 0.031. Everything angular in the pipeline (masks, priors on offsets, PS separation) is expressed in arcsec and converted with this scale, so an incorrect value silently corrupts the whole geometry.</p>",
+   "level": "essential",
+   "section": "data"
+  },
+  {
+   "key": "data.ps_lens_mask_radius",
+   "type": "float",
+   "default": 0.35,
+   "code_doc": "Radius (arcsec) of the central mask around the lens centre that is excluded from point-source detection. Shrink this when one of the images sits close to the lens galaxy.",
+   "runtime": "DataConfig.ps_lens_mask_radius",
+   "shipped": 0.35,
+   "curated_html": "<p>Radius of the central mask around the lens-galaxy centre that is excluded from point-source detection, so the bright lens core is not picked up as a fifth image. Shrink it when a genuine quasar image sits close to the lens galaxy (small-separation quads, fold configurations).</p>",
+   "level": "advanced",
+   "section": "data"
+  },
+  {
+   "key": "data.ps_min_peak_frac",
+   "type": "float",
+   "default": 0.15,
+   "code_doc": "Minimum fraction of the brightest unmasked peak for a local maximum to be accepted as a point-source candidate. Lower this for high-magnification-ratio quads where the faintest image is much dimmer than the brightest.",
+   "runtime": "DataConfig.ps_min_peak_frac",
+   "shipped": 0.15,
+   "curated_html": "<p>Minimum fraction of the brightest unmasked peak for a local maximum to count as a point-source candidate. Lower it (e.g. to 0.05) for high-magnification-ratio quads where the faintest image is far dimmer than the brightest; raising it suppresses spurious detections from bright arc knots.</p>",
+   "level": "advanced",
+   "section": "data"
+  },
+  {
+   "key": "data.ps_min_sep",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Minimum separation (arcsec) between detected point-source images. ``None`` (default) resolves to ``2 x pix_scale`` so it tracks the detector sampling automatically.",
+   "runtime": "DataConfig.ps_min_sep",
+   "shipped": null,
+   "curated_html": "<p>Minimum separation between detected point-source images. Local maxima closer than this get merged into one candidate. Two native pixels is a safe default; raise it if noise spikes near an image split one quasar image into two detections.</p>",
+   "level": "advanced",
+   "section": "data"
+  },
+  {
+   "key": "data.source_oversample",
+   "type": "int",
+   "default": 3,
+   "code_doc": "Source-plane supersampling factor for the forward model. The source grid is ``source_oversample`` times finer than the data pixels and downsampled on output. Memory scales ~quadratically. Note: the supersampling factor of the INPUT PSF lives in ``psf.input.oversample`` (it describes the provided PSF file, not the observation).",
+   "runtime": "DataConfig.source_oversample",
+   "shipped": 3,
+   "curated_html": "<p>Source-plane supersampling factor of the forward model: the internal source grid is this many times finer than the data pixels and is downsampled on output. Memory scales roughly quadratically. 3 is usually plenty; 5 adds marginal accuracy at ~2.8\u00d7 the memory.</p>",
+   "level": "advanced",
+   "section": "data"
+  },
+  {
+   "key": "light.lens.couple_sersic_centers",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Share one centre between the S\u00e9rsic components.",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.couple_sersic_ellipticities",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Share one ellipticity between the S\u00e9rsic components.",
+   "shipped": false,
+   "curated_html": "<p>Couple the ellipticities of all Sersic lens-light components: L2/L3 share <code>e1</code>/<code>e2</code> with L1. Removes four latents from a triple-Sersic model and prevents the components from twisting against each other \u2014 recommended when the extra Sersics are meant as radial-profile freedom, not isophote-twist freedom.</p>",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.ellipticity_max",
+   "type": "float | null",
+   "default": null,
+   "code_doc": "Upper bound on the lens-light ellipticity components.",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.initial",
+   "type": "str",
+   "default": "sersic",
+   "code_doc": "Lens-light model of the GD stage 1 (e.g. 'sersic', 'double-sersic', 'triple-sersic', 'MGE+double-sersic').",
+   "shipped": "double-sersic",
+   "curated_html": "<p>Preferred single-string interface for the lens-light model (2026-07). It sets the four legacy booleans (<code>use_double_sersic_lens</code>, <code>use_triple_sersic_lens</code>, <code>use_mge_lens_light</code>, <code>mge_as_correction</code>) consistently:</p><ul><li><code>\"sersic\"</code> \u2014 single Sersic profile.</li><li><code>\"double-sersic\"</code> \u2014 bulge + envelope.</li><li><code>\"triple-sersic\"</code> \u2014 plus a third component for core corrections.</li><li><code>\"MGE\"</code> \u2014 a Multi-Gaussian Expansion <em>replaces</em> the Sersics entirely.</li><li><code>\"MGE+double-sersic\"</code> / <code>\"MGE+triple-sersic\"</code> \u2014 Sersics carry bulge+envelope, a small Gaussian stack absorbs residual core mottling.</li></ul><p>When <code>null</code>, the string is derived from the legacy booleans, which remain supported for old configs and are kept in sync at validation. The number of MGE components stays a separate knob (<code>mge_n_components</code>).</p>",
+   "related": [
+    "light.lens.refit.profile"
+   ],
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.mge.n_components",
+   "type": "int",
+   "default": 20,
+   "code_doc": "Number of Gaussians in the MGE lens-light model.",
+   "shipped": 20,
+   "curated_html": "<p>Number of Gaussian components in the MGE stack, log-spaced in width between <code>mge_sigma_min</code> and <code>mge_sigma_max</code>. More components give smoother radial-profile freedom at the cost of one amplitude latent each.</p>",
+   "related": [
+    "light.lens.refit.mge_n_components"
+   ],
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.mge.sigma_max",
+   "type": "float",
+   "default": 2.5,
+   "code_doc": "Largest MGE width (arcsec).",
+   "shipped": 2.5,
+   "curated_html": "<p>Width of the widest MGE Gaussian. In correction mode keep this small (a few tenths of an arcsec) so the stack stays a core correction; in full-MGE mode it must reach the lens-light envelope scale.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.mge.sigma_min",
+   "type": "float",
+   "default": 0.03,
+   "code_doc": "Smallest MGE width (arcsec).",
+   "shipped": 0.03,
+   "curated_html": "<p>Width of the narrowest MGE Gaussian. Values well below the PSF width buy nothing \u2014 the convolution washes them out.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.adam_steps",
+   "type": "int",
+   "default": 3000,
+   "code_doc": "Optimization budget of the light-only fit.",
+   "runtime": "LensLightRefitConfig.adam_steps",
+   "shipped": 3000,
+   "curated_html": "<p>Optimization budget of the light-only fit.</p>",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.arc_mask_inner_radius",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Build a REFIT-ONLY arc annulus (arcsec, centred on the point-source centroid = the Einstein-ring centre) instead of reusing the CF arc mask. Strongly recommended whenever ``mask_arc`` or ``ps_sigma_clip_within=\"arc\"`` is used: the CF mask is sized for SOURCE reconstruction and is far too wide for a light fit \u2014 a typical is a 0.7-2.8\" annulus, and removing it costs 1.264 -> 1.879 in GD chi2 because it deletes the whole band where the Sersic R_e lives, leaving the profile there as bare interpolation. A narrow annulus bracketing the ring removes the arc flux without that damage.",
+   "runtime": "LensLightRefitConfig.arc_mask_inner_radius",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.arc_mask_outer_radius",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Build a REFIT-ONLY arc annulus (arcsec, centred on the point-source centroid = the Einstein-ring centre) instead of reusing the CF arc mask. Strongly recommended whenever ``mask_arc`` or ``ps_sigma_clip_within=\"arc\"`` is used: the CF mask is sized for SOURCE reconstruction and is far too wide for a light fit \u2014 a typical is a 0.7-2.8\" annulus, and removing it costs 1.264 -> 1.879 in GD chi2 because it deletes the whole band where the Sersic R_e lives, leaving the profile there as bare interpolation. A narrow annulus bracketing the ring removes the arc flux without that damage.",
+   "runtime": "LensLightRefitConfig.arc_mask_outer_radius",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.center_shift_sigma",
+   "type": "float",
+   "default": 0.05,
+   "runtime": "LensLightRefitConfig.center_shift_sigma",
+   "code_doc": "Width (arcsec) of the Gaussian prior on the per-component centre offsets of the refit light (lopsidedness). Only used when `uncouple_centers` is true. Default 0.05\u2033.",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.distinct_n_init",
+   "type": "bool | None",
+   "default": null,
+   "code_doc": "Seed the Sersic indices distinctly (2.5/1/4) instead of all at 3.0. None = follow smooth_bounds. Split out so the bijection and the init can be attributed separately \u2014 bundling them made the 2026-08-04 regression (0.837 -> 1.003 on the MGE flagship) unattributable.",
+   "runtime": "LensLightRefitConfig.distinct_n_init",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ellipticity_max",
+   "type": "float | None",
+   "default": null,
+   "code_doc": ": Prior half-width for the refit ellipticities (e1/e2 bounded : independently). None -> inherit model.lens_light_ellipticity_max.",
+   "runtime": "LensLightRefitConfig.ellipticity_max",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ellipticity_twist_sigma",
+   "type": "float",
+   "default": 0.05,
+   "code_doc": "Gaussian prior width on the per-component ellipticity DELTAS (twist amplitude); only used when uncouple_ellipticities is True.",
+   "runtime": "LensLightRefitConfig.ellipticity_twist_sigma",
+   "shipped": 10.0,
+   "curated_html": "<p>Gaussian prior width on the per-component ellipticity DELTAS (the twist amplitude); only used when <code>uncouple_ellipticities</code> is on.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.enabled",
+   "type": "bool",
+   "default": false,
+   "runtime": "LensLightRefitConfig.enabled",
+   "shipped": true,
+   "curated_html": "<p>Master switch for the staged lens-light refit. When enabled, after the cf_warmstart stage the pipeline subtracts the current (source + point-source) model from the data and fits the lens light ALONE on the residual \u2014 no mass model involved \u2014 then carries that light into cf_joint (fixed or free per <code><a class=\"xref\" href=\"#k-stages-cf-joint-lens-light\">stages.cf_joint.lens_light</a></code>). The sampling stage frees the light again, warm-started from the refit values.</p>",
+   "related": [
+    "stages.cf_joint.lens_light"
+   ],
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.freeze_foreground_perts",
+   "type": "bool",
+   "default": true,
+   "code_doc": "If True (default), perturbers IN FRONT of the lens plane are frozen at their stage-2 values during stage 3 while the refit light is frozen. Foreground masses deflect the grid the main-plane light is evaluated on; letting them move drags the frozen galaxy render sub-pixel across the cusp and prints a core dipole. With a frozen light, nothing else that sets its frame may move.",
+   "runtime": "LensLightRefitConfig.freeze_foreground_perts",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.mask_arc",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Zero-weight the CF ARC MASK region during the light-only fit. The refit target ``data - (source+PS)`` still carries the arc when ``simple_source=\"stage1\"`` (the smooth stage-1 source cannot reproduce arc detail), and that leftover flux is real signal the parametric light must not chase. Excluding it POSITIONALLY removes it without the one-sided selection bias a residual clip introduces \u2014 membership is decided by geometry, not by how far the data sits above the current model. Requires an active ``model.corr_field.arc_mask``.",
+   "runtime": "LensLightRefitConfig.mask_arc",
+   "shipped": false,
+   "curated_html": "<p>Zero-weight the arc region during the light-only fit. The refit target <code>data \u2212 (source+PS)</code> still carries arc flux when <code>simple_source=\"stage1\"</code> (a smooth stage-1 source cannot reproduce arc detail), and that leftover is real signal the parametric light must not chase. Excluding it positionally removes it without the one-sided selection bias a residual clip introduces \u2014 membership is decided by geometry, not by how far the data sits above the current model.</p><p><code>arc_mask_inner_radius</code>/<code>arc_mask_outer_radius</code> (float | null) build a REFIT-ONLY annulus (arcsec, centred on the point-source centroid) instead of reusing the CF arc mask \u2014 strongly recommended: the CF mask is sized for source reconstruction and is far too wide for a light fit; removing that whole band deletes exactly where the Sersic effective radius lives. A narrow annulus bracketing the ring removes the arc flux without that damage.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.mask_path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Bigger-cutout refit: when DataConfig.cutout_size crops the modelling image, the refit runs on the FULL loaded frame instead. mask_path is the likelihood mask for THAT larger frame (masks field galaxies outside the lens; keeps lens+sky active). Its shape must match the full loaded image, not the cropped model. Required when the full frame is larger than the modelling cutout.",
+   "runtime": "LensLightRefitConfig.mask_path",
+   "shipped": "data/mask_lens_only.fits",
+   "curated_html": "<p>Mask for the lens-light refit only. When <code><a class=\"xref\" href=\"#k-data-cutout-size\">data.cutout_size</a></code> crops the modelling image, the refit deliberately runs on the full loaded frame so the galaxy's faint wings and sky remain constrained. This mask must therefore match the full frame\u2014not the modelling cutout\u2014and should exclude field galaxies while keeping the lens and sky active.</p><p>Unlike a full-frame <code><a class=\"xref\" href=\"#k-data-likelihood-mask-path\">data.likelihood_mask_path</a></code>, this mask is not center-cropped. The same full-frame file can be assigned to both settings only when the desired pixel selection is genuinely identical.</p>",
+   "related": [
+    "data.cutout_size",
+    "data.likelihood_mask_path"
+   ],
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.mge_n_components",
+   "type": "int | None",
+   "default": null,
+   "code_doc": "MGE components for the refit (None = model.mge_n_components).",
+   "runtime": "LensLightRefitConfig.mge_n_components",
+   "shipped": null,
+   "curated_html": "<p>MGE components for the refit light model; <code>null</code> inherits <code><a class=\"xref\" href=\"#k-light-lens-mge-n-components\">light.lens.mge.n_components</a></code>.</p>",
+   "related": [
+    "light.lens.mge.n_components"
+   ],
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.n_sersic_max",
+   "type": "float",
+   "default": 8.0,
+   "runtime": "LensLightRefitConfig.n_sersic_max",
+   "shipped": 8.0,
+   "code_doc": "Upper bound of the S\u00e9rsic index n of every refit component (default 8). Pairs with `n_sersic_min`; a component at either bound is a warning sign (guide \u00a79.3).",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.n_sersic_min",
+   "type": "float",
+   "default": 0.2,
+   "code_doc": "Sersic-index bounds for the refit. Default floor 0.2 (measured: the data can want a near-Gaussian core; a 0.5 floor blocks it and prints an over-bright annulus around the core). n = 0.5 is a GAUSSIAN, and a triple-sersic refit can drive a component onto it from above even with smooth bounds \u2014 i.e. the fit wants a Gaussian core component and the floor is what stops it. Lowering it is the one evidence-backed knob, but there is little room: herculens approximates b_n = 1.9992*n - 0.3271, which reaches ZERO at n = 0.164, below which the profile degenerates to flat. Below ~0.35 treat the profile as a fitting basis, not a Sersic.",
+   "runtime": "LensLightRefitConfig.n_sersic_min",
+   "shipped": 0.2,
+   "curated_html": "<p>Sersic-index floor for the refit (<code>n_sersic_max = 8.0</code> is the ceiling). The worked example uses 0.2, allowing a triple-Sersic refit to use a very shallow core component. There is little room below it: the Sersic normalisation approximation reaches zero at <code>n \u2248 0.164</code>, below which the profile degenerates to flat. Below ~0.35, treat the profile as a flexible fitting basis rather than a conventional Sersic component.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.profile",
+   "type": "str",
+   "default": "same",
+   "code_doc": "Complexity of the refit light model. \"same\" = the main model's ``lens_light``; otherwise any lens_light option (\"sersic\", \"double-sersic\", \"triple-sersic\", \"MGE\", \"MGE+double-sersic\", \"MGE+triple-sersic\") \u2014 it may be MORE complex than the first try. From the refit onward this becomes the lens-light parametrization.",
+   "runtime": "LensLightRefitConfig.lens_light",
+   "shipped": "triple-sersic",
+   "curated_html": "<p>Complexity of the refit light model. <code>\"same\"</code> reuses <code><a class=\"xref\" href=\"#k-light-lens-initial\">light.lens.initial</a></code>; any other lens-light option (<code>\"sersic\"</code>, <code>\"double-sersic\"</code>, <code>\"triple-sersic\"</code>, <code>\"MGE\"</code>, <code>\"MGE+double-sersic\"</code>, <code>\"MGE+triple-sersic\"</code>) may be MORE complex than the first try. From the refit onward this becomes the lens-light parametrization of the whole pipeline. The shipped example uses <code>\"triple-sersic\"</code>. (This key was previously spelled <code>lens_light</code>; the old spelling is still accepted on input.)</p>",
+   "related": [
+    "light.lens.initial"
+   ],
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_downweight_radius",
+   "type": "float",
+   "default": 0.3,
+   "code_doc": "Radius (arcsec) of the region around each point source that is downweighted or masked. Used by ``\"downweight\"``/``\"mask\"`` only; under ``\"sigma_clip\"`` the region is still computed, but purely as a diagnostic overlay (it carries zero weight in the fit).",
+   "runtime": "LensLightRefitConfig.ps_downweight_radius",
+   "shipped": 0.5,
+   "curated_html": "<p>Radius of the region around each point source that is downweighted or masked. Used by <code>\"downweight\"</code>/<code>\"mask\"</code>; under <code>\"sigma_clip\"</code> the region is still computed but only as a diagnostic overlay (zero weight in the fit).</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_mask",
+   "type": "bool",
+   "default": false,
+   "code_doc": "DEPRECATED alias kept for old configs: ``True`` means ``ps_treatment=\"mask\"``. Ignored when ``ps_treatment`` is set explicitly.",
+   "runtime": "LensLightRefitConfig.ps_mask",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Clip threshold in sigma for ``ps_treatment=\"sigma_clip\"``; ``None`` resolves to the 4.0 default. Ignored in the other modes. Setting it without a ``ps_treatment`` selects ``\"sigma_clip\"`` (the pre-2026-08 \"clip alone\" idiom, ``ps_mask=false`` + ``ps_downweight_radius=0``).",
+   "runtime": "LensLightRefitConfig.ps_sigma_clip",
+   "shipped": null,
+   "curated_html": "<p>Clip threshold in sigma for <code>ps_treatment=\"sigma_clip\"</code>; <code>null</code> resolves to 4.0 whenever clipping is active. Ignored in the other modes.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_grow",
+   "type": "int",
+   "default": 1,
+   "code_doc": "Binary-dilate the clipped set by this many pixels (default 1). A bare threshold clips the PSF CORE but leaves the wings just below it, and those wings are exactly the flux the Sersic would otherwise absorb; one ring of growth removes them. 0 disables the growth.",
+   "runtime": "LensLightRefitConfig.ps_sigma_clip_grow",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_iters",
+   "type": "int",
+   "default": 3,
+   "code_doc": "Max sigma-clip reweight passes (default 3); stops early once the clipped-pixel set stops changing.",
+   "runtime": "LensLightRefitConfig.ps_sigma_clip_iters",
+   "shipped": 3,
+   "curated_html": "<p>Maximum sigma-clip reweight passes; stops early once the clipped-pixel set stops changing. Related fine-tuning: <code>ps_sigma_clip_grow</code> (int, default 1) binary-dilates the clipped set \u2014 a bare threshold clips the PSF core but leaves the wings just below it, and one ring of growth removes exactly the flux the Sersic would otherwise absorb; <code>ps_sigma_clip_within</code> (<code>\"all\"</code> | <code>\"arc\"</code> | <code>\"ps_aperture\"</code>, default <code>\"all\"</code>) confines where the clip may reject \u2014 an unrestricted clip also deletes lens-light pixels wherever the parametric profile fits badly (typically the galaxy core), which is the opposite of its purpose.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_within",
+   "type": "str",
+   "default": "all",
+   "code_doc": "Where the residual clip may reject: ``\"all\"`` (default), ``\"arc\"`` (only inside the arc mask) or ``\"ps_aperture\"``. An unrestricted clip also deletes lens-light pixels wherever the parametric profile fits badly \u2014 typically the galaxy CORE \u2014 which is the opposite of its purpose; confining it keeps the light intact.",
+   "runtime": "LensLightRefitConfig.ps_sigma_clip_within",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.ps_treatment",
+   "type": "str",
+   "default": "downweight",
+   "code_doc": "How the light-only fit protects itself from point-source residuals. The three modes are MUTUALLY EXCLUSIVE \u2014 this is the single knob: - ``\"downweight\"`` (default): inflate sigma 100x inside ``ps_downweight_radius`` of each point source. - ``\"mask\"``: zero-weight that same region entirely. - ``\"sigma_clip\"``: no positional PS region at all. Fit once over the whole frame, then reject pixels by RESIDUAL \u2014 anything with ``|target - light| / sigma > ps_sigma_clip`` is zero-weighted and the light is refit, iterating until the clipped set is stable. Rejects PS cores, cosmic rays and neighbour-galaxy wings wherever they actually land instead of trusting a fixed radius, and keeps every good pixel a positional mask would have thrown away (the PS aperture covers a large part of the galaxy's own core). Whichever mode is used, it is internal to the refit only \u2014 the likelihood mask used by the main pipeline is untouched.",
+   "runtime": "LensLightRefitConfig.ps_treatment",
+   "shipped": "mask",
+   "curated_html": "<p>How the light-only fit protects itself from point-source residuals \u2014 the three modes are mutually exclusive and this is the single knob:</p><ul><li><code>\"downweight\"</code> \u2014 inflate sigma 100&times; inside <code>ps_downweight_radius</code> of each point source.</li><li><code>\"mask\"</code> \u2014 zero-weight that same region entirely.</li><li><code>\"sigma_clip\"</code> \u2014 no positional region at all: fit over the whole frame, then reject pixels by RESIDUAL (<code>|target \u2212 light|/sigma &gt; ps_sigma_clip</code>) and refit, iterating until the clipped set is stable. Rejects PS cores, cosmic rays and neighbour-galaxy wings wherever they actually land, and keeps every good pixel a positional mask would have thrown away.</li></ul><p>Whichever mode is used, it is internal to the refit only \u2014 the main pipeline's likelihood mask is untouched.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.simple_source",
+   "type": "str",
+   "default": "cf",
+   "code_doc": "Source used for the (source+PS) subtraction the lens light is refit on. \"cf\" (default): the stage-2 correlated-field source \u2014 but a noisy CF source leaks flux to the cutout edges and contaminates the refit target. \"stage1\": use the SMOOTH stage-1 shapelets source instead, so the refit target is clean; the CF source then fits the residual arc detail in stage 3 with the light frozen. Decouples the light refit from CF noise.",
+   "runtime": "LensLightRefitConfig.simple_source",
+   "shipped": "stage1",
+   "curated_html": "<p>Which source model is subtracted (with the point sources) to build the refit target. <code>\"cf\"</code>: the cf_warmstart correlated-field source \u2014 but a noisy CF source leaks flux to the cutout edges and contaminates the target. <code>\"stage1\"</code>: the SMOOTH stage-1 shapelets source, so the target is clean; the CF source then fits the residual arc detail in cf_joint with the light frozen. Decouples the light refit from CF noise.</p>",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.sky_anchor",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "If set (MJy/sr), the UNIFORM sky is FIXED to this value during the refit (e.g. an externally calculated sky level).",
+   "runtime": "LensLightRefitConfig.sky_anchor",
+   "shipped": null,
+   "curated_html": "<p>If set (surface-brightness units of the image), the UNIFORM sky component is FIXED to this value during the refit \u2014 e.g. an externally calibrated sky level.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.smooth_bounds",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Bound the Sersic index and ellipticities with BIJECTIONS (n = 0.5 + 7.5*sigmoid, e = 0.4*tanh) instead of ``jnp.clip``. Default False. A hard clip has ZERO gradient outside its bounds, so a parameter Adam pushes past one is dead and can never return \u2014 not a constraint but a trap, and the direct cause of triple-Sersic refits landing on ``n_sersic = 0.500`` exactly with unphysical companions. Also seeds the Sersic indices distinctly (2.5/1/4, matched to the R_e seeds) rather than all at 3.0, which is a symmetric start the components readily collapse out of. Set False to reproduce runs made before 2026-08-04 bit-for-bit.",
+   "runtime": "LensLightRefitConfig.smooth_bounds",
+   "shipped": false,
+   "curated_html": "<p>Bound the Sersic index and ellipticities with BIJECTIONS (<code>n = 0.5 + 7.5\u00b7sigmoid</code>, <code>e = 0.4\u00b7tanh</code>) instead of a hard clip, and seed the Sersic indices distinctly (2.5/1/4) rather than all at 3.0. A hard clip has zero gradient outside its bounds, so a parameter Adam pushes past one is dead and can never return \u2014 a trap, not a constraint. Measured on real data the trap removal did not improve the fits (the data genuinely wants the <code>n = 0.5</code> boundary), so the default is off; keep it available for diagnosing future parameter railing. <code>distinct_n_init</code> (bool | null, default follows this flag) splits the seeding choice out so bijection and init can be attributed separately.</p>",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.uncouple_centers",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Per-component CENTER deltas (lopsidedness); analogous to the twist.",
+   "runtime": "LensLightRefitConfig.uncouple_centers",
+   "shipped": true,
+   "curated_html": "<p>Per-component centre deltas (lopsidedness) \u2014 the positional analogue of the ellipticity twist. <code>center_shift_sigma</code> (float, default 0.05) is the Gaussian prior width on the deltas. Two further stability switches share this block: <code>freeze_foreground_perts</code> (bool, default true) freezes foreground-plane perturbers at their warmstart values while the refit light is frozen in cf_joint \u2014 foreground masses deflect the grid the light is evaluated on, and letting them move drags the frozen galaxy render sub-pixel across the cusp, printing a core dipole.</p>",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.lens.refit.uncouple_ellipticities",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Per-component ellipticities in the refit (each Sersic + the MGE stack get their own e1/e2 -> isophote twist + radial flattening gradients; the shared-e model prints a quadrupolar residual). tonoise_v2 2026-07-19.",
+   "runtime": "LensLightRefitConfig.uncouple_ellipticities",
+   "shipped": true,
+   "curated_html": "<p>Give each refit component (each Sersic and the MGE stack) its OWN ellipticity instead of one shared shape \u2014 allowing isophote twist and radial flattening gradients. A shared-ellipticity model of a real galaxy prints a characteristic quadrupolar residual; uncoupling removes it.</p>",
+   "level": "common",
+   "section": "light"
+  },
+  {
+   "key": "light.point_sources.enabled",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Lensed point sources (quasar images). false = galaxy-galaxy mode.",
+   "runtime": "model.use_point_sources",
+   "shipped": true,
+   "curated_html": "<p>Whether the system contains multiply-imaged point sources (quasar images) to be modelled \u2014 the canonical time-delay-cosmography workflow. Set <code>false</code> for galaxy-galaxy strong lensing (extended source only). In that mode ALPACA skips point-source detection, the <code>x_image</code>/<code>y_image</code>/<code>ps_amp</code> latents, time-delay and ray-shooting likelihood factors, the entire PSF-reconstruction machinery (you must supply a fixed PSF), and point-source plot overlays.</p>",
+   "warnings": [
+    "With use_point_sources=false, config validation force-disables (with one grouped warning): psf.mode \u2192 \"fixed\", likelihood.use_time_delays, likelihood.use_rayshoot_consistency, likelihood.use_image_pos_offsets, likelihood.noise_model.noise_boost, and likelihood.noise_model.use_psf_error_map \u2014 all of these need image positions or point-source flux to be meaningful."
+   ],
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.point_sources.fft_rendering",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Render point sources by FFT convolution instead of direct PSF placement.",
+   "runtime": "model.ps_fft_rendering",
+   "shipped": false,
+   "curated_html": "<p>Experimental (anomaly-005 fix): render point sources by exact Fourier-shift placement instead of the bilinear gather. The bilinear gather broadens every point-source core by a constant tent of ~1/3 native pixel; FFT placement removes that systematic at the cost of wrap-around edge behaviour.</p>",
+   "warnings": [
+    "Experimental \u2014 validate against a bilinear run before adopting for production H\u2080 inference."
+   ],
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "light.sky_background",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Fit a constant sky level.",
+   "runtime": "model.use_sky_background",
+   "shipped": true,
+   "curated_html": "<p>Add a uniform sky-background component to the lens light with a wide, data-driven prior on its amplitude (site <code>sky_amp</code>). Use when the cutout has an unsubtracted sky pedestal \u2014 otherwise that flux gets absorbed into profile wings and biases the lens-light (and thus source) decomposition.</p>",
+   "level": "essential",
+   "section": "light"
+  },
+  {
+   "key": "light.sky_background_fixed_amp",
+   "type": "float | null",
+   "default": null,
+   "code_doc": "Fix the sky at this value (model units) instead of fitting it.",
+   "runtime": "model.sky_background_fixed_amp",
+   "level": "advanced",
+   "section": "light"
+  },
+  {
+   "key": "likelihood.astrometry_mode",
+   "type": "str",
+   "default": "source_plane",
+   "code_doc": "``\"source_plane\"`` (default, historical): the back-traced source positions of the images scatter around their mean with ``rayshoot_sigma`` (+ the optional free floor), and each delay uses its own back-traced position. ``\"image_plane\"``: one common source; the imaging centroids may differ from the lens-equation images by an image-plane Gaussian ``sigma_ast`` (mapped through each image's inverse-magnification matrix), the common source is the magnification-weighted mean, and all delays are evaluated for it (see :mod:`alpaca.models.astrometry`). Requires ``use_rayshoot_sys_error=False`` and ``use_image_pos_offsets=False``.",
+   "runtime": "LikelihoodConfig.astrometry_mode",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.image_pos_offset_sigma",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Prior sigma (arcsec) on per-image position offsets. ``None`` (default) resolves to 0.01 arcsec (10 mas), the astrometric precision of PSF-fitted quasar images in HST/JWST data. (It used to resolve to one native pixel, ~31 mas for NIRCam SW, which let the mass model largely ignore the quasar positions and biased D_dt.)",
+   "runtime": "LikelihoodConfig.image_pos_offset_sigma",
+   "shipped": null,
+   "curated_html": "<p>Gaussian prior width on each per-image offset. About one native pixel is the sensible scale \u2014 much larger and the offsets can absorb genuine mass-model misfit instead of centroid noise.</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Boost the noise map around detected point sources so they don't dominate the extended-source fit.",
+   "runtime": "NoiseModelConfig.noise_boost",
+   "shipped": false,
+   "curated_html": "<p>Multiplicatively boost the noise map in a circle around each detected point source, so PSF-core residuals at the bright quasar images don't dominate the extended-source and lens-light fit. The factor decays linearly from <code>f_max</code> at the PS centre to 1.0 at the boost radius.</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs",
+   "type": "dict",
+   "default": {
+    "f_max": 1.0,
+    "radius": null,
+    "frac_min_sep": 0.4,
+    "min_npix": 2.5,
+    "max_npix": 6.0
+   },
+   "code_doc": "Keyword arguments forwarded to ``boost_noise_around_point_sources``.",
+   "runtime": "NoiseModelConfig.noise_boost_kwargs",
+   "curated_html": "<p>Parameters forwarded to <code>boost_noise_around_point_sources</code>:</p><ul><li><code>f_max</code> \u2014 maximum multiplicative noise factor at the PS centre (1.0 = no boost).</li><li><code>radius</code> \u2014 boost radius in arcsec; <code>null</code> = auto from PS separations.</li><li><code>frac_min_sep</code> \u2014 auto radius = fraction \u00d7 minimum PS separation.</li><li><code>min_npix</code> / <code>max_npix</code> \u2014 clamps on the auto radius, in pixels.</li></ul>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.f_max",
+   "type": "float",
+   "default": 1.0,
+   "only_in_shipped_config": true,
+   "shipped": 1.0,
+   "code_doc": "Factor the noise is multiplied by at the centre of each point-source image when `noise_boost` is on; it falls linearly to 1 at the boost radius (overlapping regions keep the maximum).",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.frac_min_sep",
+   "type": "float",
+   "default": 0.4,
+   "only_in_shipped_config": true,
+   "shipped": 0.4,
+   "code_doc": "Fraction of the minimum separation between point-source images used as the automatic boost radius (when `radius` is null). Default 0.4.",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.max_npix",
+   "type": "float",
+   "default": 6.0,
+   "only_in_shipped_config": true,
+   "shipped": 6.0,
+   "code_doc": "Upper limit (pixels) of the automatic boost radius. Default 6.",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.min_npix",
+   "type": "float",
+   "default": 2.5,
+   "only_in_shipped_config": true,
+   "shipped": 2.5,
+   "code_doc": "Lower limit (pixels) of the automatic boost radius. Default 2.5.",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.radius",
+   "type": "null",
+   "default": null,
+   "only_in_shipped_config": true,
+   "shipped": null,
+   "code_doc": "Boost radius in arcsec. `null` (default) derives it from the image configuration: `frac_min_sep` \u00d7 the smallest pairwise image separation, clipped to [`min_npix`, `max_npix`] pixels.",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_b_max",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Upper bound of the Uniform(0, b_max) prior on the sampled ``b``. This is the anti-overfit cap: larger values let the likelihood down-weight the PS regions more aggressively (tonoise_v2 sweep, user 2026-07-19).",
+   "runtime": "NoiseModelConfig.psf_error_b_max",
+   "shipped": 0.3,
+   "curated_html": "<p>Upper bound of the <code>Uniform(0, b_max)</code> prior on the sampled PSF-error amplitude <code>b</code> in <code>\u03c3\u00b2_eff = \u03c3\u00b2 + b\u00b2\u00b7ps_image\u00b2</code>. This is the anti-overfit cap: larger values let the likelihood down-weight the point-source regions more aggressively.</p>",
+   "warnings": [
+    "Check the FITTED b against this cap in the model summary \u2014 a b railing at b_max means the cap, not the data, is setting the point-source error budget, and the quoted fit quality inherits that choice."
+   ],
+   "level": "common",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_b_mode",
+   "type": "str",
+   "default": "post_gd_free",
+   "code_doc": "When/how the b term participates (validated in PipelineConfig): \"joint\"         - b free during GD and sampling (legacy). \"post_gd_fixed\" - b HELD AT 0 through GD stages 1-3; after stage 3 a 1-D exact fit of b at the frozen optimum (accounts for Poisson-noise underestimation at the PS cores); sampling runs with b FIXED at that value. \"post_gd_free\"  - same GD treatment; sampling has b FREE, warm-started at the post-GD fitted value (default: on HE0435 it reproduces the joint-b posterior with a better-converged, unboosted GD optimum).",
+   "runtime": "NoiseModelConfig.psf_error_b_mode",
+   "shipped": "post_gd_free",
+   "level": "common",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_exponent",
+   "type": "float",
+   "default": 1.0,
+   "code_doc": "Flux-scaling exponent p of the PSF-error term (1.0 = classic b^2 ps^2; p<1 re-weights the boost toward the PSF WINGS; tonoise_v2 2026-07-19).",
+   "runtime": "NoiseModelConfig.psf_error_exponent",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.noise_model.use_psf_error_map",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Add a per-pixel variance term that scales with point-source flux: ``\u03c3\u00b2_eff = \u03c3\u00b2 + b\u00b2 \u00b7 ps_image\u00b2`` where ``b`` is a sampled parameter.",
+   "runtime": "NoiseModelConfig.use_psf_error_map",
+   "shipped": true,
+   "curated_html": "<p>Add a per-pixel variance term scaling with point-source flux: <code>\u03c3\u00b2_eff = \u03c3\u00b2 + b\u00b2 \u00b7 ps_image\u00b2</code>, where <code>b</code> is a sampled <code>Uniform(0, 0.1)</code> parameter. A principled way to down-weight pixels where PSF-model errors dominate, letting the data infer how wrong the PSF is.</p>",
+   "related": [
+    "psf.iterative.error_map_during_recon.enabled"
+   ],
+   "level": "essential",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.rayshoot_against_source_pos",
+   "type": "bool",
+   "default": true,
+   "code_doc": "If True, compare ray-traced positions to the sampled source position (``src_center_x/y``); if False, compare to the mean.",
+   "runtime": "LikelihoodConfig.rayshoot_against_source_pos",
+   "shipped": true,
+   "curated_html": "<p>If <code>true</code>, ray-traced image positions are compared against the sampled source-light centre (<code>src_center_x/y</code>) \u2014 coupling the point-source astrometry to the extended-source model. If <code>false</code>, they are compared against their own mean (pure internal consistency, decoupled from the light centroid).</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.rayshoot_sigma",
+   "type": "float",
+   "default": 0.001,
+   "code_doc": "Astrometric uncertainty floor (arcsec) for the ray-shooting term.",
+   "runtime": "LikelihoodConfig.rayshoot_sigma",
+   "shipped": 0.001,
+   "curated_html": "<p>Astrometric uncertainty floor for the ray-shooting term \u2014 smaller values make the consistency constraint tighter. 0.001\u20130.002 is typical for HST/JWST astrometry. If set too small, the term dominates the imaging likelihood and GD can stall in astrometry-driven local minima; the free systematic-error parameter (<code>use_rayshoot_sys_error</code>) is the safer way to let the data pick the floor.</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.rayshoot_sys_error_range",
+   "type": "tuple[float, float]",
+   "default": [
+    5e-05,
+    0.005
+   ],
+   "code_doc": "(min, max) range (arcsec) for the systematic-error parameter.",
+   "runtime": "LikelihoodConfig.rayshoot_sys_error_range",
+   "shipped": [
+    5e-05,
+    0.005
+   ],
+   "curated_html": "<p>(min, max) of the log-uniform prior on the ray-shooting systematic error. 5\u00d710\u207b\u2075 arcsec = 0.05 mas is at the floor of instrument astrometry; 5\u00d710\u207b\u00b3 arcsec = 5 mas is very loose. Widen the upper end for systems with visible astrometric anomalies.</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.sigma_ast",
+   "type": "float",
+   "default": 0.003,
+   "code_doc": "Image-plane astrometric perturbation (arcsec) for ``\"image_plane\"``.",
+   "runtime": "LikelihoodConfig.sigma_ast",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.use_image_pos_offsets",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Add per-image position offsets (TD + rayshoot terms only). Default False; when enabled, their prior width is ``image_pos_offset_sigma``.",
+   "runtime": "LikelihoodConfig.use_image_pos_offsets",
+   "shipped": true,
+   "curated_html": "<p>Sample per-image position offsets <code>offset_{x,y}_image_{i}</code> applied in the time-delay and ray-shooting terms \u2014 accounting for astrometric errors in the detected image centroids without moving the imaging-likelihood positions. One x/y pair per point-source image.</p>",
+   "warnings": [
+    "Force-disabled when light.point_sources.enabled=false."
+   ],
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.use_rayshoot_consistency",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Add a penalty for scatter in ray-traced source positions.",
+   "runtime": "LikelihoodConfig.use_rayshoot_consistency",
+   "shipped": true,
+   "curated_html": "<p>Add a penalty for scatter among the ray-traced source positions of the different point-source images \u2014 all images must trace back to the same source point. This is the imaging counterpart of the classical point-source astrometric likelihood and substantially tightens the mass model near the images.</p>",
+   "warnings": [
+    "Force-disabled when light.point_sources.enabled=false (no images to back-project)."
+   ],
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.use_rayshoot_sys_error",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Sample a free systematic-error parameter for ray-shooting.",
+   "runtime": "LikelihoodConfig.use_rayshoot_sys_error",
+   "shipped": true,
+   "curated_html": "<p>Sample a free systematic-error parameter added to the ray-shooting uncertainty, with a log-uniform prior over <code>rayshoot_sys_error_range</code>. Lets the data decide the astrometric noise floor instead of trusting a fixed <code>rayshoot_sigma</code> \u2014 the robust choice when PSF residuals or microlensing may shift image centroids.</p>",
+   "level": "advanced",
+   "section": "likelihood"
+  },
+  {
+   "key": "likelihood.use_time_delays",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Include the time-delay likelihood term.",
+   "runtime": "LikelihoodConfig.use_time_delays",
+   "shipped": true,
+   "curated_html": "<p>Include the Gaussian time-delay likelihood term comparing predicted to measured delays between the point-source images. <code>true</code> is what makes the run an H\u2080 (D_dt) inference; <code>false</code> for imaging-only model comparison.</p><p><code>run_alpaca.py</code> overrides this to <code>false</code> automatically when no <code>TIME_DELAYS</code> dict is provided, so the pipeline never demands missing data.</p>",
+   "level": "essential",
+   "section": "likelihood"
+  },
+  {
+   "key": "mass.main.bpl.deflection",
+   "type": "str",
+   "default": "series",
+   "code_doc": "How the deflection is evaluated.  ``\"series\"`` (default since 2026-09-26): closed-form homoeoid/Legendre series (:mod:`alpaca.models.bpl_series`) \u2014 same physics, more accurate than the quadrature at every axis ratio tested and ~3x cheaper per call. ``\"quadrature\"``: the original two-panel Gauss-Legendre evaluation.",
+   "runtime": "BrokenPowerLawConfig.deflection",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_in",
+   "type": "dict",
+   "default": {
+    "loc": 2.0,
+    "scale": 0.3,
+    "low": 1.3,
+    "high": 2.7
+   },
+   "code_doc": "``{\"loc\", \"scale\", \"low\", \"high\"}`` for a TruncatedNormal, the same shape as the EPL's ``gamma_prior``.  The default is deliberately WIDER than the EPL default (scale 0.3 vs 0.15): a broken profile splits the single well-constrained lensing slope between two parameters, so each is individually less constrained and a tight prior would just re-impose the EPL answer.",
+   "runtime": "BrokenPowerLawConfig.gamma_in",
+   "curated_html": "<p>TruncatedNormal prior on the INNER slope (same shape as the EPL's <code>gamma_prior</code>; <code>bpl.gamma_out</code> is the outer twin). Deliberately WIDER than the EPL default (scale 0.3 vs 0.15): a broken profile splits the single well-constrained lensing slope between two parameters, and a tight prior would just re-impose the EPL answer.</p>",
+   "related": [
+    "mass.main.bpl.gamma_out"
+   ],
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.high",
+   "type": "float",
+   "default": 2.7,
+   "only_in_shipped_config": true,
+   "shipped": 2.7,
+   "code_doc": "Upper truncation of the \u03b3_in prior (default 2.7).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.loc",
+   "type": "float",
+   "default": 2.0,
+   "only_in_shipped_config": true,
+   "shipped": 2.0,
+   "code_doc": "Centre of the TruncatedNormal prior on the INNER slope \u03b3_in of the broken power law (default 2.0). The BPL priors are deliberately wider than the EPL's: the single, well-constrained lensing slope is split between two parameters.",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.low",
+   "type": "float",
+   "default": 1.3,
+   "only_in_shipped_config": true,
+   "shipped": 1.3,
+   "code_doc": "Lower truncation of the \u03b3_in prior (default 1.3).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.scale",
+   "type": "float",
+   "default": 0.3,
+   "only_in_shipped_config": true,
+   "shipped": 0.3,
+   "code_doc": "Width of the TruncatedNormal prior on \u03b3_in (default 0.3; the EPL uses 0.15).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_out",
+   "type": "dict",
+   "default": {
+    "loc": 2.0,
+    "scale": 0.3,
+    "low": 1.3,
+    "high": 2.7
+   },
+   "code_doc": "``{\"loc\", \"scale\", \"low\", \"high\"}`` for a TruncatedNormal, the same shape as the EPL's ``gamma_prior``.  The default is deliberately WIDER than the EPL default (scale 0.3 vs 0.15): a broken profile splits the single well-constrained lensing slope between two parameters, so each is individually less constrained and a tight prior would just re-impose the EPL answer.",
+   "runtime": "BrokenPowerLawConfig.gamma_out",
+   "curated_html": "<p>TruncatedNormal prior on the OUTER slope \u2014 the twin of <code><a class=\"xref\" href=\"#k-mass-main-bpl-gamma-in\">mass.main.bpl.gamma_in</a></code> (see that entry for why the priors are deliberately wide). Sub-keys: <code>loc</code>/<code>scale</code> are the Normal centre and width, <code>low</code>/<code>high</code> the truncation bounds.</p>",
+   "related": [
+    "mass.main.bpl.gamma_in"
+   ],
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.high",
+   "type": "float",
+   "default": 2.7,
+   "only_in_shipped_config": true,
+   "shipped": 2.7,
+   "code_doc": "Upper truncation of the \u03b3_out prior (default 2.7).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.loc",
+   "type": "float",
+   "default": 2.0,
+   "only_in_shipped_config": true,
+   "shipped": 2.0,
+   "code_doc": "Centre of the TruncatedNormal prior on the OUTER slope \u03b3_out (default 2.0). \u03b3_in = \u03b3_out reproduces the EPL exactly.",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.low",
+   "type": "float",
+   "default": 1.3,
+   "only_in_shipped_config": true,
+   "shipped": 1.3,
+   "code_doc": "Lower truncation of the \u03b3_out prior (default 1.3).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.scale",
+   "type": "float",
+   "default": 0.3,
+   "only_in_shipped_config": true,
+   "shipped": 0.3,
+   "code_doc": "Width of the \u03b3_out prior (default 0.3).",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.n_quad",
+   "type": "int",
+   "default": 24,
+   "code_doc": "Gauss-Legendre nodes PER PANEL (two panels, split at the break) for the deflection and the potential.  See :mod:`alpaca.models.mass_profiles` \u2014 24/28 gives ~1e-13 relative accuracy for a round-to-mildly-flattened deflector and stays below 1e-6 down to q ~ 0.5.  Lower only if profiling says so.  Used for the potential always, and for the deflection only when ``deflection == \"quadrature\"``.",
+   "runtime": "BrokenPowerLawConfig.n_quad",
+   "curated_html": "<p>Gauss-Legendre nodes PER PANEL (two panels, split analytically at the break) for the BPL deflection; <code>n_quad_potential</code> (default 28) is the potential's counterpart. 24 reproduces the analytic EPL to ~1e-13 at \u03b3=2 (where the endpoint substitution makes the quadrature exact) and stays below 1e-6 relative down to q~0.55. Lower only if profiling says so.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.n_quad_potential",
+   "type": "int",
+   "default": 28,
+   "code_doc": "Gauss-Legendre nodes PER PANEL (two panels, split at the break) for the deflection and the potential.  See :mod:`alpaca.models.mass_profiles` \u2014 24/28 gives ~1e-13 relative accuracy for a round-to-mildly-flattened deflector and stays below 1e-6 down to q ~ 0.5.  Lower only if profiling says so.  Used for the potential always, and for the deflection only when ``deflection == \"quadrature\"``.",
+   "runtime": "BrokenPowerLawConfig.n_quad_potential",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.n_series",
+   "type": "int",
+   "default": 40,
+   "code_doc": "Terms of each series (the two EPL pieces and the core term).  They converge like ((1-q)/(1+q))^n; 40 keeps the error below 1e-13\" for q >= 0.3 and below the quadrature's everywhere down to q = 0.2.",
+   "runtime": "BrokenPowerLawConfig.n_series",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.bpl.r_break_frac",
+   "type": "list",
+   "default": [
+    0.5,
+    2.0
+   ],
+   "code_doc": "``[low, high]`` bounds of the Uniform prior on ``r_break/theta_E``.",
+   "runtime": "BrokenPowerLawConfig.r_break_frac",
+   "shipped": [
+    0.5,
+    2.0
+   ],
+   "curated_html": "<p>Uniform prior bounds on the break radius in units of \u03b8<sub>E</sub> (site <code>lens_r_break_frac</code>). Tying the break to \u03b8_E keeps it inside the annulus the arcs actually constrain for every sample, instead of letting the chain wander into a regime where the second slope is unconstrained.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.center_sigma",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Width [arcsec] of the Normal prior of the mass centre around the (detected / given) lens-light centre. None = mode default: 0.3\" when point sources anchor the mass (quasar mode), 0.05\" without them (galaxy-galaxy mode), where nothing else ties the mass to the lens and multistarts otherwise settle on a small-theta_E \"lens\" on an arc image.",
+   "runtime": "LensMassConfig.center_sigma",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.multipoles.elliptical",
+   "type": "bool",
+   "default": false,
+   "code_doc": "If True use the ELLIPTICAL multipoles of Paugnat & Gilman (2025) (lenstronomy's ``MULTIPOLE_ELL``, :class:`alpaca.models.multipole_ell.MultipoleEllCS`) instead of the default circular ones: the perturbation then deforms the main deflector's own elliptical isodensity contours, sharing its axis ratio and position angle, and the phase is measured from its major axis.  Only ``m = 1, 3, 4`` are implemented.  Default False (the circular :class:`MultipoleCS`, unchanged behaviour).",
+   "runtime": "MultipoleConfig.elliptical",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.multipoles.orders",
+   "type": "list[int]",
+   "default": [],
+   "code_doc": "Multipole orders to include, e.g. ``[1, 3, 4]``.  Empty (default) = no multipoles, i.e. the historical EPL+SHEAR model.  ``m = 2`` is NOT recommended: it is degenerate with the EPL ellipticity.",
+   "runtime": "MultipoleConfig.orders",
+   "shipped": [],
+   "curated_html": "<p>Angular multipole orders added to the main deflector, e.g. <code>[3,&nbsp;4]</code>. Each order m adds the convergence <code>\u03ba_m = a_m\u00b7cos[m(\u03c6\u2212\u03c6_m)]/(2r)</code> and TWO sampled sites, the Cartesian pair <code>lens_a{m}_cos</code>/<code>lens_a{m}_sin</code> (single-valued and smooth through zero \u2014 the polar (a_m,&nbsp;\u03c6_m) pair is 2m-fold multimodal and singular exactly at the a_m=0 null-test point). All amplitudes zero = the EPL, bit-for-bit.</p><p>m=4 is boxy/discy \u2014 the mode with real photometric backing (a\u2084/a ~ 1\u20132% in ellipticals). m=3 is the triangular mode. m=1 is supported (it needs a special <code>r\u00b7ln r</code> potential \u2014 the scale-free form divides by zero) but see the warning.</p>",
+   "related": [
+    "mass.main.profile"
+   ],
+   "level": "essential",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.multipoles.r_ref_m1",
+   "type": "float",
+   "default": 1.0,
+   "code_doc": "Reference radius (arcsec) in the ``m = 1`` potential ``psi = (1/2) r ln(r/r_ref) C(phi)``.  Changing it only adds a CONSTANT deflection (degenerate with the source position) and does not touch the convergence; it is fixed rather than sampled so the ``m = 1`` amplitudes stay well conditioned.  Default 1.0\" ~ theta_E.",
+   "runtime": "MultipoleConfig.r_ref_m1",
+   "shipped": 1.0,
+   "curated_html": "<p>Reference radius (arcsec) in the m=1 potential <code>\u03c8\u2081 = \u00bd\u00b7r\u00b7ln(r/r_ref)\u00b7C(\u03c6)</code>. Changing it only adds a CONSTANT deflection \u2014 exactly degenerate with a source-plane shift, leaving the convergence untouched \u2014 so it is held fixed (~\u03b8_E) rather than sampled. Ignored without m=1.</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.multipoles.sigma",
+   "type": "float | dict | None",
+   "default": null,
+   "code_doc": "Width of the zero-mean Normal prior on each Cartesian amplitude, in arcsec.  A dict maps order -> sigma (keys may be ints or strings), any missing order falling back to ``sigma_default``. Scale intuition: the convergence perturbation is ``kappa_m = a_m cos(m(phi-phi_m)) / (2 r)``, so ``a_m / theta_E`` is the usual dimensionless multipole strength.  Real ellipticals have ``a_4/a ~ 0.01-0.02``; for a ``theta_E ~ 1\"`` lens the default ``sigma = 0.02\"`` is a weakly informative ~1.7% prior that still lets the data push to ~5% amplitudes.",
+   "runtime": "MultipoleConfig.sigma",
+   "shipped": null,
+   "curated_html": "<p>Width (arcsec) of the zero-mean Normal prior on each Cartesian amplitude; a dict maps order \u2192 \u03c3 with <code>sigma_default</code> as fallback. The example uses <code>null</code>, so every configured order delegates to <code>sigma_default = 0.02</code>. Scale intuition: <code>a_m/\u03b8_E</code> is the usual dimensionless strength; real ellipticals sit at 0.01\u20130.02, so \u03c3=0.02\" (~2% of a typical \u03b8_E) is weakly informative and lets the data push to ~5%.</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.multipoles.sigma_default",
+   "type": "float",
+   "default": 0.02,
+   "code_doc": "Fallback width when ``sigma`` is a dict without that order.",
+   "runtime": "MultipoleConfig.sigma_default",
+   "shipped": 0.02,
+   "curated_html": "<p>Fallback prior width used for any multipole order not listed when <code>multipoles.sigma</code> is a per-order dict (or when it is <code>null</code>).</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.profile",
+   "type": "str",
+   "default": "EPL+Shear",
+   "code_doc": "Radial profile of the main deflector.  ``\"epl\"`` (default) is the historical elliptical power law with a single ``lens_gamma``; ``\"bpl\"`` is the elliptical broken power law (see :class:`BrokenPowerLawConfig`).",
+   "runtime": "LensMassConfig.profile",
+   "shipped": "EPL+Shear",
+   "curated_html": "<p>Radial mass profile of the main deflector.</p><ul><li><code>\"EPL+Shear\"</code> \u2014 elliptical power law + external shear, one slope <code>lens_gamma</code>. The historical model (legacy alias <code>\"epl\"</code>).</li><li><code>\"BPL+Shear\"</code> \u2014 elliptical <b>broken power law</b> + external shear (legacy alias <code>\"bpl\"</code>): slope <code>gamma_in</code> inside a break radius, <code>gamma_out</code> outside. Samples <code>lens_gamma_in</code>, <code>lens_gamma_out</code>, <code>lens_r_break_frac</code> and <em>removes</em> <code>lens_gamma</code>. Reduces to the EPL exactly at <code>gamma_in&nbsp;=&nbsp;gamma_out</code> (verified to ~1e-13), and \u03b8<sub>E</sub> keeps its EPL meaning (mean convergence 1 inside \u03b8<sub>E</sub>) so the two models are directly comparable.</li></ul><p>The BPL has no closed-form deflection \u2014 it is evaluated by desingularised Gauss-Legendre quadrature (Keeton 2001), costing ~\u00d71.8 per gradient.</p><p>The profile string selects the RADIAL model only \u2014 angular structure is added independently via <code><a class=\"xref\" href=\"#k-mass-main-multipoles-orders\">mass.main.multipoles.orders</a></code> (combinable with either profile), and the external shear is always part of the model.</p>",
+   "related": [
+    "mass.main.multipoles.orders"
+   ],
+   "level": "essential",
+   "section": "mass"
+  },
+  {
+   "key": "mass.main.theta_E_prior",
+   "type": "object | null",
+   "default": null,
+   "code_doc": "{center, sigma} in arcsec: TruncatedNormal prior on the Einstein radius. Required for galaxy-galaxy lenses.",
+   "runtime": "model.lens_theta_E_prior",
+   "shipped": null,
+   "curated_html": "<p>Optional informative prior on the main-lens Einstein radius. <code>null</code> keeps the wide <code>Uniform(0.5&thinsp;r_min, 1.5&thinsp;r_max)</code> driven by the detected image positions. <code>{\"center\": &lt;arcsec&gt;, \"sigma\": &lt;arcsec&gt;}</code> samples theta_E from a TruncatedNormal clipped to the same physical bounds \u2014 useful to test whether pinning theta_E to an external measurement changes the fit or the outer-arc residual.</p>",
+   "level": "essential",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.cosmology.H0_fid",
+   "type": "float",
+   "default": 70.0,
+   "runtime": "PerturbersCosmologyConfig.H0_fid",
+   "shipped": 70.0,
+   "curated_html": "<p>Fiducial H\u2080 for the multi-plane distance-ratio (\u03b7) matrix and the fiducial time-delay distance used to rescale multi-plane arrival times onto the sampled D_dt. Distance <em>ratios</em> are exactly H\u2080-independent, so this choice does not bias the H\u2080 inference \u2014 it is the standard treatment.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.cosmology.Om0",
+   "type": "float",
+   "default": 0.3,
+   "runtime": "PerturbersCosmologyConfig.Om0",
+   "shipped": 0.3,
+   "curated_html": "<p>Fiducial matter density for the multi-plane distance ratios. The dependence of the ratios on \u03a9_m is weak; 0.3 is the conventional choice.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.exclude_ids",
+   "type": "list[int] | None",
+   "default": null,
+   "code_doc": "Explicit whitelist / blacklist of catalog ids.",
+   "runtime": "PerturbersConfig.exclude_ids",
+   "shipped": null,
+   "curated_html": "<p>Explicit blacklist of catalog ids to drop regardless of other filters. <code>null</code> = no blacklist.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.include_ids",
+   "type": "list[int] | None",
+   "default": null,
+   "code_doc": "Explicit whitelist / blacklist of catalog ids.",
+   "runtime": "PerturbersConfig.include_ids",
+   "shipped": null,
+   "curated_html": "<p>Explicit whitelist of catalog ids. When set, only these perturbers are modelled (still subject to the flexion cut). <code>null</code> = no whitelist.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.min_flexion_shift_arcsec",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Drop catalog perturbers below this flexion shift. None keeps all.",
+   "runtime": "PerturbersConfig.min_flexion_shift_arcsec",
+   "shipped": null,
+   "curated_html": "<p>Drop catalog perturbers whose flexion shift is below this threshold. The flexion shift is the standard importance ranking for line-of-sight structure \u2014 a threshold around 10\u207b\u2074 arcsec keeps only perturbers that measurably affect the model.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.mode",
+   "type": "one of ['auto', 'single_plane']",
+   "default": "auto",
+   "code_doc": "\"auto\" = honest plane assignment (multi-plane when needed); \"single_plane\" = force ALL perturbers into the main lens plane (classic approximation; keeps the single-plane forward model).",
+   "runtime": "PerturbersConfig.mode",
+   "shipped": "auto",
+   "curated_html": "<p><code>\"auto\"</code> gives honest plane assignment: perturbers within <code>z_tolerance</code> of the lens redshift join the main plane as ordinary profiles; the rest get their own fore-/background planes, switching to multi-plane ray tracing with distance ratios fixed at the fiducial cosmology and arrival times rescaled by the sampled D_dt. <code>\"single_plane\"</code> forces <em>all</em> perturbers into the main lens plane \u2014 the classic approximation that keeps the cheaper single-plane forward model.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Perturber catalog JSON (target block + perturbers list, as written by the perturber-finder tool). Per-dataset \u2014 usually set via PERTURBERS_PATH in run_alpaca.py.",
+   "runtime": "PerturbersConfig.path",
+   "shipped": "data/perturbers.json",
+   "curated_html": "<p>Perturber catalog JSON (a target block + perturbers list, as written by the perturber-finder tool). <code>null</code> disables perturbers entirely \u2014 the model is then byte-identical to the plain single-plane pipeline. When set, each selected perturber contributes its catalog-declared mass profile; perturbers outside the main-plane redshift window get their own planes and switch the forward model to multi-plane lensing (Herculens <code>MPLensImage</code>).</p><p>Per-dataset path \u2014 prefer setting it via <code>PERTURBERS_PATH</code> in <code>run_alpaca.py</code>.</p>",
+   "warnings": [
+    "A perturber's light is modelled only when its catalog entry carries a lens_light block \u2014 mask every other perturber galaxy with data.likelihood_mask_path, or its flux biases the fit."
+   ],
+   "level": "essential",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.priors.fix_positions",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Freeze perturber centers at the catalog positions (no position latents; only theta_E is sampled).",
+   "runtime": "PerturberPriorConfig.fix_positions",
+   "shipped": false,
+   "curated_html": "<p>Freeze perturber centres at the catalog positions \u2014 no position latents; only \u03b8_E stays free. Cuts two latents per perturber; use when the catalog astrometry is trustworthy and the perturbers are weak.</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.priors.position_sigma_arcsec",
+   "type": "float",
+   "default": 0.3,
+   "code_doc": "Normal prior width (arcsec) on each perturber center, around the catalog position.",
+   "runtime": "PerturberPriorConfig.position_sigma_arcsec",
+   "shipped": 0.3,
+   "curated_html": "<p>Normal prior width on each perturber centre around its catalog position (converted into the model frame). Wide enough to absorb astrometric frame offsets; the overlay plot in <code>01_input/</code> shows the anchors so you can verify the conversion.</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.priors.theta_E_max_factor",
+   "type": "float",
+   "default": 3.0,
+   "code_doc": "theta_E prior is Uniform(0, factor * theta_E_catalog).",
+   "runtime": "PerturberPriorConfig.theta_E_max_factor",
+   "shipped": 3.0,
+   "curated_html": "<p>Each perturber's Einstein radius gets a <code>Uniform(0, factor \u00d7 \u03b8_E,catalog)</code> prior. The factor absorbs catalog mass uncertainties; 3\u00d7 is generous without letting a perturber grow into a second main deflector.</p>",
+   "level": "common",
+   "section": "mass"
+  },
+  {
+   "key": "mass.perturbers.z_tolerance",
+   "type": "float",
+   "default": 0.01,
+   "code_doc": "Redshift window around z_lens for main-plane membership.",
+   "runtime": "PerturbersConfig.z_tolerance",
+   "shipped": 0.01,
+   "curated_html": "<p>Redshift window around the lens: perturbers with <code>|z \u2212 z_lens| \u2264 z_tolerance</code> are placed in the main lens plane. Must be \u2265 0 (validated). Widening it trades multi-plane fidelity for a simpler, faster model.</p>",
+   "level": "advanced",
+   "section": "mass"
+  },
+  {
+   "key": "plotting.corner_params",
+   "type": "list[str] | str | None",
+   "default": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "code_doc": "Parameters to include in the corner plot. ``None`` auto-selects.",
+   "runtime": "PlottingConfig.corner_params",
+   "shipped": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "curated_html": "<p>Parameters for the corner plot: an explicit list of names, <code>\"all\"</code> to plot everything (heavy for CF models), or <code>null</code> for automatic selection capped at <code>max_corner_params</code>.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.dpi",
+   "type": "int",
+   "default": 300,
+   "code_doc": "Raster DPI for saved plots.",
+   "runtime": "PlottingConfig.dpi",
+   "shipped": 300,
+   "curated_html": "<p>Raster resolution of saved figures.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.max_corner_params",
+   "type": "int",
+   "default": 10,
+   "code_doc": "Max params in the corner plot under auto-selection.",
+   "runtime": "PlottingConfig.max_corner_params",
+   "shipped": 10,
+   "curated_html": "<p>Maximum parameters in the corner plot under auto-selection.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.n_posterior_draws_to_plot",
+   "type": "int",
+   "default": 3,
+   "code_doc": "Number of random posterior draws to visualise (when ``plot_posterior_draws`` is True).",
+   "runtime": "PlottingConfig.n_posterior_draws_to_plot",
+   "shipped": 3,
+   "curated_html": "<p>Number of random posterior draws to visualise.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_chains",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Generate chain trace plots.",
+   "runtime": "PlottingConfig.plot_chains",
+   "shipped": true,
+   "curated_html": "<p>Chain trace plots \u2014 the first thing to look at for convergence problems.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_corner",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Generate corner plots of posterior samples.",
+   "runtime": "PlottingConfig.plot_corner",
+   "shipped": true,
+   "curated_html": "<p>Corner plot of the posterior samples for the selected parameters.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_format",
+   "type": "str",
+   "default": "png",
+   "code_doc": "``\"png\"`` or ``\"pdf\"``.",
+   "runtime": "PlottingConfig.plot_format",
+   "shipped": "png",
+   "curated_html": "<p>Output format for saved figures. PNG for quick inspection; PDF for publication-quality vector output (larger files for image-heavy panels).</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_model_summary",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Generate the model-data-residual summary plot.",
+   "runtime": "PlottingConfig.plot_model_summary",
+   "shipped": true,
+   "curated_html": "<p>Model\u2013data\u2013residual summary figure. In the staged joint-PSF flow, each stage renders the same Herculens Plotter figure as the runner, with the recovered kernel baked into the plot's LensImage (triptych only as fallback).</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_model_summary_extended",
+   "type": "bool",
+   "default": true,
+   "code_doc": "In the model summary, include convergence, critical curves, and caustics (Herculens ``show_lens_others``/``show_lens_lines``).",
+   "runtime": "PlottingConfig.plot_model_summary_extended",
+   "shipped": true,
+   "curated_html": "<p>Extend the model summary with convergence, critical curves and caustics (Herculens <code>show_lens_others</code>/<code>show_lens_lines</code>).</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_posterior_draws",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Visualise random posterior draws as model images.",
+   "runtime": "PlottingConfig.plot_posterior_draws",
+   "shipped": true,
+   "curated_html": "<p>Render model images for random posterior draws \u2014 a visual posterior-predictive check.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_psf",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Generate the PSF comparison/residuals plot.",
+   "runtime": "PlottingConfig.plot_psf",
+   "shipped": true,
+   "curated_html": "<p>PSF comparison/residual plot \u2014 input vs reconstructed/recovered kernel per stage.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.plot_residuals",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Generate standalone residual plots.",
+   "runtime": "PlottingConfig.plot_residuals",
+   "shipped": true,
+   "curated_html": "<p>Standalone normalised-residual maps.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.save_plots",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Master toggle for writing any plots to disk.",
+   "runtime": "PlottingConfig.save_plots",
+   "shipped": true,
+   "curated_html": "<p>Master toggle for writing any plots to disk. All other plot flags are gated by this one.</p>",
+   "level": "common",
+   "section": "plotting"
+  },
+  {
+   "key": "plotting.save_priors",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Draw + save prior samples for prior/posterior comparison.",
+   "runtime": "PlottingConfig.save_priors",
+   "shipped": true,
+   "curated_html": "<p>Draw and save prior samples plus prior-distribution plots, enabling prior/posterior comparison \u2014 the standard check for prior-dominated parameters.</p>",
+   "level": "advanced",
+   "section": "plotting"
+  },
+  {
+   "key": "psf.input.error_map_path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Path to a per-pixel sigma map of the input PSF (``.npy``/``.npz`` array or FITS) \u2014 the MEASURED uncertainty of the provided PSF. Currently consumed by the joint mode when ``psf.joint.priors.background.type == \"error_map\"``.",
+   "runtime": "PSFInputConfig.error_map_path",
+   "shipped": "data/psf_error_map.fits",
+   "curated_html": "<p>Path to a measured per-pixel sigma map of the input PSF (<code>.npy</code>/<code>.npz</code> array or FITS) \u2014 the empirical uncertainty of the provided kernel. Currently consumed by joint mode when <code>psf.joint.priors.background.type=\"error_map\"</code>, where it sets the per-pixel prior widths on the free background grid (or the kernel-space prior). Per-dataset path \u2014 prefer setting it via <code>PSF_ERROR_MAP_PATH</code> in <code>run_alpaca.py</code>.</p>",
+   "related": [
+    "psf.joint.priors.background.type"
+   ],
+   "level": "essential",
+   "section": "psf"
+  },
+  {
+   "key": "psf.input.error_map_resampling",
+   "type": "one of ['none', 'bilinear']",
+   "default": "none",
+   "runtime": "PSFInputConfig.error_map_resampling",
+   "code_doc": "How a PSF error map on a different grid is matched to the PSF prior grid: `\"none\"` (default) requires the map on exactly that grid and raises an error otherwise; `\"bilinear\"` interpolates it (legacy behaviour, opt-in). Supplying the map on the right grid (STARRED, `high_res=True`, same stamp) is the clean option.",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.input.oversample",
+   "type": "int",
+   "default": 3,
+   "code_doc": "Supersampling factor of the INPUT PSF relative to the data pixel grid. 1 = PSF at data resolution. >1 = PSF is N\u00d7 finer than the data pixels (e.g. a JWST PSF provided at 5\u00d7 oversampling needs ``oversample=5``). When >1, Herculens enables supersampled convolution and keeps the PSF at its native finer resolution through the forward model.",
+   "runtime": "PSFInputConfig.oversample",
+   "shipped": 3,
+   "curated_html": "<p>Supersampling factor of the <em>provided</em> PSF file relative to the data pixel grid. 1 = PSF at data resolution; N &gt; 1 = the PSF is N\u00d7 finer (e.g. a WebbPSF kernel at 3\u00d7). When &gt; 1, Herculens enables supersampled convolution and keeps the PSF at native fine resolution through the forward model. <code>run_alpaca.py</code>'s <code>PSF_OVERSAMPLE</code>, if not <code>None</code>, overrides this.</p>",
+   "level": "essential",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.cutout_size_pix",
+   "type": "int | str",
+   "default": "auto",
+   "code_doc": "Size of the STARRED per-source stamps in native data pixels. Must be odd; even values are bumped up by 1. ``\"auto\"`` (default) uses the native-resolution PSF size (``psf_kernel.shape[0] // psf.input.oversample``). Shrinking this (e.g. to 61\u201381) restricts STARRED's fit to the signal-carrying core of the PSF and avoids letting the background-grid absorb noise from the wings. Note that this also shrinks the reconstructed PSF kernel returned to the rest of the pipeline to ``cutout_size_pix`` native pixels (``cutout_size_pix * starred_oversample`` high-res pixels).",
+   "runtime": "IterativePSFConfig.cutout_size_pix",
+   "shipped": "auto",
+   "curated_html": "<p>Size of the STARRED per-source stamps in native pixels. Must be odd (even values are bumped up by 1); <code>\"auto\"</code> uses the native-resolution PSF size (<code>kernel_size // psf.input.oversample</code>). Shrinking to 61\u201381 restricts the fit to the signal-carrying PSF core and stops the background grid from absorbing wing noise.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.error_map_during_recon.b_max",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Upper bound of the ``Uniform(0, b_max)`` prior on ``psf_error_b`` **during the PSF reconstruction stage only**. ``None`` uses the ProbModel default (0.1). Raising it (e.g. to 0.3\u20130.5) gives the likelihood more room to absorb PSF mis-modelling in the early iterations when the initial PSF is very approximate. Automatically restored before multistart MAP + sampling. Only meaningful when the error map is active during the PSF stage (via ``enabled`` here or the global ``likelihood.noise_model.use_psf_error_map``).",
+   "runtime": "PSFReconErrorMapConfig.b_max",
+   "shipped": null,
+   "curated_html": "<p>Upper bound of the <code>Uniform(0, b_max)</code> prior on <code>psf_error_b</code> during the reconstruction stage only. Raising it to 0.3\u20130.5 gives the likelihood more room to absorb PSF mis-modelling in early iterations when the initial PSF is crude. Restored before multistart + sampling.</p>",
+   "warnings": [
+    "Only meaningful when the error map is active during the PSF stage \u2014 via enabled=true here or the global likelihood.noise_model.use_psf_error_map."
+   ],
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.error_map_during_recon.enabled",
+   "type": "bool",
+   "default": false,
+   "code_doc": "If True, enables Herculens' PSF error map (a PSF-shaped noise inflation ``sigma_eff\u00b2 = sigma\u00b2 + b\u00b2 * ps_image\u00b2`` with ``b`` sampled on ``Uniform(0, b_max)``) **only for the PSF reconstruction stage**. Down-weights point-source cores during the internal GD so the lens/source/lens-light fit isn't starved by PSF mis-modelling leverage \u2014 giving STARRED cleaner model-subtracted stamps. Automatically reverts before multistart MAP and posterior sampling, which then see the user's global ``likelihood.noise_model.use_psf_error_map`` setting unchanged. Independent of that global flag: if both are True, this one is a no-op (PSF stage already has the error map).",
+   "runtime": "PSFReconErrorMapConfig.enabled",
+   "shipped": false,
+   "curated_html": "<p>Enable Herculens' PSF error map (<code>\u03c3\u00b2_eff = \u03c3\u00b2 + b\u00b2 \u00b7 ps_image\u00b2</code>, <code>b ~ Uniform(0, b_max)</code>) <em>only during the PSF reconstruction stage</em>. Down-weights point-source cores in the internal GD so the lens/source/lens-light fit isn't starved by PSF-mismodelling leverage, giving STARRED cleaner model-subtracted stamps. Automatically reverted before multistart MAP and sampling, which see the global <code><a class=\"xref\" href=\"#k-likelihood-noise-model-use-psf-error-map\">likelihood.noise_model.use_psf_error_map</a></code> unchanged.</p>",
+   "warnings": [
+    "If the global use_psf_error_map is already true, this flag is a no-op \u2014 the PSF stage already has the error map."
+   ],
+   "related": [
+    "likelihood.noise_model.use_psf_error_map"
+   ],
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.masking.mask_other_peaks",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Mask other detected peaks when reconstructing each PS.",
+   "runtime": "PSFMaskingConfig.mask_other_peaks",
+   "shipped": true,
+   "curated_html": "<p>When fitting each point source in STARRED, mask the other detected peaks so a neighbouring image's flux doesn't contaminate the stamp. Essential for small-separation quads.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.masking.radius_pix",
+   "type": "int",
+   "default": 8,
+   "code_doc": "Radius (pixels) of the mask around other peaks.",
+   "runtime": "PSFMaskingConfig.radius_pix",
+   "shipped": 8,
+   "curated_html": "<p>Radius of the mask placed over each contaminant peak. Should comfortably cover the neighbour's PSF core without eating the stamp being fitted.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.masking.smoothing",
+   "type": "one of ['cosine', 'hard', 'gaussian']",
+   "default": "cosine",
+   "code_doc": "Window-function shape for the contaminant-PS masks fed to STARRED. ``\"cosine\"`` (default) applies a raised-cosine taper outside ``radius_pix`` over a width ``smoothing_width_pix``, suppressing the Fourier-domain ringing that a hard 0/1 cut would inject into the PSF reconstruction. ``\"hard\"`` reproduces the legacy 0/1 binary mask. ``\"gaussian\"`` uses ``1 - exp(-r^2 / (2 * R^2))`` with ``R = radius_pix``.",
+   "runtime": "PSFMaskingConfig.smoothing",
+   "shipped": "cosine",
+   "curated_html": "<p>Window shape of the contaminant masks fed to STARRED. <code>\"cosine\"</code> applies a raised-cosine taper outside <code>radius_pix</code> over <code>smoothing_width_pix</code>, suppressing the Fourier-domain ringing a hard 0/1 edge injects into the reconstruction. <code>\"hard\"</code> reproduces the legacy binary mask; <code>\"gaussian\"</code> uses <code>1 \u2212 exp(\u2212r\u00b2/2R\u00b2)</code> with <code>R = radius_pix</code>.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.masking.smoothing_width_pix",
+   "type": "float",
+   "default": 4.0,
+   "code_doc": "Width (pixels) of the cosine taper. Ignored when ``smoothing != \"cosine\"``.",
+   "runtime": "PSFMaskingConfig.smoothing_width_pix",
+   "shipped": 4.0,
+   "curated_html": "<p>Width of the raised-cosine taper. Ignored unless <code>smoothing=\"cosine\"</code>. Must be non-negative (validated).</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.n_iterations",
+   "type": "int",
+   "default": 2,
+   "code_doc": "Number of iterative PSF refinement passes.",
+   "runtime": "IterativePSFConfig.n_iterations",
+   "shipped": 2,
+   "curated_html": "<p>Number of outer refinement passes: fit lens model \u2192 subtract extended light \u2192 re-fit PSF on the cleaned point sources \u2192 repeat. Two passes usually converge; more help when the initial PSF is very approximate.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.n_starts_per_iteration",
+   "type": "int",
+   "default": 20,
+   "code_doc": "Random starts for multi-start optimization per iteration.",
+   "runtime": "IterativePSFConfig.n_starts_per_iteration",
+   "shipped": 20,
+   "curated_html": "<p>Random starts for the internal lens-modelling multi-start inside each PSF iteration. Higher = more robust extended-light subtraction (and thus cleaner PSF stamps), slower.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.negative_sigma_clip",
+   "type": "float | None",
+   "default": 2.0,
+   "code_doc": "Clip pixels below ``-negative_sigma_clip * \u03c3`` in the reconstructed PSF. ``None`` disables clipping.",
+   "runtime": "IterativePSFConfig.negative_sigma_clip",
+   "shipped": 2.0,
+   "curated_html": "<p>Clip reconstructed PSF pixels below <code>\u2212N \u00d7 \u03c3</code> \u2014 masking negative reconstruction artefacts that would imprint dark rings around every point source. <code>null</code> disables clipping.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.parallelized",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Parallelize multi-start evaluations across devices.",
+   "runtime": "IterativePSFConfig.parallelized",
+   "shipped": true,
+   "curated_html": "<p>Parallelize the multi-start evaluations across available devices (GPUs). Disable only for debugging or on memory-starved single-GPU nodes.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.rotation_mode",
+   "type": "str",
+   "default": "none",
+   "code_doc": "Rotation augmentation mode for STARRED.",
+   "runtime": "IterativePSFConfig.rotation_mode",
+   "shipped": "none",
+   "curated_html": "<p>Rotation augmentation inside STARRED: <code>\"90\"</code> adds a 90\u00b0-rotated copy of each stamp, <code>\"all\"</code> every 90\u00b0 rotation. Augmentation suppresses detector-frame systematics at the cost of imprinting rotational symmetry on the kernel \u2014 leave <code>\"none\"</code> for PSFs with strong diffraction spikes.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.iterative.starred_oversample",
+   "type": "int | None",
+   "default": null,
+   "code_doc": "Supersampling factor inside STARRED. ``None`` (default) inherits ``psf.input.oversample`` so the reconstruction works on the same grid as the input PSF.",
+   "runtime": "IterativePSFConfig.starred_oversample",
+   "shipped": null,
+   "curated_html": "<p>Internal supersampling factor of the STARRED reconstruction grid. The reconstructed kernel is returned at this resolution relative to native pixels.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.convolution_method",
+   "type": "str",
+   "default": "fft",
+   "code_doc": "Convolution backend for the live kernel (\"fft\").",
+   "runtime": "JointPSFConfig.convolution_method",
+   "shipped": "fft",
+   "curated_html": "<p>Convolution backend for the live kernel. <code>\"fft\"</code> is the supported production choice; direct convolution is orders of magnitude slower for typical kernel sizes.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.free",
+   "type": "tuple[str, ...]",
+   "default": [
+    "moffat",
+    "background"
+   ],
+   "code_doc": "Which PSF blocks are free GD latents.",
+   "runtime": "JointPSFConfig.free",
+   "shipped": [
+    "moffat",
+    "background"
+   ],
+   "curated_html": "<p>Which PSF blocks become free GD latents. <code>\"moffat\"</code> frees the analytic core (FWHM, \u03b2, ellipticity C, angle \u03c6); <code>\"background\"</code> frees the STARRED pixel grid that carries diffraction structure and wings. Freeing both gives the most faithful kernel but adds the full grid as latents \u2014 the background prior configuration below then matters a lot.</p>",
+   "related": [
+    "psf.joint.priors.background.type"
+   ],
+   "level": "common",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.oversample",
+   "type": "int | None",
+   "default": null,
+   "code_doc": "Supersampling factor of the live joint kernel (STARRED grid). Fallback when the seed does not record its own ``upsampling_factor``. ``None`` (default) inherits ``psf.input.oversample`` \u2014 the joint kernel lives on the same grid as the input PSF.",
+   "runtime": "JointPSFConfig.oversample",
+   "shipped": null,
+   "curated_html": "<p>Supersampling factor of the live joint kernel (the STARRED grid). Used as a fallback when the seed file does not record its own <code>upsampling_factor</code> \u2014 a seed that records it wins.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.error_map_alpha",
+   "type": "float",
+   "default": 1.0,
+   "code_doc": "Global scale on the measured error map (``type == \"error_map\"``).",
+   "runtime": "JointBackgroundPriorConfig.error_map_alpha",
+   "shipped": 1.0,
+   "curated_html": "<p>Global scale on the measured error map in the <code>\"error_map\"</code> recipe. 1.0 trusts the map as-is; &gt; 1 inflates the prior widths if the map is known to be optimistic (e.g. it omits systematic terms).</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.floor",
+   "type": "float | None",
+   "default": 1e-08,
+   "code_doc": "Numerical floor added to the per-pixel width (heuristic and error_map recipes). ``None`` -> 5% of the seed background std.",
+   "runtime": "JointBackgroundPriorConfig.floor",
+   "shipped": 1e-08,
+   "curated_html": "<p>Numerical floor added to the per-pixel width (heuristic and error_map recipes). Guards against <code>\u03c3\u1d62 \u2192 0</code> in the zero-error wings, which would freeze those pixels and can condition the optimisation badly. <code>null</code> uses 5% of the seed background's standard deviation.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.noncentered",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Non-centered reparametrization of the free background grid (b = seed + sigma*z, z~N(0,1)). Identical prior, well-conditioned geometry for tiny sigma. Set False for the original centered behaviour.",
+   "runtime": "JointBackgroundPriorConfig.noncentered",
+   "shipped": true,
+   "curated_html": "<p>Non-centered reparametrization of the free background grid: <code>b = seed + \u03c3\u00b7z</code> with <code>z ~ N(0,1)</code> as the latent. The prior is identical, but the geometry is far better conditioned when \u03c3 is tiny (as it is with a measured error map) \u2014 recommended whenever the background is free.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.rel",
+   "type": "float",
+   "default": 3.5,
+   "code_doc": "Relative width for the heuristic recipe.",
+   "runtime": "JointBackgroundPriorConfig.rel",
+   "shipped": 3.5,
+   "curated_html": "<p>Relative width for the <code>\"heuristic\"</code> recipe: <code>\u03c3\u1d62 = rel \u00d7 |seed\u1d62| + floor</code>. Larger values let bright background pixels move more.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.sigma",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Global scalar width; required when ``type == \"scalar\"``.",
+   "runtime": "JointBackgroundPriorConfig.sigma",
+   "shipped": null,
+   "curated_html": "<p>Global scalar width for the <code>\"scalar\"</code> recipe \u2014 one \u03c3 for every background pixel.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.space",
+   "type": "one of ['background', 'kernel']",
+   "default": "kernel",
+   "code_doc": "Space the error-map prior acts in: ``\"background\"`` (legacy: width on the bg latent) or ``\"kernel\"`` (Gaussian prior on the full PSF kernel via a factor \u2014 the physically correct space; no deconvolution of the narrow->full convolution needed).",
+   "runtime": "JointBackgroundPriorConfig.space",
+   "shipped": "kernel",
+   "curated_html": "<p>Space the error-map prior acts in. <code>\"kernel\"</code> places a Gaussian prior on the <em>full PSF kernel</em> via a likelihood factor \u2014 the physically correct space, since the error map measures kernel uncertainty (and no deconvolution of the narrow\u2192full convolution is needed). <code>\"background\"</code> is the legacy behaviour: the width is applied directly to the background latent.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.background.type",
+   "type": "one of ['heuristic', 'error_map', 'scalar']",
+   "default": "error_map",
+   "code_doc": "Which prior-width recipe to use (see above).",
+   "runtime": "JointBackgroundPriorConfig.type",
+   "shipped": "error_map",
+   "curated_html": "<p>Recipe for the per-pixel prior width on the free STARRED background grid (only consulted when <code>\"background\"</code> is in <code><a class=\"xref\" href=\"#k-psf-joint-free\">psf.joint.free</a></code>):</p><ul><li><code>\"heuristic\"</code> \u2014 <code>\u03c3\u1d62 = rel \u00d7 |seed\u1d62| + floor</code>: freedom proportional to the seed's own structure.</li><li><code>\"error_map\"</code> \u2014 <code>\u03c3\u1d62 = sqrt((\u03b1 \u00d7 errmap\u1d62)\u00b2 + floor\u00b2)</code>: the <em>measured</em> uncertainty of the seed PSF, read from <code><a class=\"xref\" href=\"#k-psf-input-error-map-path\">psf.input.error_map_path</a></code>. The physically motivated choice when you have an empirical error map.</li><li><code>\"scalar\"</code> \u2014 one global \u03c3 for every pixel.</li></ul>",
+   "related": [
+    "psf.input.error_map_path",
+    "psf.joint.free"
+   ],
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.moffat_phi_sigma",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Absolute Normal(0, sigma) prior for the Moffat angle phi (whose seed is ~0).",
+   "runtime": "JointPriorsConfig.moffat_phi_sigma",
+   "shipped": 0.1,
+   "curated_html": "<p>Absolute <code>Normal(0, \u03c3)</code> prior on the Moffat position angle \u03c6, whose seed value is ~0 (a relative width would collapse to zero there).</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.priors.moffat_rel_sigma",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Moffat priors: Normal(seed, rel*|seed|) for fwhm/beta/C.",
+   "runtime": "JointPriorsConfig.moffat_rel_sigma",
+   "shipped": 0.1,
+   "curated_html": "<p>Relative prior width on the Moffat core parameters: <code>Normal(seed, rel \u00d7 |seed|)</code> for FWHM, \u03b2 and the ellipticity parameter C. 0.1 = 10% freedom around the seed \u2014 enough to correct a slightly wrong STARRED fit while anchoring the core against source\u2013PSF degeneracy.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.regularization.lambda_hf",
+   "type": "float",
+   "default": 3.0,
+   "runtime": "JointRegularizationConfig.lambda_hf",
+   "shipped": 3.0,
+   "curated_html": "<p>Starlet regularization strength on the highest-frequency scale \u2014 the main defence against the background grid absorbing pixel noise.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.regularization.lambda_positivity",
+   "type": "float",
+   "default": 1000000.0,
+   "runtime": "JointRegularizationConfig.lambda_positivity",
+   "shipped": 1000000.0,
+   "curated_html": "<p>Penalty on negative kernel pixels. The shipped value (10\u2076) makes positivity effectively a hard constraint; the small dataclass default only nudges. Negative PSF pixels imprint dark rings around every point source, so a strong positivity term is usually right.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.regularization.lambda_scales",
+   "type": "float",
+   "default": 3.0,
+   "runtime": "JointRegularizationConfig.lambda_scales",
+   "shipped": 3.0,
+   "curated_html": "<p>STARRED-style starlet regularization strength on the coarse wavelet scales of the live kernel \u2014 suppresses smooth spurious structure the imaging likelihood can't constrain.</p>",
+   "warnings": [
+    "The lambdas here are unnormalised (no star noise-map W), so values tuned inside STARRED/JWSTPSF do not transfer 1:1 \u2014 calibrate empirically on your data."
+   ],
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.seed_path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Path to the JWSTPSF/STARRED seed (kwargs_moffat + kwargs_background). Required in joint mode.",
+   "runtime": "JointPSFConfig.seed_path",
+   "shipped": "data/psf_starred_seed.npz",
+   "curated_html": "<p>Path to the STARRED/JWSTPSF seed containing <code>kwargs_moffat</code> (analytic core) and <code>kwargs_background</code> (pixel grid), produced by a PSF fit you ran ahead of time. The seed centres the priors of the free PSF blocks and provides the frozen parts. Per-dataset path \u2014 prefer setting it via <code>PSF_STARRED_KWARGS_PATH</code> in <code>run_alpaca.py</code>.</p>",
+   "level": "essential",
+   "section": "psf"
+  },
+  {
+   "key": "psf.joint.supersampled",
+   "type": "bool",
+   "default": true,
+   "code_doc": "When True, allow ``psf.input.oversample > 1`` in joint mode so the bright point-source cores are rendered with a LIVE supersampled (high-res) joint PSF kernel (Moffat fit at os-resolution; STARRED background built on the os grid). Extended light stays on the static supersampled SubgridKernelConvolution path (seed HR kernel). Requires ``data.source_oversample == psf.input.oversample``. Set False for the native-only joint behaviour.",
+   "runtime": "JointPSFConfig.supersampled",
+   "shipped": true,
+   "curated_html": "<p>Allow <code>psf.input.oversample &gt; 1</code> in joint mode: bright point-source cores are rendered with a <em>live</em> supersampled joint kernel (Moffat evaluated at the oversampled resolution; STARRED background built on the oversampled grid), while extended light stays on the static supersampled convolution path using the seed high-res kernel. Set this to <code>false</code> for native-resolution-only joint behaviour.</p>",
+   "level": "advanced",
+   "section": "psf"
+  },
+  {
+   "key": "psf.mode",
+   "type": "one of ['fixed', 'iterative', 'joint']",
+   "default": "joint",
+   "runtime": "PSFConfig.mode",
+   "shipped": "joint",
+   "curated_html": "<p>The single source of truth for how the PSF is treated:</p><ul><li><code>\"fixed\"</code> \u2014 trust the PSF you provide; no reconstruction at all. Only the <code>psf.input</code> section matters.</li><li><code>\"iterative\"</code> \u2014 iteratively reconstruct the PSF with STARRED before the main gradient descent (settings under <code>psf.iterative</code>).</li><li><code>\"joint\"</code> \u2014 fit the PSF (Moffat core + optional background grid) <em>jointly</em> with the lens model during gradient descent, seeded from a STARRED/JWSTPSF fit (settings under <code>psf.joint</code>).</li></ul><p>The subsection not matching the mode is ignored; if an ignored section differs from its defaults, a notice is printed so a stale section can't silently mislead. The legacy layout (<code>run_psf</code>, <code>mode=\"joint_gd\"</code>, flat <code>psf.joint_*</code> keys) is auto-upgraded with a deprecation notice.</p>",
+   "level": "essential",
+   "section": "psf"
+  },
+  {
+   "key": "run.multistart",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Run the gradient-descent stages (MAP).",
+   "runtime": "run_multistart",
+   "shipped": true,
+   "curated_html": "<p>Run the multi-start gradient-descent MAP stage (<code>03_multistart/</code>). Nearly always <code>true</code> \u2014 the MAP point seeds the sampler, defines the signal-derived arc mask, and (in joint PSF mode) carries the PSF fit. Set <code>false</code> only to start sampling directly from prior means or from a previous run's best fit.</p>",
+   "level": "advanced",
+   "section": "run"
+  },
+  {
+   "key": "run.output_dir",
+   "type": "str",
+   "default": "run/",
+   "code_doc": "Directory for all outputs of this run. A new directory per model variant: re-running into an existing directory resumes it.",
+   "runtime": "output_dir",
+   "shipped": "run/",
+   "curated_html": "<p>Root directory for all pipeline outputs (input snapshots, PSF stage, multistart, sampling, plots, timing). The literal token <code>{date}</code> is replaced with a <code>YYYY-MM-DD_HH-MM</code> timestamp when the config is built, so every run lands in its own sub-folder. A trailing slash is added if missing; an empty string, <code>null</code>, or an omitted key falls back to <code>pipeline_output</code> (the <code>{date}</code> expansion only happens in the run scripts, so the dataclass deliberately does not default to the <code>{date}</code> path).</p>",
+   "warnings": [
+    "Resume logic (staged joint-PSF stages, resume_from_previous) keys off directories inside output_dir \u2014 reuse the same directory (no {date} token) if you want reruns to skip completed stages."
+   ],
+   "level": "essential",
+   "section": "run"
+  },
+  {
+   "key": "run.random_seed",
+   "type": "int",
+   "default": 42,
+   "code_doc": "Seed for every random choice (multistart draws, perturbations, sampler).",
+   "runtime": "random_seed",
+   "shipped": 42,
+   "curated_html": "<p>Master PRNG seed, propagated to every stochastic component: multi-start initial positions, Adam/L-BFGS randomness, sampler chains, posterior subsampling. Fixing it makes runs bit-reproducible on the same hardware/software stack; change it to probe run-to-run scatter of the multistart.</p>",
+   "level": "essential",
+   "section": "run"
+  },
+  {
+   "key": "run.resume_from_previous",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Skip GD and load a previous MAP (for sampling only).",
+   "runtime": "resume_from_previous",
+   "shipped": false,
+   "curated_html": "<p>Only consulted when <code>run.multistart=false</code>: if <code>true</code>, load the best-fit parameters from a previous run's <code>03_multistart/</code> directory and use them as the sampling start point; if <code>false</code>, start from prior means.</p>",
+   "warnings": [
+    "The loaded best fit must come from a compatible model \u2014 the staged flow fingerprints the likelihood config and warns (and invalidates later stages) when the objective changed, e.g. a time-delay flip."
+   ],
+   "level": "advanced",
+   "section": "run"
+  },
+  {
+   "key": "run.resume_multistart_path",
+   "type": "str | null",
+   "default": null,
+   "code_doc": "Folder of the previous 03_multistart to load when resuming.",
+   "runtime": "resume_multistart_path",
+   "shipped": null,
+   "curated_html": "<p>Explicit path to a previous run's <code>03_multistart/</code> directory. When <code>null</code>, the path is derived from <code>output_dir</code>. Only used when <code>resume_from_previous=true</code>.</p>",
+   "level": "advanced",
+   "section": "run"
+  },
+  {
+   "key": "run.sampling",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Run posterior sampling after the GD stages.",
+   "runtime": "run_sampling",
+   "shipped": true,
+   "curated_html": "<p>Run posterior sampling (NUTS / Nautilus / NIFTy) after gradient descent. Disable to stop after the MAP stage \u2014 useful for quick model checks, arc-mask tuning, or PSF-stage debugging where the posterior is not needed yet.</p>",
+   "level": "essential",
+   "section": "run"
+  },
+  {
+   "key": "run.verbose",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Print progress to stdout.",
+   "runtime": "verbose",
+   "shipped": true,
+   "curated_html": "<p>Master verbosity toggle applied to every pipeline stage \u2014 progress prints, per-start GD summaries, sampler diagnostics. Does not affect what is written to disk, only console output.</p>",
+   "level": "advanced",
+   "section": "run"
+  },
+  {
+   "key": "sampling.marginalize_psf",
+   "type": "bool",
+   "default": true,
+   "code_doc": "When True (NIFTy + staged joint-PSF only), the PSF Moffat-core parameters remain FREE latents during posterior sampling, so the posterior marginalises over PSF uncertainty instead of freezing the kernel at the final GD value. The background grid stays frozen at its GD value (the 447^2 grid is intractable as VI latents and is pinned by the error-map floor). Requires the staged joint-PSF model (joint_stages set). Set False to reproduce the legacy frozen-kernel sampling exactly.",
+   "runtime": "SamplerConfig.marginalize_psf",
+   "shipped": false,
+   "curated_html": "<p>Keep the PSF Moffat-core parameters as <em>free latents during posterior sampling</em>, so the posterior marginalises over PSF uncertainty instead of freezing the kernel at the final GD value. The background grid stays frozen at its GD value (a ~450\u00b2 grid is intractable as VI latents and is pinned by the error-map floor). Default <code>false</code> reproduces legacy frozen-kernel sampling exactly.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.marginalize_psf_background",
+   "type": "bool",
+   "default": true,
+   "code_doc": "When marginalize_psf is on, ALSO marginalise the PSF background \u2014 but only the high-res pixels inside a central box of side ~ marginalize_psf_background_fwhm_box * fwhm * upsampling (where the PSF carries signal), as a perturbation around the GD-recovered grid. Keeps the sampled-background latent count tiny (= side**2) so geoVI/NUTS stays tractable; the kernel-space prior anchors it to the measured error map. Set False to freeze the whole background (legacy marginalize_psf).",
+   "runtime": "SamplerConfig.marginalize_psf_background",
+   "shipped": false,
+   "curated_html": "<p>When <code>marginalize_psf</code> is on, <em>also</em> marginalise the PSF background \u2014 but only the high-res pixels inside a central box of side \u2248 <code>fwhm_box \u00d7 fwhm \u00d7 upsampling</code>, where the PSF actually carries signal, sampled as a perturbation around the GD-recovered grid. Keeps the sampled-background latent count tiny (= side\u00b2) so geoVI/NUTS stays tractable; the kernel-space prior anchors it to the measured error map.</p>",
+   "warnings": [
+    "Meaningless without sampling.marginalize_psf=true."
+   ],
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.marginalize_psf_background_fwhm_box",
+   "type": "float",
+   "default": 6.0,
+   "code_doc": "Must stay small enough that side = fwhm_box * fwhm * upsampling is below image_size_up; otherwise the box clips to the full grid and the latent count is image_size_up**2 rather than tiny.",
+   "runtime": "SamplerConfig.marginalize_psf_background_fwhm_box",
+   "shipped": 80.0,
+   "curated_html": "<p>Size of the marginalised background box, in units of the PSF FWHM (times the upsampling factor), giving a box of side <code>fwhm_box \u00d7 fwhm \u00d7 upsampling</code> centred on the kernel. Only pixels inside the box become free latents. The side is clipped to the full high-res grid, so once <code>fwhm_box \u00d7 fwhm \u00d7 upsampling</code> reaches <code>image_size_up</code>, the box covers every background pixel. The example value of 80.0 therefore resolves to the full high-resolution grid if background marginalisation is enabled; in the worked run it is dormant because <code>marginalize_psf</code> is <code>false</code>.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.n_posterior_samples_final",
+   "type": "int | None",
+   "default": 5000,
+   "code_doc": "Target posterior sample count after final subsampling. ``None`` keeps whatever the backend produced (no resampling) \u2014 with a finite target, backends that produced fewer raw draws than the target are resampled WITH replacement up to it.",
+   "runtime": "SamplerConfig.n_posterior_samples_final",
+   "shipped": 5000,
+   "curated_html": "<p>Target posterior sample count after final subsampling \u2014 the size of the chains written to <code>posterior_samples.npz</code> and used by corner plots and downstream cosmography.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nautilus.batch_per_device",
+   "type": "int",
+   "default": 64,
+   "runtime": "NautilusConfig.batch_per_device",
+   "shipped": 64,
+   "curated_html": "<p>Likelihood-evaluation batch size per device. Larger batches amortise dispatch overhead until memory limits bite.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nautilus.n_live",
+   "type": "int",
+   "default": 1000,
+   "runtime": "NautilusConfig.n_live",
+   "shipped": 1000,
+   "curated_html": "<p>Number of live points. More live points improve evidence accuracy and multimodal coverage at proportional cost.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nautilus.uniform_priors",
+   "type": "bool",
+   "default": true,
+   "runtime": "NautilusConfig.uniform_priors",
+   "shipped": true,
+   "curated_html": "<p>Map the unit cube through uniform priors (Nautilus' native parametrisation) rather than the model's transformed priors.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nautilus.use_jax",
+   "type": "bool",
+   "default": true,
+   "runtime": "NautilusConfig.use_jax",
+   "shipped": true,
+   "curated_html": "<p>Evaluate the likelihood through the JAX-compiled path (batched, GPU-accelerated) instead of plain NumPy calls.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nautilus.use_multi_device",
+   "type": "bool",
+   "default": true,
+   "runtime": "NautilusConfig.use_multi_device",
+   "shipped": true,
+   "curated_html": "<p>Distribute batched likelihood evaluations across all available devices.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.mode",
+   "type": "one of ['vi+nuts', 'vi_only', 'nuts_only']",
+   "default": "nuts_only",
+   "code_doc": "NIFTy sub-mode, consulted only when the effective sampler is ``\"nifty\"``.",
+   "runtime": "SamplerConfig.nifty_mode",
+   "shipped": "nuts_only",
+   "curated_html": "<p>NIFTy sub-mode, consulted only when the effective sampler is <code>\"nifty\"</code>:</p><ul><li><code>\"vi+nuts\"</code> \u2014 geoVI first, then NUTS-in-\u03be refinement warm-started from it. Asymptotically exact, and enables the VI-derived mass matrices.</li><li><code>\"vi_only\"</code> \u2014 geoVI only. Fast, but a Gaussian (in \u03be) approximation.</li><li><code>\"nuts_only\"</code> \u2014 NUTS-in-\u03be warm-started from the gradient-descent MAP, skipping VI entirely.</li></ul>",
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.chain_method",
+   "type": "one of ['auto', 'parallel', 'vectorized', 'sequential']",
+   "default": "auto",
+   "runtime": "NIFTyNUTSConfig.chain_method",
+   "shipped": "auto",
+   "curated_html": "<p>Chain execution strategy. <code>\"auto\"</code> (the default) picks <code>\"parallel\"</code> when <code>num_chains \u2265 device_count &gt; 1</code>, otherwise <code>\"vectorized\"</code> \u2014 batching all chains into one XLA program, which is roughly a wall-clock factor of <code>num_chains</code> faster than running them one at a time. There is an automatic OOM fallback to <code>\"sequential\"</code>, so <code>\"auto\"</code> is safe to leave on; set <code>\"sequential\"</code> explicitly only to force the memory-safe path up front. Note that models above <code>50000</code> latent dimensions are routed to a per-chain collector regardless of this setting.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.dense_block_names",
+   "type": "tuple[str, ...] | None",
+   "default": null,
+   "code_doc": "For mass_matrix=\"block_from_vi\": the \u03be-leaf names that form the single DENSE block of the mass matrix (everything else stays diagonal). The block is seeded with the geoVI sample COVARIANCE of these leaves, capturing the macro-lens correlations (slope / \u03b8_E / shear / D_dt) that a diagonal mass matrix throws away. None -> the built-in macro-lens default set. Names not present among the live latents are silently skipped.",
+   "runtime": "NIFTyNUTSConfig.dense_block_names",
+   "shipped": null,
+   "curated_html": "<p>For <code>mass_matrix=\"block_from_vi\"</code>: the \u03be-leaf names forming the single dense block (everything else stays diagonal). <code>null</code> uses the built-in macro-lens default set; names not present among the live latents are silently skipped.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.init_perturbation",
+   "type": "float",
+   "default": 0.001,
+   "runtime": "NIFTyNUTSConfig.init_perturbation",
+   "shipped": 0.001,
+   "curated_html": "<p>Gaussian jitter applied to each chain's initial position \u2014 keeps all chains on the typical set (near the warm start) while making them distinguishable, so R-hat is meaningful.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.mass_matrix",
+   "type": "one of ['identity', 'adaptive_diag', 'diag_from_vi', 'block_from_vi']",
+   "default": "adaptive_diag",
+   "runtime": "NIFTyNUTSConfig.mass_matrix",
+   "shipped": "adaptive_diag",
+   "curated_html": "<p>Mass matrix for \u03be-space NUTS:</p><ul><li><code>\"identity\"</code> \u2014 no adaptation; canonical for standardised \u03be-space, but ignores likelihood-induced scale differences.</li><li><code>\"adaptive_diag\"</code> \u2014 NumPyro's Welford diagonal estimator during warmup. Robust general default.</li><li><code>\"diag_from_vi\"</code> \u2014 per-coordinate variances from the geoVI residual samples.</li><li><code>\"block_from_vi\"</code> \u2014 dense macro-lens block seeded from the geoVI sample covariance (slope / \u03b8_E / shear / D_dt correlations that a diagonal matrix throws away), diagonal elsewhere.</li></ul>",
+   "level": "common",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.max_tree_depth",
+   "type": "int",
+   "default": 10,
+   "runtime": "NIFTyNUTSConfig.max_tree_depth",
+   "shipped": 12,
+   "curated_html": "<p>Maximum NUTS trajectory tree depth (2^depth leapfrog steps). Chains persistently hitting the cap signal a bad mass matrix \u2014 fix that before raising the cap (each +1 doubles the worst-case cost).</p>",
+   "level": "common",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.n_chains",
+   "type": "int | None",
+   "default": null,
+   "runtime": "NIFTyNUTSConfig.n_chains",
+   "shipped": 2,
+   "curated_html": "<p>Number of chains; <code>null</code> = one per GPU with a minimum of 2, so R-hat is always defined.</p>",
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.n_samples",
+   "type": "int",
+   "default": 6000,
+   "runtime": "NIFTyNUTSConfig.n_samples",
+   "shipped": 250,
+   "curated_html": "<p>Post-warmup samples per chain.</p>",
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.n_warmup",
+   "type": "int",
+   "default": 3000,
+   "runtime": "NIFTyNUTSConfig.n_warmup",
+   "shipped": 150,
+   "curated_html": "<p>Warmup iterations per chain for NUTS in \u03be-space. \u03be-space is prior-standardised, but the likelihood still bends it \u2014 generous warmup pays off for CF+PSF models.</p>",
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.nuts.target_accept",
+   "type": "float",
+   "default": 0.8,
+   "runtime": "NIFTyNUTSConfig.target_accept",
+   "shipped": 0.95,
+   "curated_html": "<p>Target acceptance for step-size adaptation. Raise if divergences appear.</p>",
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.algorithm",
+   "type": "one of ['MGVI', 'geoVI']",
+   "default": "geoVI",
+   "runtime": "NIFTyVIConfig.algorithm",
+   "shipped": "geoVI",
+   "curated_html": "<p>Variational algorithm: <code>\"MGVI\"</code> (metric Gaussian VI \u2014 faster, Gaussian approximation in \u03be) or <code>\"geoVI\"</code> (geometric VI \u2014 adapts to posterior curvature, more accurate for non-Gaussian posteriors).</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.cg_maxiter",
+   "type": "int | None",
+   "default": 100,
+   "runtime": "NIFTyVIConfig.cg_maxiter",
+   "shipped": 100,
+   "curated_html": "<p>Conjugate-gradient iterations for linear sample draws and KL minimisation. Higher values give more accurate VI samples per iteration at linear cost \u2014 the shipped 100 prioritises accuracy.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.init_spread",
+   "type": "float",
+   "default": 0.1,
+   "runtime": "NIFTyVIConfig.init_spread",
+   "shipped": 0.1,
+   "curated_html": "<p>Scale factor of the random initial position in latent (\u03be) space around the warm start.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.n_iterations",
+   "type": "int",
+   "default": 25,
+   "runtime": "NIFTyVIConfig.n_iterations",
+   "shipped": 25,
+   "curated_html": "<p>Total VI outer iterations (KL-minimisation rounds). Watch the reported KL/energy: if it is still falling at the end, add iterations.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.n_resample",
+   "type": "int",
+   "default": 500,
+   "code_doc": "batch-resample from converged geoVI; 0 = skip",
+   "runtime": "NIFTyVIConfig.n_resample",
+   "shipped": 500,
+   "curated_html": "<p>Batch-resample count from the <em>converged</em> geoVI approximation (posterior samples beyond the few used during convergence). <code>0</code> disables and keeps only the convergence samples.</p>",
+   "warnings": [
+    "Ignored when NUTS refinement follows (nifty.mode=\"vi+nuts\") \u2014 the NUTS samples overwrite these anyway."
+   ],
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.n_samples_per_iteration",
+   "type": "int | None",
+   "default": 8,
+   "runtime": "NIFTyVIConfig.n_samples_per_iteration",
+   "shipped": 8,
+   "curated_html": "<p>Antithetic sample pairs drawn per VI iteration for the KL estimate. A fixed value is safest; <code>null</code> switches to an adaptive schedule (4\u21928\u219216\u219264).</p>",
+   "warnings": [
+    "The adaptive schedule (null) can OOM on large correlated fields \u2014 the late-stage 64-sample rounds are memory-hungry. Prefer a fixed value on big grids."
+   ],
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.quick_run",
+   "type": "bool",
+   "default": false,
+   "runtime": "NIFTyVIConfig.quick_run",
+   "shipped": false,
+   "curated_html": "<p>Fast settings for testing/debugging \u2014 reduces conjugate-gradient iteration counts. Not for production posteriors.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.resample_batch_size",
+   "type": "int",
+   "default": 16,
+   "runtime": "NIFTyVIConfig.resample_batch_size",
+   "shipped": 16,
+   "curated_html": "<p>PRNG keys per resampling batch; mirror (antithetic) sampling doubles each batch.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.vi.use_multi_gpu",
+   "type": "bool",
+   "default": true,
+   "runtime": "NIFTyVIConfig.use_multi_gpu",
+   "shipped": true,
+   "curated_html": "<p>Shard the geoVI computation across all GPUs to reduce per-GPU memory \u2014 often the difference between fitting and OOM for 128\u00b2+ correlated fields.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.warmstart.gtol",
+   "type": "float",
+   "default": 1.0,
+   "code_doc": "Stop when the gradient norm of U falls below this.",
+   "runtime": "NIFTyWarmstartConfig.gtol",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.warmstart.maxiter",
+   "type": "int",
+   "default": 3000,
+   "code_doc": "L-BFGS iteration cap.",
+   "runtime": "NIFTyWarmstartConfig.maxiter",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nifty.warmstart.polish",
+   "type": "one of ['lbfgs', 'off']",
+   "default": "lbfgs",
+   "code_doc": "``\"lbfgs\"`` (default): optax L-BFGS with zoom line search on U until ``|grad U| < gtol`` or ``maxiter`` iterations; kept only if U decreased and stayed finite. ``\"off\"``: the bare exact transfer (0.4.1 behaviour).",
+   "runtime": "NIFTyWarmstartConfig.polish",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nuts.n_chains",
+   "type": "int | None",
+   "default": null,
+   "runtime": "NUTSConfig.n_chains",
+   "shipped": null,
+   "curated_html": "<p>Number of chains. <code>null</code> runs one chain per available device. At least 2 chains are needed for meaningful R-hat diagnostics.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nuts.n_samples",
+   "type": "int",
+   "default": 5000,
+   "runtime": "NUTSConfig.n_samples",
+   "shipped": 5000,
+   "curated_html": "<p>Post-warmup samples per chain.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nuts.n_warmup",
+   "type": "int",
+   "default": 3000,
+   "runtime": "NUTSConfig.n_warmup",
+   "shipped": 3000,
+   "curated_html": "<p>Warmup (adaptation) iterations per chain \u2014 step size and mass-matrix tuning. Lens posteriors with strong D_dt\u2013slope correlations benefit from generous warmup.</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.nuts.target_accept",
+   "type": "float",
+   "default": 0.8,
+   "runtime": "NUTSConfig.target_accept",
+   "shipped": 0.8,
+   "curated_html": "<p>Target acceptance probability for the dual-averaging step-size adaptation. Raise towards 0.9\u20130.95 if divergences appear (smaller steps, slower sampling).</p>",
+   "level": "advanced",
+   "section": "sampling"
+  },
+  {
+   "key": "sampling.sampler",
+   "type": "one of ['nuts', 'nautilus', 'nifty', 'default']",
+   "default": "nifty",
+   "code_doc": "Backend. ``\"default\"`` auto-selects: NIFTy for correlated-field models, Nautilus for \u226450 parameters, NUTS otherwise.",
+   "runtime": "SamplerConfig.sampler",
+   "shipped": "nifty",
+   "curated_html": "<p>Posterior sampling backend:</p><ul><li><code>\"nuts\"</code> \u2014 classical NumPyro NUTS on the physical parameters. Right for Shapelets/Sersic models with moderate dimensionality.</li><li><code>\"nautilus\"</code> \u2014 nested sampling. Practical up to ~50 parameters and the only backend that returns a log-evidence (model comparison).</li><li><code>\"nifty\"</code> \u2014 NIFTy-based inference (geoVI and/or NUTS in \u03be-space). <em>Required</em> for correlated-field sources; also the backend that supports PSF marginalisation.</li><li><code>\"default\"</code> \u2014 auto-select: NIFTy for correlated fields, Nautilus for \u2264 50 parameters, NUTS otherwise.</li></ul>",
+   "warnings": [
+    "Nautilus does not scale past ~50 parameters \u2014 with image-position offsets, perturbers and a large Shapelet basis you can exceed that quickly; check the printed parameter count."
+   ],
+   "level": "essential",
+   "section": "sampling"
+  },
+  {
+   "key": "stages.cf_joint.adam_lr",
+   "type": "float",
+   "default": 0.001,
+   "code_doc": "Learning rate of the joint stage.",
+   "runtime": "psf.joint.stages.stage3.adam_lr",
+   "shipped": 0.001,
+   "curated_html": "<p>Adam learning rate for stage 3.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.adam_steps",
+   "type": "int",
+   "default": 4000,
+   "code_doc": "Adam steps of the joint CorrField stage.",
+   "runtime": "psf.joint.stages.stage3.adam_steps",
+   "shipped": 12000,
+   "curated_html": "<p>Adam steps in stage 3 (<code>cf_joint</code>): a single-start joint optimisation with <em>all</em> latents free (CF source, lens, point sources, PSF), started from the stage-2 state.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.enabled",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Run the CorrField joint stage (stage 3): source, lens, lens light and PSF fitted together.",
+   "shipped": true,
+   "curated_html": "<p>Run the joint CF stage: source + mass (+ PSF in joint-PSF mode, + lens light per <code><a class=\"xref\" href=\"#k-stages-cf-joint-lens-light\">stages.cf_joint.lens_light</a></code>) optimised together, warm-started from the previous stages. This is the stage that produces the MAP model the sampler is centred on. With both CF stages disabled the pipeline is shapelets-only: sampling runs on the stage-1 model.</p>",
+   "related": [
+    "stages.cf_joint.lens_light"
+   ],
+   "level": "essential",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.lbfgs_maxiter",
+   "type": "int",
+   "default": 0,
+   "code_doc": "Optional L-BFGS polish after the joint Adam (0 = off).",
+   "runtime": "psf.joint.stages.stage3.lbfgs_maxiter",
+   "shipped": 0,
+   "curated_html": "<p>Optional L-BFGS polish after the stage-3 Adam run; <code>0</code> disables. A few hundred iterations can sharpen the MAP before sampling, at the risk of L-BFGS instabilities on the high-dimensional CF+PSF objective.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.lens_light",
+   "type": "str",
+   "default": "fixed",
+   "code_doc": "'free' or 'fixed': whether the lens light from the refit stays free in stage 3.",
+   "runtime": "refit.freeze_in_cf_joint",
+   "shipped": "free",
+   "curated_html": "<p>NEW (2026-08-18): whether the cf_joint stage optimises against the refit's FROZEN lens light (historical behaviour \u2014 all ~27 refit sites substituted) or leaves the lens light FREE as sampled latents. runtime knob: <code>light.lens.refit.freeze_in_cf_joint</code>.</p>",
+   "warnings": [
+    "With \"free\" the lens light initialises from STAGE 1, not from the refit values \u2014 the refit still runs and saves its outputs, but enters cf_joint's start only via the warm-start flow."
+   ],
+   "related": [
+    "light.lens.refit.enabled",
+    "stages.cf_joint.enabled"
+   ],
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.prior",
+   "type": "str",
+   "default": "seed",
+   "code_doc": "Prior centre of the live PSF in stage 3: 'seed' (STARRED seed) or 'stage1'.",
+   "runtime": "psf.joint.stages.stage3.prior",
+   "shipped": "seed",
+   "curated_html": "<p>PSF prior centering in stage 3. <code>\"seed\"</code> keeps the identical prior used in stage 1 (centred on the STARRED seed). <code>\"stage1\"</code> re-centres the Moffat/background/kernel prior <em>means</em> on the stage-1 recovered PSF (sigmas unchanged) \u2014 a trust region around the stage-1 kernel that limits CF\u2194PSF degeneracy excursions when the flexible source could otherwise trade flux with the PSF wings.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.adaptive_grid",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Whether to adapt the source grid extent to the arc mask.",
+   "runtime": "CorrFieldConfig.adaptive_grid",
+   "shipped": true,
+   "curated_html": "<p>Adapt the source-plane grid extent to the ray-shot arc mask, so field pixels cover the region the arcs actually map to instead of a fixed window. Disable only for controlled comparisons with fixed-grid runs.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.custom_path",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "Path to a custom mask (FITS or ``.npy``) when mode == \"custom\".",
+   "runtime": "ArcMaskConfig.custom_path",
+   "shipped": null,
+   "curated_html": "<p>Path to a custom boolean arc mask (FITS or <code>.npy</code>, matching the image shape). Only read when <code>mode=\"custom\"</code>.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.inner_radius",
+   "type": "float | str",
+   "default": 0.0,
+   "code_doc": "Inner radius (arcsec) to mask the lens centre. ``\"auto\"`` computes from PS positions.",
+   "runtime": "ArcMaskConfig.inner_radius",
+   "shipped": "auto",
+   "curated_html": "<p>Inner radius masking out the lens centre (lens-light-dominated region). <code>\"auto\"</code> computes <code>0.6 \u00d7 r_min_ps</code> from the innermost point-source radius. <code>0</code> disables the central hole \u2014 appropriate when the lens light is well modelled and the arcs pass close to the centre.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.mode",
+   "type": "one of ['auto', 'signal', 'custom']",
+   "default": "auto",
+   "code_doc": "\"auto\" = circular annulus from PS positions; \"signal\" = derived from GD residuals; \"custom\" = load from ``custom_path``.",
+   "runtime": "ArcMaskConfig.mode",
+   "shipped": "auto",
+   "curated_html": "<p>How the arc mask (the image-plane region where the source model is evaluated / the CF grid is anchored) is built:</p><ul><li><code>\"auto\"</code> \u2014 circular annulus derived from the point-source positions. Safe default; needs no prior fit.</li><li><code>\"signal\"</code> \u2014 derived from gradient-descent residuals: pixels above an SNR threshold, dilated and cleaned. Tightest mask, best CF resolution.</li><li><code>\"custom\"</code> \u2014 load a user-provided mask from <code>custom_path</code>.</li></ul>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.outer_radius",
+   "type": "float | str",
+   "default": "auto",
+   "code_doc": "Outer radius (arcsec) for the source region. ``\"auto\"`` computes from PS positions.",
+   "runtime": "ArcMaskConfig.outer_radius",
+   "shipped": 2.8,
+   "curated_html": "<p>Outer radius of the source region. <code>\"auto\"</code> computes <code>2.0 \u00d7 r_max_ps</code> from the outermost point-source radius \u2014 generous enough for typical quads while excluding field contaminants.</p>",
+   "level": "essential",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_dilate_pix",
+   "type": "int",
+   "default": 3,
+   "code_doc": "Morphological dilation radius in pixels.",
+   "runtime": "ArcMaskConfig.signal_dilate_pix",
+   "shipped": 3,
+   "curated_html": "<p>Morphological dilation radius applied to the thresholded signal mask, padding it to include low-SNR arc outskirts adjacent to detected pixels.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_inner_factor",
+   "type": "float",
+   "default": 0.0,
+   "code_doc": "Inner radius = ``factor * r_min_ps`` (smaller = let signal decide).",
+   "runtime": "ArcMaskConfig.signal_inner_factor",
+   "shipped": 0.0,
+   "curated_html": "<p>Inner-radius factor for signal mode: a geometric hole of <code>factor \u00d7 r_min_ps</code> is intersected with the signal mask. The default <code>0</code> lets the signal mask alone define the arc, with no central exclusion.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_min_area",
+   "type": "int",
+   "default": 50,
+   "code_doc": "Minimum connected-component area (pixels).",
+   "runtime": "ArcMaskConfig.signal_min_area",
+   "shipped": 50,
+   "curated_html": "<p>Minimum connected-component area in the signal mask; smaller blobs (noise islands, hot pixels) are removed. Lower it if a genuinely small counter-image is being erased.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_threshold",
+   "type": "float",
+   "default": 3.0,
+   "code_doc": "SNR threshold for arc detection (mode == \"signal\" only).",
+   "runtime": "ArcMaskConfig.signal_threshold",
+   "shipped": 3.0,
+   "curated_html": "<p>SNR threshold for a residual pixel to enter the signal-derived mask (mode <code>\"signal\"</code> only). Lower it to catch faint outer arc segments at the cost of noise blobs \u2014 which the dilation and minimum-area cleanup then have to remove.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.asperity",
+   "type": "tuple[float, float] | None",
+   "default": null,
+   "code_doc": "Optional spectral priors. ``None`` disables.",
+   "runtime": "CorrFieldConfig.asperity",
+   "shipped": null,
+   "curated_html": "<p>Optional NIFTy spectral prior on the roughness of the power spectrum itself (wiggliness on top of <code>flexibility</code>). <code>null</code> disables; only meaningful together with <code>flexibility</code>.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.clip_source_to_arc_mask",
+   "type": "bool",
+   "default": false,
+   "code_doc": "Legacy source-image truncation is separate from adaptive-grid selection. False keeps PSF-spread source light outside the footprint in the model.",
+   "runtime": "CorrFieldConfig.clip_source_to_arc_mask",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.cropped_border_size",
+   "type": "int",
+   "default": 20,
+   "code_doc": "Border pixels cropped to mitigate FFT edge effects.",
+   "runtime": "CorrFieldConfig.cropped_border_size",
+   "shipped": 20,
+   "curated_html": "<p>Border pixels cropped from the field to mitigate FFT periodic-boundary artefacts (the GP is defined on a torus). The field is <em>evaluated</em> on <code>num_pixels + 2\u00b7border</code> per side and then cropped back to <code>num_pixels</code>, so the effective source grid stays <code>num_pixels</code> while the sampled latent block is <code>(num_pixels + 2\u00b7border)\u00b2</code>. Increase if bright source flux sits near the grid edge; note the latent count \u2014 and therefore NUTS cost \u2014 grows with the padded size, not the effective one (at the defaults 80 + 2\u00b720 = 120, that is 14400 latents for a 6400-pixel source).</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.exponentiate",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Whether to exponentiate the field (ensures positivity).",
+   "runtime": "CorrFieldConfig.exponentiate",
+   "shipped": true,
+   "curated_html": "<p>Exponentiate the Gaussian field so the source intensity is strictly positive (log-normal prior). Disabling allows negative source flux \u2014 almost never what you want for a physical galaxy.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.flexibility",
+   "type": "tuple[float, float] | None",
+   "default": null,
+   "code_doc": "Optional spectral priors. ``None`` disables.",
+   "runtime": "CorrFieldConfig.flexibility",
+   "shipped": null,
+   "curated_html": "<p>Optional NIFTy spectral prior letting the power-spectrum slope vary with scale (an integrated-Wiener-process component on the spectrum). <code>null</code> disables. Enable only when a single power law visibly under-fits both large-scale gradients and small-scale clumps.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.fluctuations",
+   "type": "tuple[float, float]",
+   "default": [
+    1.5,
+    1.0
+   ],
+   "code_doc": "GP prior hyperparameters. ``loglogavgslope`` controls smoothness (more negative = smoother); ``fluctuations`` controls amplitude.",
+   "runtime": "CorrFieldConfig.fluctuations",
+   "shipped": [
+    1.0,
+    0.5
+   ],
+   "curated_html": "<p>Prior on the amplitude of field fluctuations around the mean \u2014 how much total power the GP puts into structure. Raise the mean for high-contrast clumpy sources; shrink it if the field starts absorbing noise or lens-light residuals.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.interpolation_type",
+   "type": "str",
+   "default": "fast_bilinear",
+   "code_doc": "Interpolation method for pixel\u2192image-plane mapping.",
+   "runtime": "CorrFieldConfig.interpolation_type",
+   "shipped": "fast_bilinear",
+   "curated_html": "<p>Interpolation used to map source-grid pixels onto ray-traced image-plane positions. <code>\"fast_bilinear\"</code> is the JAX-optimised default; other Herculens interpolators trade speed for smoothness of the gradient.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.loglogavgslope",
+   "type": "tuple[float, float]",
+   "default": [
+    -3.0,
+    1.5
+   ],
+   "code_doc": "GP prior hyperparameters. ``loglogavgslope`` controls smoothness (more negative = smoother); ``fluctuations`` controls amplitude.",
+   "runtime": "CorrFieldConfig.loglogavgslope",
+   "shipped": [
+    -3.5,
+    0.1
+   ],
+   "curated_html": "<p>Prior on the average log-log slope of the field's power spectrum \u2014 the smoothness dial. More negative mean = smoother fields: \u22123.0 is a good start for typical hosts; \u22125 to \u22126 for very smooth, elliptical-like sources. The std sets how far the data can pull the slope away from the mean.</p>",
+   "level": "essential",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.mean_intensity",
+   "type": "float | None",
+   "default": null,
+   "code_doc": "Log-space mean intensity. ``None`` = estimate from data.",
+   "runtime": "CorrFieldConfig.mean_intensity",
+   "shipped": null,
+   "curated_html": "<p>Gaussian-process prior mean intensity, in log-space (the field is exponentiated). <code>null</code> auto-estimates it from the data \u2014 rarely needs manual setting; override only when the auto estimate is skewed by contamination inside the arc mask.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.num_pixels",
+   "type": "int",
+   "default": 80,
+   "code_doc": "Number of pixels per side for the source grid.",
+   "runtime": "CorrFieldConfig.num_pixels",
+   "shipped": 128,
+   "curated_html": "<p>Source grid size (N\u00d7N pixels). Larger grids resolve more source detail and cost more GPU memory (the field has N\u00b2 latents before cropping). 80 is fine for most arcs; go to 128\u2013256 for extended or highly structured sources.</p>",
+   "warnings": [
+    "Large grids make geoVI memory-hungry \u2014 combine with sampling.nifty.vi.use_multi_gpu=true and a fixed n_samples_per_iteration (the adaptive schedule can OOM)."
+   ],
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.offset_std",
+   "type": "tuple[float, float]",
+   "default": [
+    0.5,
+    0.001
+   ],
+   "code_doc": "GP prior hyperparameters. ``loglogavgslope`` controls smoothness (more negative = smoother); ``fluctuations`` controls amplitude.",
+   "runtime": "CorrFieldConfig.offset_std",
+   "shipped": [
+    0.1,
+    0.001
+   ],
+   "curated_html": "<p>Prior on the field's global offset amplitude \u2014 the (mean, std) of the offset's standard deviation in the NIFTy correlated-field model. The tiny default std essentially pins it; loosen only if the overall source normalisation fights the amplitude latents.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.source_grid_scale",
+   "type": "float",
+   "default": 1.0,
+   "code_doc": "Positive scale factor on the adaptive source-plane grid extent derived from the ray-shot arc mask. 1.0 = full footprint (legacy). Use < 1 when the source is compact compared to the mask footprint, so the CF pixels concentrate on the source instead of empty sky.",
+   "runtime": "CorrFieldConfig.source_grid_scale",
+   "shipped": 0.5,
+   "curated_html": "<p>Shrink factor on the adaptive source-plane grid extent derived from the ray-shot arc mask. <code>1.0</code> keeps the full footprint (legacy behaviour). Use &lt; 1 when the source is compact compared to the mask footprint, so the correlated-field pixels concentrate on the source instead of empty sky \u2014 effectively raising the source-plane resolution for free.</p>",
+   "warnings": [
+    "Too small a scale crops real source flux; check the source-plane panel of the model summary after changing it."
+   ],
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_joint.source.type",
+   "type": "str",
+   "default": "corr_field",
+   "code_doc": "Must be 'corr_field'.",
+   "shipped": "corr_field",
+   "curated_html": "<p>Source representation of the joint stage \u2014 <code>\"corr_field\"</code> (a pixelated source with a Gaussian-process prior; all the hyperparameters below) is the only supported value.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_warmstart.adam_lr",
+   "type": "float",
+   "default": 0.001,
+   "code_doc": "Learning rate of the source warm-up.",
+   "runtime": "psf.joint.stages.stage2.adam_lr",
+   "shipped": 0.001,
+   "curated_html": "<p>Adam learning rate for stage 2.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_warmstart.adam_steps",
+   "type": "int",
+   "default": 3000,
+   "code_doc": "Adam steps of the CorrField source warm-up.",
+   "runtime": "psf.joint.stages.stage2.adam_steps",
+   "shipped": 8000,
+   "curated_html": "<p>Maximum Adam steps in stage 2 (<code>cf_warmstart</code>): a short optimisation over the correlated-field source latents only, with lens, point sources, D_dt and PSF frozen by gradient masking. Early-stopped by <code>patience</code>.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_warmstart.enabled",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Grow the CorrField source with everything else pinned before the joint fit (phase A of stage 3).",
+   "shipped": true,
+   "curated_html": "<p>Run the CF warmstart stage: with the stage-1 model (mass, light, point sources) FROZEN, fit only the correlated-field source to the data. Cheap, and gives cf_joint a source that already resembles the arc instead of noise \u2014 skipping it makes the joint stage slower and more fragile. Disabled automatically when the pipeline has no CF stages at all.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.cf_warmstart.patience",
+   "type": "int",
+   "default": 200,
+   "code_doc": "Early-stopping patience (steps) of the source warm-up.",
+   "runtime": "psf.joint.stages.stage2.patience",
+   "shipped": 400,
+   "curated_html": "<p>Early-stopping patience for stage 2: stop when the loss hasn't improved for this many steps.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.adam.cosine_decay",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Adam optimizer settings (shared between phases).",
+   "runtime": "GDConfig.adam_use_cosine_decay",
+   "shipped": true,
+   "curated_html": "<p>Cosine-decay the learning rate to zero over the run (after warmup) instead of holding it constant \u2014 smoother convergence into the basin before L-BFGS takes over.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.adam.grad_clip",
+   "type": "float",
+   "default": 10.0,
+   "code_doc": "Adam optimizer settings (shared between phases).",
+   "runtime": "GDConfig.adam_grad_clip",
+   "shipped": 10.0,
+   "curated_html": "<p>Global gradient-norm clip. Guards against exploding gradients from extreme prior draws in Phase 1.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.adam.lr",
+   "type": "float",
+   "default": 0.003,
+   "code_doc": "Adam optimizer settings (shared between phases).",
+   "runtime": "GDConfig.adam_lr",
+   "shipped": 0.003,
+   "curated_html": "<p>Adam learning rate, shared by both phases (modulated by warmup and cosine decay). Too high loses fragile latents (PSF background, CF spectrum); too low stalls exploration.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.adam.steps",
+   "type": "int",
+   "default": 1000,
+   "code_doc": "Phase-1 Adam steps / L-BFGS iterations per start.",
+   "runtime": "GDConfig.adam_steps_initial",
+   "shipped": 1000,
+   "curated_html": "<p>Adam steps per start in Phase 1 (exploration). Enough to reach the basin, not to polish \u2014 L-BFGS follows.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.adam.warmup_fraction",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Adam optimizer settings (shared between phases).",
+   "runtime": "GDConfig.adam_warmup_fraction",
+   "shipped": 0.1,
+   "curated_html": "<p>Fraction of steps spent linearly ramping the learning rate from zero \u2014 protects against violent early updates from a bad initialisation.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.adam_steps",
+   "type": "int",
+   "default": 400,
+   "runtime": "GDConfig.anneal_adam_steps",
+   "shipped": 400,
+   "curated_html": "<p>Adam steps PER LEVEL of the annealing ladder (with <code>anneal.lbfgs_maxiter</code>, default 400, as the L-BFGS counterpart). The per-level budget is deliberately small \u2014 the ladder's power is the warm-started sequence, not any single level. <code>adam.steps</code>/<code>lbfgs.maxiter</code> are ignored while annealing is on.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.lbfgs_maxiter",
+   "type": "int",
+   "default": 400,
+   "runtime": "GDConfig.anneal_lbfgs_maxiter",
+   "shipped": 400,
+   "curated_html": "<p>L-BFGS iteration cap PER LEVEL of the annealing ladder \u2014 the counterpart of <code>anneal.adam_steps</code>. The per-level budget is deliberately small; the ladder's power is the warm-started sequence, not any single level.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.level_hi",
+   "type": "float",
+   "default": 16.0,
+   "runtime": "GDConfig.anneal_level_hi",
+   "code_doc": "Start noise-inflation level of the `\"continuous\"` anneal mode (default 16): the likelihood noise is multiplied by this factor at the start and decays exponentially to `level_lo`. Needs level_hi > level_lo \u2265 1. Unused by the `\"discrete\"` ladder.",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.level_lo",
+   "type": "float",
+   "default": 1.0,
+   "runtime": "GDConfig.anneal_level_lo",
+   "code_doc": "Final noise level of the continuous anneal (default 1 = the real noise).",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.levels",
+   "type": "list | None",
+   "default": [
+    16.0,
+    8.0,
+    4.0,
+    2.0,
+    1.0
+   ],
+   "code_doc": "NOISE-CONTINUATION (\"annealing\") for Phase 1. Each start is optimised at noise_map * level, warm-starting the next level, ending at the TRUE noise (1.0 appended if missing). Inflating sigma by L tempers the imaging likelihood to the power 1/L^2 while priors stay untempered, which smooths away shallow local minima that trap flat multistart (graduated non-convexity / continuation \u2014 deterministic, NOT simulated annealing). None/[] = historical single-level behaviour. Deeper schedules (e.g. [16,8,4,2,1]) typically help; Phase-2 refinement still runs afterwards at true noise with the standard refinement budgets.",
+   "runtime": "GDConfig.anneal_levels",
+   "shipped": [
+    16,
+    8,
+    4,
+    2,
+    1
+   ],
+   "curated_html": "<p><b>Noise-continuation (\"annealing\") Phase 1.</b> When set, every start is optimised at <code>noise_map \u00d7 level</code>, each level warm-starting the next, ending at the TRUE noise (a final 1.0 is appended if missing) \u2014 so the ranked losses are always the real objective. Inflating \u03c3 by L tempers the imaging likelihood to the power 1/L\u00b2 while the priors stay untempered: the smoothed early levels wash out the shallow local minima plain multistart lands in (graduated non-convexity / continuation \u2014 deterministic, NOT simulated annealing).</p><p>Benchmarks on real quad-lens data: \u03c7\u00b2_red 1.07 vs 1.94 from IDENTICAL starts; 6 annealed starts beat the 30+5 flat recipe at ~21% less compute; the flat baseline's best fit had collapsed the source to a delta function and left the Einstein ring unmodelled. Phase-2 refinement runs unchanged afterwards, at true noise.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.mode",
+   "type": "str | None",
+   "default": null,
+   "code_doc": "ANNEAL MODE (2026-08-25). \"discrete\"   \u2014 the ladder above: a fixed noise level per rung. \"continuous\" \u2014 the level decays exponentially from ``anneal_level_hi`` to ``anneal_level_lo`` across ``anneal_segments`` segments.  The level is a TRACED argument, so the whole schedule compiles once instead of once per rung. \"off\"        \u2014 no annealing (equivalent to anneal_levels=None). None resolves to \"discrete\" when levels are set, \"off\" otherwise, so existing configs keep their behaviour exactly. DEFAULT-ON (2026-08-27).  Validated on HE0435: 26,212 s -> 4,072 s at chi2_red 3.853 vs the flat-recipe reference 3.850.  Opt out with ``anneal: {mode: \"off\"}``.  NOTE the dataclass default used to be None -> \"off\"; a config that never mentions annealing therefore CHANGES behaviour on upgrade (faster, equal-or-better chi2, different numbers).",
+   "runtime": "GDConfig.anneal_mode",
+   "shipped": "discrete",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.ramp",
+   "type": "bool | None",
+   "default": null,
+   "code_doc": "RAMP the per-rung/segment budget by (index + 1) / n, floored at 50 Adam steps: cheap while the pool is wide and the objective heavily tempered, full budget once the ranking decides.  Measured (pool 32, seed 7, identical otherwise): ramp on -> chi2_red 3.83 in 59360 gradients; ramp off -> 8.04 in 106400.  79% MORE compute, and it fails.  NOTE: ramping applies cleanly to \"discrete\" mode only.  In \"continuous\" mode each segment's temperature range is scaled by the same factor so d(log level)/step stays constant -- but that is NOT sufficient: ramped continuous runs still fail (chi2_red 6.1-7.8; 8.5-16.7 without the coupling).  A continuous segment must both CONVERGE and TRACK a moving minimum, so it has a minimum viable step count that ramping violates; a discrete rung only has to converge at a fixed temperature.  Leave ramp off when mode == \"continuous\". Stays None: __post_init__ resolves it MODE-AWARE (True for discrete, False for continuous -- a ramped continuous segment violates the 300-step floor and fails).",
+   "runtime": "GDConfig.anneal_ramp",
+   "shipped": true,
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.segments",
+   "type": "int",
+   "default": 5,
+   "runtime": "GDConfig.anneal_segments",
+   "code_doc": "Number of segments of the continuous anneal schedule (default 5). The level is a traced argument, so the whole schedule compiles once instead of once per rung.",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.exec_mode",
+   "type": "str",
+   "default": "auto",
+   "code_doc": "How Phase-1/2 starts are executed. \"auto\"        \u2014 pmap across devices when there is more than one (that parallelism is real), otherwise SEQUENTIAL. \"vmap\"        \u2014 the historical chunked path; keep for reproducing pre-2026-08-25 runs. \"sequential\" / \"distributed\" \u2014 force one. Measured on a 219x219 frame with a 447x447 supersampled PSF: a gradient costs 62 ms at vmap width 1 and 61 ms per start at width 8, so one start already saturates the device and batching buys nothing.  It is worse than neutral: under vmap jaxopt's L-BFGS runs a BATCHED while_loop, so a converged start keeps iterating until its slowest chunk-mate finishes.",
+   "runtime": "GDConfig.exec_mode",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.halving.keep",
+   "type": "list | None",
+   "default": null,
+   "code_doc": "SUCCESSIVE HALVING over Phase 1: starts alive at each rung/segment. ``[32, 16, 8, 4, 2]`` screens 32 basins for less total compute than the flat recipe spends on 10, because only survivors pay full budget. None = no pruning (every start walks the whole ladder). Must have one entry per rung (discrete) or segment (continuous), and be non-increasing.",
+   "runtime": "GDConfig.halving_keep",
+   "shipped": [
+    32,
+    16,
+    8,
+    4,
+    2
+   ],
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.impl",
+   "type": "str",
+   "default": "optax",
+   "code_doc": "L-BFGS implementation. \"optax\" (default) uses a zoom line search with Wolfe conditions and terminates on the gradient norm; \"jaxopt\" runs a fixed maxiter regardless of progress and is unmaintained.  Measured on identical schedules (b=0 HE0435, pool 32): optax loss 170720 in 2597 s, jaxopt 171378 in 3153 s -- better and ~18%% faster.  Keep \"jaxopt\" to reproduce pre-2026-08-25 runs.",
+   "runtime": "GDConfig.lbfgs_impl",
+   "shipped": "optax",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.maxiter",
+   "type": "int",
+   "default": 1200,
+   "code_doc": "Phase-1 Adam steps / L-BFGS iterations per start.",
+   "runtime": "GDConfig.lbfgs_maxiter_initial",
+   "shipped": 1200,
+   "curated_html": "<p>L-BFGS iterations per start in Phase 1, run after Adam to converge within the basin.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.tol",
+   "type": "float",
+   "default": 1e-05,
+   "code_doc": "L-BFGS convergence tolerance.",
+   "runtime": "GDConfig.lbfgs_tol",
+   "shipped": 1e-05,
+   "curated_html": "<p>L-BFGS convergence tolerance (relative objective change). Tighten for final production MAPs; loosen for quick exploratory runs.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.enabled",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Use tight perturbations around prior means for a fraction of starts (instead of full prior sampling).",
+   "runtime": "GDConfig.use_mean_init",
+   "shipped": true,
+   "curated_html": "<p>Start a fraction of Phase-1 starts from tight Gaussian perturbations around the prior means instead of full prior samples. Improves convergence markedly when priors are informative (e.g. joint-PSF mode, where PSF priors are seeded); keep some full-prior starts to preserve exploration.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.fraction",
+   "type": "float",
+   "default": 0.8,
+   "code_doc": "Fraction of starts using mean-based init.",
+   "runtime": "GDConfig.mean_init_fraction",
+   "shipped": 0.8,
+   "curated_html": "<p>Fraction of Phase-1 starts using mean-based initialisation; the remainder draw from the full prior.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.sigma",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Perturbation scale for mean-based init.",
+   "runtime": "GDConfig.mean_init_sigma",
+   "shipped": 0.1,
+   "curated_html": "<p>Perturbation scale (unconstrained space) for mean-based initialisation.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.refine.adam_steps",
+   "type": "int",
+   "default": 1800,
+   "code_doc": "Phase-2 Adam steps / L-BFGS iterations.",
+   "runtime": "GDConfig.adam_steps_refinement",
+   "shipped": 2600,
+   "curated_html": "<p>Adam steps per Phase-2 refinement run.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.refine.lbfgs_maxiter",
+   "type": "int",
+   "default": 2200,
+   "code_doc": "Phase-2 Adam steps / L-BFGS iterations.",
+   "runtime": "GDConfig.lbfgs_maxiter_refinement",
+   "shipped": 3000,
+   "curated_html": "<p>L-BFGS iterations per Phase-2 refinement run \u2014 the final polish that produces the MAP handed to the sampler.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.refine.perturbation_scale",
+   "type": "float",
+   "default": 0.1,
+   "code_doc": "Gaussian \u03c3 for Phase-2 perturbations.",
+   "runtime": "GDConfig.phase2_perturbation_scale",
+   "shipped": 0.1,
+   "curated_html": "<p>Gaussian \u03c3 of the Phase-2 perturbations, in unconstrained (transformed) parameter space.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.refine.perturbations_per_top",
+   "type": "int",
+   "default": 1,
+   "code_doc": "Perturbations per top result in Phase-2.",
+   "runtime": "GDConfig.n_perturbations_per_top",
+   "shipped": 1,
+   "curated_html": "<p>Gaussian perturbations applied to each top result in Phase 2 \u2014 probing the local landscape around each candidate optimum.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.refine.top",
+   "type": "int",
+   "default": 5,
+   "code_doc": "Top Phase-1 results carried into Phase-2.",
+   "runtime": "GDConfig.n_top_for_refinement",
+   "shipped": 1,
+   "curated_html": "<p>Number of best Phase-1 results carried into Phase 2 refinement.</p>",
+   "level": "common",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.retry.chi2_red_threshold",
+   "type": "float",
+   "default": 2.0,
+   "code_doc": "Reduced chi\u00b2 threshold that triggers a retry.",
+   "runtime": "GDConfig.chi2_red_threshold",
+   "shipped": 2.0,
+   "curated_html": "<p>Reduced-\u03c7\u00b2 threshold that triggers a retry (when retries are enabled). Also a useful sanity number: a converged fit far above it usually means a data/config problem (wrong pixel scale, missing mask, bad PSF), not bad luck.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.retry.max_iterations",
+   "type": "int",
+   "default": 1,
+   "code_doc": "Max retry attempts if ``chi2_red > chi2_red_threshold``.",
+   "runtime": "GDConfig.max_retry_iterations",
+   "shipped": 1,
+   "curated_html": "<p>Total optimisation attempts: if the best reduced \u03c7\u00b2 exceeds <code>chi2_red_threshold</code>, the multistart is retried with fresh randomness, up to this many total attempts. 2\u20133 enables automatic retries.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.save_phase_results",
+   "type": "bool",
+   "default": true,
+   "code_doc": "Save top-N parameter sets from each phase.",
+   "runtime": "GDConfig.save_phase_results",
+   "shipped": true,
+   "curated_html": "<p>Save the top-N parameter sets from each phase to disk \u2014 useful for diagnosing multimodality and for warm-starting later runs.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.starts",
+   "type": "int | None",
+   "default": null,
+   "code_doc": "Number of random multistart initialisations. ``None`` (default) resolves by optimizer mode: 10 when an anneal ladder is set (annealing removes the multistart lottery \u2014 nearly every start flows into the same basin, so redundancy beyond ~10 is wasted compute), 50 for flat multistart (which needs the lottery). Phase-1 random starts.",
+   "runtime": "GDConfig.n_starts_initial",
+   "curated_html": "<p>Number of Phase-1 random starts. The worked example uses 10 together with the annealing ladder, which removes much of the multistart lottery. Flat multistart runs generally benefit from at least 50; use 100\u2013200 for production runs on lenses with strong degeneracies.</p>",
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.optimizer.vmap_chunk_sizes",
+   "type": "list[int]",
+   "default": [
+    5,
+    2,
+    1
+   ],
+   "code_doc": "Phase 1 vmap chunk fallback ladder for multi-start GD (largest tried first). Hardware-dependent: [10, 5, 1] is fastest on >=40GB cards; the conservative default [5, 2, 1] is required on 24GB cards with 199^2 frames (a failed chunk-10 attempt fragments the pool; anomaly 003).",
+   "runtime": "GDConfig.vmap_chunk_sizes",
+   "curated_html": "<p>vmap chunk fallback ladder for multi-start GD \u2014 how many starts are batched through one vmapped evaluation, largest tried first with OOM fallback down the ladder. Hardware-dependent: <code>[10, 5, 1]</code> is fastest on \u2265 40 GB cards; the conservative default is required on 24 GB cards with ~200\u00b2 frames.</p>",
+   "warnings": [
+    "A failed large-chunk attempt fragments the GPU memory pool (anomaly 003) \u2014 on smaller cards, don't lead with an optimistic chunk size."
+   ],
+   "level": "advanced",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.source.n_max",
+   "type": "int",
+   "default": 16,
+   "code_doc": "Maximum shapelet order of the stage-1 source.",
+   "runtime": "model.shapelets_n_max",
+   "shipped": 16,
+   "curated_html": "<p>Maximum Shapelet order. The number of basis functions grows as <code>(n_max+1)(n_max+2)/2</code> \u2014 n_max=16 gives 153 components. Higher orders resolve finer source structure but add latents and can start fitting noise or absorbing PSF residuals. Unused unless <code>source_type=\"shapelets\"</code> or the staged CF flow (whose stage 1 is a Shapelets fit).</p>",
+   "level": "essential",
+   "section": "stages"
+  },
+  {
+   "key": "stages.gd.source.type",
+   "type": "str",
+   "default": "shapelets",
+   "code_doc": "Source model of the GD stage: shapelets | sersic | double-sersic | corr_field. 'shapelets' is required for the staged CorrField pipeline.",
+   "shipped": "shapelets",
+   "curated_html": "<p>Source representation used during the stage-1 multi-start gradient descent. <code>\"shapelets\"</code> (Sersic + shapelet basis, size <code>n_max</code>) is the production default \u2014 smooth, analytic and fast to optimise from random starts. <code>\"sersic\"</code> drops the shapelets. <code>\"corr_field\"</code> runs GD directly on a pixelated correlated-field source (no staged flow; expensive and non-convex \u2014 the staged shapelets \u2192 CF path exists precisely because this is hard).</p>",
+   "level": "advanced",
+   "section": "stages"
+  }
+ ]
+}

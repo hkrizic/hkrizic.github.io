@@ -1,0 +1,191 @@
+<h2 id="overview"><span class="step">Guide</span>Overview</h2>
+<p>ALPACA fits a strong-lens model to an image: a mass model for the deflector (EPL + external shear, optionally
+  multipoles, a broken power law and line-of-sight perturbers), parametric lens light, a source (shapelets, then a
+  pixelated <i>correlated field</i>), a PSF that is refined together with the lens, and, for lensed quasars, the
+  point images and their time delays. It runs in JAX, so every stage is differentiable and runs on a CPU, an NVIDIA
+  GPU or an Apple GPU.</p>
+<p>A run has two phases:</p>
+<ol>
+  <li><b>MAP</b>: a staged gradient descent finds the best-fit model (§ <a href="#pipeline">The staged pipeline</a>).</li>
+  <li><b>Posterior</b>: sampling around it (NIFTy NUTS / geoVI, NumPyro NUTS or Nautilus). For cosmography the time
+    delays turn the model into a time-delay distance and H<sub>0</sub>, blinded by default.</li>
+</ol>
+<p>The methods and their validation are in the paper:
+  <a href="https://arxiv.org/abs/2609.04312">Krizic et al. 2026, arXiv:2609.04312</a>.</p>
+
+<h2 id="install"><span class="step">Guide</span>Installation</h2>
+<p>Install from the source repository into a <b>fresh</b> environment and pick the extra for your hardware.</p>
+<pre><code>git clone https://github.com/hkrizic/alpaca.git && cd alpaca
+python3.12 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip
+python -m pip install -e ".[apple]"     # Apple Silicon GPU (MPS, float32)
+# python -m pip install -e ".[cpu]"     # CPU, float64
+# python -m pip install -e ".[gpu]"     # NVIDIA, Linux, CUDA 12   ([cuda13] for CUDA 13)
+alpaca-device                           # shows which device JAX will use</code></pre>
+<table>
+  <tr><th>target</th><th>extra</th><th>precision</th><th>notes</th></tr>
+  <tr><td>Apple M-series GPU</td><td><code>apple</code></td><td>float32</td><td>fastest on a Mac (1.5–3× the CPU in our tests). Float32 is not a substitute for float64: verify final models on the CPU.</td></tr>
+  <tr><td>CPU</td><td><code>cpu</code></td><td>float64</td><td>the validated precision; also available in an <code>[apple]</code> environment with <code>--backend cpu</code>.</td></tr>
+  <tr><td>NVIDIA GPU (Linux)</td><td><code>gpu</code> / <code>cuda13</code></td><td>float64</td><td>CUDA 12 needs driver ≥ 525, CUDA 13 ≥ 580.</td></tr>
+</table>
+<p>Choose the device per run with <code>--backend cpu|gpu|cuda|mps</code> and <code>--precision float32|float64</code>,
+  or the environment variables <code>ALPACA_BACKEND</code> / <code>ALPACA_PRECISION</code> (set them <i>before</i>
+  importing ALPACA). For two or more NVIDIA GPUs, do not pass <code>--backend gpu</code>; set
+  <code>JAX_PLATFORMS=cuda,cpu</code> instead. Never install two packages that provide <code>alpaca</code> into the
+  same environment.</p>
+
+<h2 id="ai"><span class="step">Guide</span>AI-assisted workflow</h2>
+<p>The <code>llm/</code> folder of the repository contains three instruction files for a terminal AI assistant
+  (Claude Code, Codex, Gemini CLI). The assistant works on your machine, shows you every figure it makes, and asks
+  before installing or running anything heavy.</p>
+<table>
+  <tr><th>file</th><th>what the assistant does</th></tr>
+  <tr><td><code>llm/1_ALPACA_SETUP.md</code></td><td>asks MPS / CPU / CUDA and conda / venv, shows the commands, installs after your OK, verifies</td></tr>
+  <tr><td><code>llm/2_ALPACA_PREPARE_DATA.md</code></td><td>looks at your science image, finds the lens, makes cutout, masks, PSF (STARRED) and perturbers, writes <code>config.json</code> + <code>run_alpaca.py</code>, prints the command</td></tr>
+  <tr><td><code>llm/3_ALPACA_MODELLING.md</code></td><td>tries about ten one-change variants, inspects every residual map, picks the best starting model</td></tr>
+</table>
+<pre><code>cd alpaca && claude
+&gt; Read llm/1_ALPACA_SETUP.md and set up ALPACA for me.
+&gt; Read llm/2_ALPACA_PREPARE_DATA.md and prepare /path/to/science.fits.
+&gt; Read llm/3_ALPACA_MODELLING.md. Try ~10 variants in 2 hours on ~/AlpacaRuns/MYLENS and pick the best start.</code></pre>
+<p>Use files 1 and 2 for a first model; file 3 is optional, to start from a better one. Sampling, systematics and the
+  science decisions stay with you.</p>
+
+<h2 id="inputs"><span class="step">Guide</span>Input files</h2>
+<p>One folder per lens and band, all FITS 2-D, float64, absolute paths in the configuration.</p>
+<table>
+  <tr><th>file</th><th>content</th><th>set in</th></tr>
+  <tr><td><code>image.fits</code></td><td>The <b>full frame</b>, lens centred to a pixel, sky pedestal subtracted. Never pre-cut to the model size: ALPACA centre-crops to <code>data.cutout_size</code> and the lens-light refit uses the full frame.</td><td><code>IMAGE_PATH</code></td></tr>
+  <tr><td><code>noise_map.fits</code></td><td>1σ per pixel, same units and size. Bad pixels: a huge σ, never NaN. Check it: std(empty sky) / mean(noise) ≈ 1 (drizzled data: below 1).</td><td><code>NOISE_MAP_PATH</code></td></tr>
+  <tr><td><code>psf_supersampled.fits</code></td><td>PSF kernel, odd size, sum 1, supersampled by <code>psf.input.oversample</code> (usually 3).</td><td><code>PSF_PATH</code></td></tr>
+  <tr><td><code>psf_starred_seed.npz</code></td><td>STARRED parameters (Moffat + background grid). <b>Joint mode builds the PSF from this seed, not from the kernel file</b>, so the two must agree (the seed's full PSF = the kernel to &lt; 1 % of the peak).</td><td><a href="#k-psf-joint-seed-path"><code>psf.joint.seed_path</code></a></td></tr>
+  <tr><td><code>psf_error_map.fits</code></td><td>Per-pixel uncertainty of the PSF, on the seed grid. The prior width of the live PSF: about 1–10 % of the kernel. Too loose and the PSF fits noise; too tight and it cannot correct the seed.</td><td><a href="#k-psf-input-error-map-path"><code>psf.input.error_map_path</code></a></td></tr>
+  <tr><td><code>mask_likelihood.fits</code></td><td>Cutout-sized (or full-frame, cropped automatically), 1 = use. Keep the lens, arcs and images; exclude everything you don't model.</td><td><a href="#k-data-likelihood-mask-path"><code>data.likelihood_mask_path</code></a></td></tr>
+  <tr><td><code>mask_lens_only.fits</code></td><td>Full frame, 1 = use: the lens and sky, every other source masked. For the lens-light refit.</td><td><a href="#k-light-lens-refit-mask-path"><code>light.lens.refit.mask_path</code></a></td></tr>
+  <tr><td><code>perturbers.json</code></td><td>Optional: nearby galaxies with positions, redshifts and θ<sub>E</sub> priors. Multi-plane lensing is switched on automatically for other redshifts.</td><td><a href="#k-mass-perturbers-path"><code>mass.perturbers.path</code></a></td></tr>
+</table>
+<p>Perturber catalogue entry (the minimum; positions as RA/Dec or <code>pixel_xy</code> in the full frame):</p>
+<pre><code>{"target": {"z_lens": 0.4546, "z_source": 1.689, "pix_scale_arcsec": 0.0312, "npix": 499},
+ "perturbers": [{"id": 7, "pixel_xy": [377.8, 293.1], "redshift": {"z": 0.7821},
+                 "profile": {"mass_model": "SIS", "theta_E_arcsec": 0.30},
+                 "theta_E_prior_sigma": 0.12, "fix_positions": true}]}</code></pre>
+
+<h2 id="run-script"><span class="step">Guide</span>run_alpaca.py</h2>
+<p>The data paths, the approximate image positions (quasars) and the time delays sit at the top of
+  <code>run_alpaca.py</code>; the science settings sit in the JSON configuration.</p>
+<pre><code>IMAGE_PATH     = "/data/HE0435/image.fits"
+PSF_PATH       = "/data/HE0435/psf_supersampled.fits"
+NOISE_MAP_PATH = "/data/HE0435/noise_map.fits"
+
+IMAGE_POSITIONS = {"A": (-0.906, -0.937), "B": (-0.999, 0.656),   # arcsec from the lens; labels only,
+                   "C": ( 0.406,  1.249), "D": ( 0.906, -0.531)}  # ALPACA re-detects the positions
+REFERENCE_IMAGE = "A"
+LENS_POSITION   = (0.0, 0.0)              # sub-pixel lens offset from the frame centre (arcsec)
+TIME_DELAYS = {"B": (9.0, 0.8),           # (t_X - t_ref, 1 sigma) in DAYS
+               "C": (0.8, 0.7),
+               "D": (13.8, 0.8)}
+# galaxy-galaxy lens: IMAGE_POSITIONS = None; TIME_DELAYS = None</code></pre>
+<div class="callout warn"><span class="k">Sign convention</span><p>ALPACA wants <b>t<sub>X</sub> − t<sub>ref</sub></b> (positive: X arrives after the reference), the opposite of
+  the COSMOGRAIL/TDCOSMO Δt<sub>AB</sub> = t<sub>A</sub> − t<sub>B</sub>. Flip published delays.</p></div>
+<pre><code>python run_alpaca.py config.json                                     # everything (MAP + sampling)
+python run_alpaca.py config.json --fit-only                          # MAP only: a quick look
+python run_alpaca.py config.json --backend mps --precision float32   # Apple GPU
+python run_alpaca.py config.json --output runs/variant_m4/           # another output directory</code></pre>
+
+<h2 id="pipeline"><span class="step">Guide</span>The staged pipeline</h2>
+<p>With the default joint PSF (<code>psf.mode: "joint"</code>) the MAP is found in stages, each starting from the
+  previous one. This is the recommended path for every lens.</p>
+<table>
+  <tr><th>stage</th><th>what is fitted</th><th>why</th><th>main knobs</th></tr>
+  <tr><td><b>1 · shapelets</b><br><span class="muted small">03_multistart/stage1_shapelets</span></td>
+      <td>Mass, lens light (e.g. double Sérsic), a shapelet source, the live PSF; many random starts, annealed
+        (noise inflated ×16 → ×1) and culled by successive halving, then the best are refined.</td>
+      <td>A smooth source makes the multistart robust: it finds the right mass basin (and, for galaxy–galaxy lenses,
+        the lensed instead of the unlensed solution).</td>
+      <td><a href="#k-stages-gd-optimizer-anneal-levels">anneal</a>, <a href="#k-stages-gd-optimizer-halving-keep">halving</a>, <a href="#k-stages-gd-optimizer-refine-top">refine</a>, <a href="#k-stages-gd-source-n-max">n_max</a></td></tr>
+  <tr><td><b>2 · lens-light refit</b><br><span class="muted small">stage2_lens_light_refit</span></td>
+      <td>The lens light alone (e.g. triple Sérsic) on the <b>full frame</b>, after subtracting the stage-1 source and
+        point sources.</td>
+      <td>The full frame constrains the light profile's wings and the sky, which the small cutout cannot.</td>
+      <td><a href="#k-light-lens-refit-profile">refit.profile</a>, <a href="#k-light-lens-refit-mask-path">refit.mask_path</a>, <a href="#k-light-lens-refit-simple-source">simple_source</a></td></tr>
+  <tr><td><b>3 · CorrField joint</b><br><span class="muted small">stage3_cf_joint</span></td>
+      <td>Phase A grows a pixelated correlated-field source with everything else pinned; phase B fits source, mass,
+        light and PSF together.</td>
+      <td>The pixelated source captures the real source structure the shapelets miss; this is the model you judge
+        and sample.</td>
+      <td><a href="#k-stages-cf-joint-source-loglogavgslope">loglogavgslope</a>, <a href="#k-stages-cf-joint-source-num-pixels">num_pixels</a>, <a href="#k-stages-cf-joint-source-arc-mask-outer-radius">arc mask</a>, <a href="#k-stages-cf-joint-adam-steps">adam_steps</a></td></tr>
+  <tr><td><b>PSF-error b</b> (quasars)</td>
+      <td>After GD, the amplitude <i>b</i> of σ²<sub>eff</sub> = σ² + b²·PS² is fitted; it stays free in sampling
+        (<code>post_gd_free</code>).</td>
+      <td>Down-weights the quasar cores, where any PSF error dominates χ².</td>
+      <td><a href="#k-likelihood-noise-model-use-psf-error-map">use_psf_error_map</a>, <a href="#k-likelihood-noise-model-psf-error-b-max">psf_error_b_max</a></td></tr>
+  <tr><td><b>warm start → sampling</b><br><span class="muted small">04_sampling, 05_posterior</span></td>
+      <td>The MAP is mapped exactly into the sampler's latent space, then NUTS (and optionally geoVI) samples.</td>
+      <td>Uncertainties, the time-delay distance, H<sub>0</sub>.</td>
+      <td><a href="#k-sampling-nifty-mode">nifty.mode</a>, <a href="#k-sampling-nifty-nuts-target-accept">target_accept</a></td></tr>
+</table>
+<p>Use a shapelet-only model (<code>psf.mode: "fixed"</code>) only when you specifically want one, for example as a
+  quick systematic check.</p>
+
+<h2 id="running"><span class="step">Guide</span>Running &amp; budgets</h2>
+<p>The GD cost is set by the multistart (number of starts, anneal levels, Adam / L-BFGS steps), the refit steps and
+  the CorrField steps. Typical settings:</p>
+<table>
+  <tr><th>budget</th><th>anneal levels · adam / lbfgs</th><th>halving keep</th><th>refine top</th><th>refit · cf_warmstart · cf_joint</th><th>laptop (M-series)</th></tr>
+  <tr><td>quick</td><td>[8,4,2,1] · 200 / 150</td><td>[8,4,2,2]</td><td>1</td><td>1200 · 1500 · 2500</td><td>~5–15 min</td></tr>
+  <tr><td>standard</td><td>[16,8,4,2,1] · 300 / 300</td><td>[16,8,4,4,2]</td><td>2</td><td>2500 · 4000 · 6000</td><td>~30–60 min</td></tr>
+  <tr><td>production</td><td>[16,8,4,2,1] · 400 / 400</td><td>[32,16,8,4,2] (GG: [64,32,16,8,4])</td><td>1–4</td><td>3000 · 8000 · 12000</td><td>hours (GPU node)</td></tr>
+</table>
+<p>One output directory per variant: re-running a configuration into a finished directory <b>resumes</b> it (finished
+  stages are reloaded when their fingerprint matches; a stage that must be redone is archived as
+  <code>stage…stale-&lt;time&gt;</code>). Any change to ALPACA's own code invalidates the fingerprints.</p>
+
+<h2 id="outputs"><span class="step">Guide</span>Outputs</h2>
+<pre><code>run/
+├── config/            config.json (exactly what ran), timing.json
+├── 01_input/          inputs and priors as figures: image, noise, masks, PSF, perturbers_overlay.png  ← check these
+├── 03_multistart/     stage1_shapelets/  stage2_lens_light_refit/  stage3_cf_joint/
+│                      each: model_summary.png, stage_summary.json (chi2_red), recovered PSF
+│                      model_image.fits, noise_map_effective.fits, best_fit_params_full.npz (TRUE values)
+├── 04_sampling/       warmstart/ (arc_mask.png, warm-start summary), nifty_nuts/ (chains, diagnostics)
+└── 05_posterior/      samples/ posterior_samples.npz (blinded), parameter_summary.txt, boundary_flags.txt, bic.json</code></pre>
+<p>The browser-based <a href="../app.html">ALPACA analysis app</a> opens a run folder directly: parameter tables, corner
+  plots, model and residual viewers, ray tracing, H<sub>0</sub> (blinded).</p>
+
+<h2 id="judging"><span class="step">Guide</span>Judging a model</h2>
+<p>Look at pictures before numbers. A model is acceptable when:</p>
+<ul>
+  <li>the <b>normalised residuals</b> have no coherent structure: no arcs (source or mass), no rings or dipoles at
+    quasar cores (PSF or astrometry), no quadrupole at the centre (lens light), no gradient (sky);</li>
+  <li>χ² is <b>balanced by region</b>: quasar cores, arcs, centre and outskirts. A global χ²<sub>red</sub> hides
+    compensation, for example a component that fits the noise in one place (χ² well below the empty-sky level) while
+    another region is not fitted at all. A block-binned χ² map shows this at a glance;</li>
+  <li>nothing sits at a <b>prior bound</b> (<code>boundary_flags.txt</code>; check the GD endpoint too);</li>
+  <li>the model is physical: γ about 1.8–2.3, mass and light aligned within about 10–20°, perturber masses
+    consistent with their light, a galaxy-like source that does not touch the source-grid edge;</li>
+  <li>a different <b>random seed</b> lands in the same solution, and an extended model fits at least as well as the
+    baseline it contains;</li>
+  <li>for galaxy–galaxy lenses: it is <b>lensing, not painting</b>. θ<sub>E</sub> is not at its lower bound, the mass
+    is centred on the light, the critical curve runs through the arcs, and the source is smaller than the
+    arcs.</li>
+</ul>
+<p>Drizzled data have correlated noise: a good fit can sit at χ²<sub>red</sub> ≈ 0.5. Judge structure and
+  differences between models, not the distance from 1.</p>
+
+<h2 id="blinding"><span class="step">Guide</span>Blinding</h2>
+<p>For cosmography, keep one campaign key in <code>ALPACA_BLINDING_KEY</code> (never in a config or a log). Blinded
+  quantities (D<sub>Δt</sub>, H<sub>0</sub>, γ …) are stored as offsets from the posterior mean, so runs are compared
+  through differences only. <code>python -m alpaca.unblind &lt;run&gt;</code> unblinds once the collaboration
+  decides. GD files (<code>best_fit_params_full.npz</code>) hold true values; treat run directories as internal.</p>
+
+<h2 id="troubleshooting"><span class="step">Guide</span>Troubleshooting</h2>
+<table>
+  <tr><th>symptom</th><th>cause</th><th>fix</th></tr>
+  <tr><td>Residuals far below the noise around bright images, normal elsewhere</td><td>The live PSF fits noise: the STARRED seed does not match the kernel and/or the error map is too loose</td><td>Make the seed reproduce the kernel; error map about 1–10 % of the kernel</td></tr>
+  <tr><td>Quasar cores with χ² in the hundreds</td><td>PSF mismatch</td><td>Better stars, a matching seed, a joint PSF; use the PSF-error b (quasars)</td></tr>
+  <tr><td><code>Cannot initialize a prior from nonfinite/out-of-support values</code> at the warm start (MPS)</td><td>A float32 parameter railed at a uniform bound sits one ULP outside it</td><td>Fixed in ALPACA 0.4.2 (<code>prior_transforms.py</code>); update</td></tr>
+  <tr><td><code>atleast_1d requires ndarray or scalar arguments</code></td><td>Python lists reaching JAX 0.10.2 (fixed-PSF runs)</td><td>Fixed in 0.4.2 (<code>ProbModel.params2kwargs</code>); update</td></tr>
+  <tr><td>θ<sub>E</sub> about twice the expected value (galaxy–galaxy)</td><td>No θ<sub>E</sub> prior</td><td>Set <a href="#k-mass-main-theta-e-prior"><code>mass.main.theta_E_prior</code></a></td></tr>
+  <tr><td>θ<sub>E</sub> at its lower bound, source looks like the arcs</td><td>Unlensed "painting" solution</td><td>Lower <code>n_max</code> (16 → 8), a tighter aperture, more seeds</td></tr>
+  <tr><td>A run took hours longer than expected on a laptop</td><td>The machine slept (closing the lid sleeps even under <code>caffeinate</code>)</td><td>Plug in, keep the lid open</td></tr>
+  <tr><td>Sampling saturates the tree depth</td><td><code>target_accept</code> 0.95 with a diagonal mass matrix</td><td><code>target_accept</code> 0.8, longer warm-up</td></tr>
+</table>

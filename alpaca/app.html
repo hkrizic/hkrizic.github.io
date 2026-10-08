@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALPACA analysis</title>
+  <meta name="description" content="Browser-side analysis workbench for ALPACA lens-modelling runs: parameters, corner plots, image and model viewers, lensing maps, H0." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="assets/logo-mark.png" alt="ALPACA" /><span>Alpaca</span><span class="sub">analysis</span></div>
+    <div class="topbar-actions">
+      <button id="btn-open" class="btn primary" title="Open a run folder (or drop it anywhere)">Open run folder</button>
+      <button id="btn-add-b" class="btn" title="Load a second run for comparison">Add run B</button>
+      <button id="btn-url" class="btn" title="Load a run served over HTTP">From URL</button>
+      <select id="preset-select" class="btn" title="Add a preset set of panels"><option value="">Presets</option></select>
+      <button id="btn-reset" class="btn" title="Reset the workspace to the standard layout">Reset layout</button>
+      <a class="btn" href="./" title="ALPACA home: tutorial, documentation, analysis" style="text-decoration:none">Home</a>
+      <span id="status" class="muted small"></span>
+    </div>
+    <input id="dir-input" type="file" webkitdirectory directory multiple hidden />
+  </header>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <main id="workspace" class="workspace"></main>
+  </div>
+  <div id="drop-overlay" class="drop-overlay"><div>Drop the run folder</div></div>
+  <div id="toasts" class="toasts"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

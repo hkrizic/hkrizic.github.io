@@ -64,7 +64,7 @@ on the bundled example run all components agree to ~1e-8 relative.
 ## Layout
 
 ```
-index.html            page shell
+app.html              page shell (index.html is the landing page)
 css/app.css           theme
 js/main.js            app: run loading, workspace, panels
 js/core/              file ingestion, parsers, worker, run model, blinding, stats, contours, colormaps

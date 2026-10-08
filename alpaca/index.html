@@ -3,34 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ALPACA analysis</title>
-  <meta name="description" content="Browser-side analysis workbench for ALPACA lens-modelling runs: parameters, corner plots, image and model viewers, lensing maps, H0." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <title>ALPACA</title>
+  <meta name="description" content="ALPACA, the JAX lens-modelling and time-delay cosmography pipeline: real-data tutorials, documentation of every option, and a browser-side analysis tool for run folders." />
+  <script>
+    // old links such as /alpaca/?run=<url> opened the analysis tool directly; keep them working
+    if (new URLSearchParams(location.search).has("run")) location.replace("app.html" + location.search + location.hash);
+  </script>
   <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="doc/doc.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png" />
+  <style>.choices { max-width: 1120px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } .strip { max-width: 1120px; }</style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="assets/logo-mark.png" alt="ALPACA" /><span>Alpaca</span><span class="sub">analysis</span></div>
-    <div class="topbar-actions">
-      <button id="btn-open" class="btn primary" title="Open a run folder (or drop it anywhere)">Open run folder</button>
-      <button id="btn-add-b" class="btn" title="Load a second run for comparison">Add run B</button>
-      <button id="btn-url" class="btn" title="Load a run served over HTTP">From URL</button>
-      <select id="preset-select" class="btn" title="Add a preset set of panels"><option value="">Presets</option></select>
-      <button id="btn-reset" class="btn" title="Reset the workspace to the standard layout">Reset layout</button>
-      <span id="status" class="muted small"></span>
-    </div>
-    <input id="dir-input" type="file" webkitdirectory directory multiple hidden />
+    <a class="brand" href="./"><img src="assets/logo-mark.png" alt="ALPACA" /><span>Alpaca</span></a>
+    <nav class="navlinks">
+      <a class="btn" href="doc/tutorial.html">Tutorial</a>
+      <a class="btn" href="doc/documentation.html">Documentation</a>
+      <a class="btn" href="app.html">Analysis</a>
+      <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
+    </nav>
   </header>
-  <div class="layout">
-    <aside id="sidebar" class="sidebar"></aside>
-    <main id="workspace" class="workspace"></main>
-  </div>
-  <div id="drop-overlay" class="drop-overlay"><div>Drop the run folder</div></div>
-  <div id="toasts" class="toasts"></div>
-  <script type="module" src="js/main.js"></script>
+
+  <section class="hero">
+    <img src="assets/logo.png" alt="ALPACA" />
+    <p class="lead">Model strong gravitational lenses with ALPACA: lensed quasars and galaxy–galaxy lenses, a pixelated
+      source, a PSF fitted together with the lens, and time-delay cosmography. Learn it on real data, look up
+      exactly what every option does, or open a finished run and explore it.</p>
+  </section>
+
+  <section class="choices">
+    <a class="choice-tile" href="doc/tutorial.html">
+      <span class="k">Learn by doing</span>
+      <div class="t">Tutorial</div>
+      <div class="d">Two complete walkthroughs on real telescope data: the lensed quasar <b>HE0435−1223</b>
+        (JWST) and the galaxy–galaxy lens <b>COSMOS 5921+0638</b> (HST). From the raw image to a model you can
+        judge, with every figure explained.</div>
+      <span class="arrow">→</span>
+    </a>
+    <a class="choice-tile" href="doc/documentation.html">
+      <span class="k">Look it up</span>
+      <div class="t">Documentation</div>
+      <div class="d">Installation, input files, the staged pipeline, outputs, and <b>every configuration
+        option</b>, each with its default, what it does and when to change it. Searchable and filterable.</div>
+      <span class="arrow">→</span>
+    </a>
+    <a class="choice-tile" href="app.html">
+      <span class="k">Explore a run</span>
+      <div class="t">Analysis</div>
+      <div class="d">Open or drop an ALPACA run folder in the browser: parameter tables, corner plots, image,
+        model and residual viewers, lensing maps and H<sub>0</sub>. Compare two runs side by side. Nothing
+        is uploaded; everything stays on your machine.</div>
+      <span class="arrow">→</span>
+    </a>
+  </section>
+
+  <section class="strip">
+    <div class="card"><div class="k">Pipeline</div><div class="big">staged</div><div class="small muted">shapelets → lens-light refit → correlated-field source with a live PSF</div></div>
+    <div class="card"><div class="k">Runs on</div><div class="big">CPU · GPU · Apple</div><div class="small muted">JAX on CPU, NVIDIA CUDA, and Apple Silicon (MPS)</div></div>
+    <div class="card"><div class="k">AI-assisted</div><div class="big">3 files</div><div class="small muted">let a terminal assistant set up, prepare and start a model with you</div></div>
+    <div class="card"><div class="k">Paper</div><div class="big"><a href="https://arxiv.org/abs/2609.04312">arXiv:2609.04312</a></div><div class="small muted">methods, validation, cite this</div></div>
+  </section>
 </body>
 </html>
