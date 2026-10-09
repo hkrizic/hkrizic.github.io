@@ -15,6 +15,9 @@ export default {
   available: (run) => run.paramSummary.length > 0 || run.features.posterior,
   create(ctx, state, panel) {
     state.groups = state.groups || GROUP_ORDER.slice();
+    // groups added in later versions start enabled in layouts saved before them
+    for (const g of GROUP_ORDER) if (!(state.knownGroups || state.groups).includes(g) && !state.groups.includes(g)) state.groups.push(g);
+    state.knownGroups = GROUP_ORDER.slice();
     state.query = state.query || "";
     state.flaggedOnly = !!state.flaggedOnly;
     state.compare = state.compare ?? true;
@@ -45,7 +48,7 @@ export default {
         const cells = [
           el("span", { class: "mono" }, r.name, blinded.has(r.name) ? badge("Δ", "warn") : null),
           el("span", { class: "muted" }, paramGroup(r.name)),
-          el("b", {}, fmtNum(r.median, 5)), "+" + fmtNum(r.up, 4), "−" + fmtNum(r.lo, 4), fmtNum(r.mean, 5), fmtNum(r.std, 4),
+          el("b", {}, fmtNum(r.median, 5)), "+" + fmtNum(r.up, 4), "−" + fmtNum(Math.abs(r.lo), 4), fmtNum(r.mean, 5), fmtNum(r.std, 4),
           el("span", { class: "muted small" }, pr),
           f ? (f.status === "FLAG" ? badge(f.boundary + " " + f.why, "warn") : badge("ok", "ok")) : "–",
           rh != null ? el("span", { class: rh > 1.1 ? "bad" : rh > 1.05 ? "meh" : "" }, rh.toFixed(3)) : "–",

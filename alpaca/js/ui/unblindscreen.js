@@ -34,7 +34,7 @@ export function openUnblindScreen(app, run) {
         el("h4", {}, "Key"), keyRow,
         el("h4", {}, "Cosmology for H₀"),
         el("div", { class: "ctl-row" }, el("span", { class: "ctl-label" }, "z_lens"), number(cfg.zl, (v) => { cfg.zl = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "z_source"), number(cfg.zs, (v) => { cfg.zs = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "Ωm"), number(cfg.Om, (v) => { cfg.Om = v; }, { step: 0.01, width: 70 })),
-        el("div", { class: "muted small" }, "Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm."),
+        el("div", { class: "muted small" }, "Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm." + (run.massSheet.applies ? ` Kinematics run: H₀ is revealed from the physical distance D_Δt / [λ_int (1 − κ_ext)], κ_ext = ${run.massSheet.kappaExt}${run.massSheet.sampleLambda ? ", λ_int as sampled" : `, λ_int = ${run.massSheet.lambdaFixed}`}.` : "")),
       ),
       el("div", {},
         el("h4", {}, "Scope"),
@@ -73,10 +73,13 @@ export function openUnblindScreen(app, run) {
       const h0 = await run.h0Samples({ zl: cfg.zl, zs: cfg.zs, Om: cfg.Om });
       const st = summarize(h0.samples);
       const dd = summarize(h0.ddt);
+      const stModel = h0.physical ? summarize(h0.model) : null;
+      const lam = h0.lam ? summarize(h0.lam) : null;
+      const extra = { h0: st, ddt: dd, zl: cfg.zl, zs: cfg.zs, Om: cfg.Om, physical: h0.physical, h0Model: stModel, src: h0.src };
       let written = null;
-      if (cfg.scope === "folder") written = await run.writeUnblinded({ h0: st, ddt: dd, zl: cfg.zl, zs: cfg.zs, Om: cfg.Om });
-      if (cfg.scope === "download") written = await run.downloadUnblinded({ h0: st, ddt: dd, zl: cfg.zl, zs: cfg.zs, Om: cfg.Om });
-      return { st, dd, written };
+      if (cfg.scope === "folder") written = await run.writeUnblinded(extra);
+      if (cfg.scope === "download") written = await run.downloadUnblinded(extra);
+      return { st, dd, stModel, lam, physical: h0.physical, written };
     })();
 
     const T_SPIN = 3600, T_SETTLE = 1400;
@@ -103,9 +106,12 @@ export function openUnblindScreen(app, run) {
       box.classList.add("revealed");
       title.textContent = "UNBLINDED";
       const st = result.st, dd = result.dd;
+      const pm = (s, d) => `${s.median.toFixed(d)} +${(s.hi68 - s.median).toFixed(d)} −${(s.median - s.lo68).toFixed(d)}`;
+      const ms = run.massSheet;
       sub.append(
         el("div", { class: "cer-err" }, `+${(st.hi68 - st.median).toFixed(2)}  −${(st.median - st.lo68).toFixed(2)}  (68 %)   ·   ${(100 * st.std / st.median).toFixed(2)} % precision`),
-        el("div", { class: "cer-line" }, `D_Δt = ${dd.median.toFixed(1)} +${(dd.hi68 - dd.median).toFixed(1)} −${(dd.median - dd.lo68).toFixed(1)} Mpc   ·   z_l = ${cfg.zl}, z_s = ${cfg.zs}, Ωm = ${cfg.Om}`),
+        el("div", { class: "cer-line" }, `${result.physical ? "physical D_Δt" : "D_Δt"} = ${pm(dd, 1)} Mpc   ·   z_l = ${cfg.zl}, z_s = ${cfg.zs}, Ωm = ${cfg.Om}`),
+        result.physical ? el("div", { class: "cer-line" }, (result.lam ? `λ_int = ${pm(result.lam, 3)}` : `λ_int = ${ms.lambdaFixed} (fixed)`) + `   ·   κ_ext = ${ms.kappaExt}   ·   lens-model H₀ (λ = 1) = ${pm(result.stModel, 2)}`) : null,
         el("div", { class: "cer-line muted" }, result.written ? `Written: ${result.written}` : "Session only — nothing was written."),
         el("div", { class: "cer-line muted" }, "Press ✕ or Esc to analyse the unblinded results."),
       );

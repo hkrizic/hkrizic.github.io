@@ -155,3 +155,33 @@ export function fmt(v, digits = 4) {
   if (a !== 0 && (a < 1e-3 || a >= 1e5)) return v.toExponential(Math.max(1, digits - 2));
   return v.toFixed(digits).replace(/\.?0+$/, "");
 }
+
+// Seeded generator (mulberry32) with uniform and standard-normal draws, for reproducible Monte Carlo.
+export function rng(seed = 1) {
+  let a = seed >>> 0;
+  const uniform = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  let spare = null;
+  const normal = () => {
+    if (spare !== null) { const s = spare; spare = null; return s; }
+    let u = 0; while (u === 0) u = uniform();
+    const r = Math.sqrt(-2 * Math.log(u)), t = 2 * Math.PI * uniform();
+    spare = r * Math.sin(t);
+    return r * Math.cos(t);
+  };
+  return { uniform, normal };
+}
+
+// Indices of a systematic resample of `weights` (n draws; weights need not be normalised).
+export function resampleIndex(weights, n = weights.length, u0 = 0.5) {
+  let tot = 0;
+  for (const w of weights) tot += w;
+  const out = new Int32Array(n);
+  if (!(tot > 0)) return out.fill(-1);
+  let k = 0, acc = weights[0] / tot;
+  for (let i = 0; i < n; i++) {
+    const u = (i + u0) / n;
+    while (u > acc && k < weights.length - 1) acc += weights[++k] / tot;
+    out[i] = k;
+  }
+  return out;
+}

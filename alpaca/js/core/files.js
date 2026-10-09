@@ -182,12 +182,24 @@ export function findRunRoots(index) {
   return [...roots].sort((a, b) => a.length - b.length);
 }
 
-// Locate a perturber catalog anywhere in the index (prefer the config path).
-export function findCatalog(index, configPath = null) {
+// Locate the perturber catalog of the run at `root`. Order: the copy the run saved next to its
+// inputs (01_input/perturbers.json, ALPACA >= 0.5.1), the config path (matched on its longest
+// suffix present in the index, since configs store the absolute path of the machine that ran it),
+// then any perturbers*.json. Ties go to the file closest to the run folder.
+export function findCatalog(index, configPath = null, root = "") {
+  const own = root + "01_input/perturbers.json";
+  if (index.has(own)) return own;
+  const near = (cands) => {
+    const up = (p) => { let r = root, n = 0; while (r && !p.startsWith(r)) { r = r.replace(/[^/]*\/$/, ""); n++; } return n * 100 + p.split("/").length; };
+    return cands.slice().sort((a, b) => up(a) - up(b) || a.localeCompare(b))[0] || null;
+  };
   if (configPath) {
-    const cands = index.paths.filter((p) => p.endsWith(normalize(configPath)));
-    if (cands.length) return cands[0];
+    const parts = normalize(configPath).split("/");
+    for (let k = parts.length; k >= 2; k--) {
+      const tail = parts.slice(-k).join("/");
+      const cands = index.paths.filter((p) => p === tail || p.endsWith("/" + tail));
+      if (cands.length) return near(cands);
+    }
   }
-  const c = index.find(/(^|\/)perturbers[^/]*\.json$/);
-  return c[0] || null;
+  return near(index.find(/(^|\/)perturbers[^/]*\.json$/));
 }

@@ -118,7 +118,7 @@ export function unblindUI(run, onDone) {
     el("div", { class: "ctl-row" }, input, button("Load key for computations", () => go(input.value), { kind: "primary" })),
     el("div", { class: "ctl-row" }, el("label", { class: "ctl-check" }, (() => { const c = el("input", { type: "checkbox" }); c.checked = true; c.addEventListener("change", () => { opts.session = c.checked; }); return c; })(), el("span", {}, "use for every run in this browser session (campaign key)")),
       el("label", { class: "ctl-check" }, (() => { const c = el("input", { type: "checkbox" }); c.addEventListener("change", () => { opts.device = c.checked; }); return c; })(), el("span", {}, "remember on this device"), el("span", { class: "muted small" }, " — anyone using this browser profile could then unblind"))),
-    run.features.keyFile ? el("div", { class: "ctl-row" }, button("Use blinding_secret.key found in the run folder", async () => go(await run.keyFileContents()))) : null,
+    run.features.keyFile ? el("div", { class: "ctl-row" }, button("Use blinding_secret.key found in the run folder", async () => go(await run.keyFileContents()))) : "",
     status,
   );
   return box;

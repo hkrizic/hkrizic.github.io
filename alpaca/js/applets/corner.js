@@ -7,7 +7,7 @@ import { niceTicks, formatTick } from "../ui/imagecanvas.js";
 import { THEME } from "../ui/theme.js";
 import { observeStable } from "../ui/resize.js";
 
-const DEFAULT = ["lens_theta_E", "lens_gamma", "lens_e1", "lens_e2", "lens_gamma1", "lens_gamma2", "D_dt"];
+const DEFAULT = ["lens_theta_E", "lens_gamma", "lens_e1", "lens_e2", "lens_gamma1", "lens_gamma2", "D_dt", "kin_lambda_int", "kin_anisotropy_ratio"];
 const COLORS = THEME.series;
 
 function fillColor(hex, a) { const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r},${g},${b},${a})`; }

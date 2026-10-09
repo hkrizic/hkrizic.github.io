@@ -27,8 +27,22 @@ export default {
           ["Cutout", c.data?.cutout_size ? `${c.data.cutout_size} px` : "–"],
           ["Posterior", run.posteriorSummary ? `${run.posteriorSummary.nSamples} samples × ${run.posteriorSummary.nParams} params` : "–"],
           ["Blinding", blindBadge],
-          ["Perturber catalog", run.catalog ? badge("found: " + run.catalogPath, "ok") : badge("not found (drop the experiment folder incl. data/)", "warn")],
+          ["Perturber catalog", run.catalog ? badge((run.catalogInRun ? "run copy: " : "found: ") + (run.catalogInRun ? "01_input/perturbers.json" : run.catalogPath), "ok") : badge("not found (runs ≥ 0.5.1 keep it in 01_input/; else drop the experiment folder incl. data/)", "warn")],
         ])));
+      // kinematics and the internal mass sheet (alpaca.kinematics)
+      const ms = run.massSheet;
+      if (ms.kinematics) {
+        const lam = run.paramSummary.find((r) => r.name === "kin_lambda_int");
+        const blindedLam = (run.blinding?.blinded_columns || []).includes("kin_lambda_int");
+        grid.append(card("Kinematics & mass sheet", kv([
+          ["Data", ms.mode === "resolved" ? `resolved IFU (${(ms.ifuFile || "").split("/").pop() || "–"})` : `aperture σ = ${ms.observedSigma ?? "–"} ± ${ms.sigmaError ?? "–"} km/s`],
+          ["Dynamics", `${ms.dynamics} Jeans, ${ms.anisotropyModel} anisotropy` + (ms.anisotropyRange && ms.anisotropyFixed == null ? ` σ_t/σ_r ∈ [${ms.anisotropyRange.join(", ")}]` : ms.anisotropyFixed != null ? ` σ_t/σ_r = ${ms.anisotropyFixed}` : "")],
+          ["Inference", ms.importance ? "importance update of the lensing posterior" + (run.kinImportance ? ` (ESS ${fmtNum(run.kinImportance.importance_ess, 0)} / ${run.kinImportance.n_draws})` : "") : "joint with the imaging"],
+          ["λ_int", ms.sampleLambda ? el("span", {}, `free, U[${ms.lambdaRange.join(", ")}]`, lam ? (blindedLam ? el("span", { class: "muted" }, ` · σ = ${fmtNum(lam.std, 4)} (blinded)`) : ` · ${fmtNum(lam.median, 4)} +${fmtNum(lam.up, 4)} −${fmtNum(Math.abs(lam.lo), 4)}`) : null) : `fixed at ${ms.lambdaFixed}`],
+          ["κ_ext", String(ms.kappaExt)],
+          ["D_Δt", ms.applies ? "sampled = lens model; physical = D_Δt / [λ_int (1 − κ_ext)] (used for H₀)" : "lens model = physical (λ_int = 1, κ_ext = 0)"],
+        ]), el("div", { class: "muted small" }, "Details: the Mass-sheet degeneracy applet.")));
+      }
       // fit quality
       const q = [];
       for (const s of run.stages) if (s.summary?.chi2_red != null) q.push([`χ²ᵥ (${s.label})`, fmtNum(s.summary.chi2_red, 3)]);

@@ -58,12 +58,20 @@ export function paramGroup(name) {
   if (/^offset_[xy]_image/.test(name)) return "Astrometric offsets";
   if (/^pert\d+_/.test(name)) return "Perturbers";
   if (/^psf_/.test(name)) return "PSF";
+  if (/^kin_|^lambda_int$/.test(name)) return "Kinematics & mass sheet";
   if (/^(D_dt|H0|D_d|log_sigma_rayshoot)/.test(name)) return "Cosmography";
   if (/^sky/.test(name)) return "Sky";
   return "Other";
 }
 
-export const GROUP_ORDER = ["Cosmography", "Lens mass", "External shear", "Perturbers", "Lens light", "Source light", "Point sources", "Astrometric offsets", "PSF", "Sky", "Other"];
+export const GROUP_ORDER = ["Cosmography", "Kinematics & mass sheet", "Lens mass", "External shear", "Perturbers", "Lens light", "Source light", "Point sources", "Astrometric offsets", "PSF", "Sky", "Other"];
+
+// Posterior sets a run can hold: the sampled posterior and, with likelihood.kinematics.importance_sample,
+// the lensing posterior importance-reweighted by the kinematics (its own blinding offsets).
+export const POSTERIOR_SOURCES = {
+  samples: { dir: "05_posterior/samples", label: "Posterior samples" },
+  kinImportance: { dir: "05_posterior/kinematics_importance", label: "Kinematics importance update" },
+};
 
 export class Run {
   constructor(index, root, worker, label = "A") {
@@ -92,19 +100,23 @@ export class Run {
   // ------------------------------------------------------------ init / feature detection
   async init() {
     const first = async (...cands) => { for (const c of cands) { const v = await this.json(c); if (v) return v; } return null; };
-    const [config, timing, bic, rayTracing, blinding, postSummary] = await Promise.all([
+    const [config, timing, bic, rayTracing, blinding, postSummary, kinMeta, kinImportance] = await Promise.all([
       first("config/config.json", "config.json"),
       first("timing.json", "config/timing.json"),
       this.json("05_posterior/samples/bic.json"),
       this.json("05_posterior/samples/ray_tracing_summary.json"),
       this.json("05_posterior/samples/blinding_manifest.json"),
       this.json("05_posterior/samples/posterior_summary.json"),
+      this.json("05_posterior/samples/kinematics_metadata.json"),
+      this.json("05_posterior/kinematics_importance/importance_summary.json"),
     ]);
     this.config = config || {};
     this.timing = timing;
     this.bic = bic;
     this.rayTracing = rayTracing;
     this.blinding = blinding;
+    this.kinMeta = kinMeta;
+    this.kinImportance = kinImportance;
     this.posteriorSummary = postSummary ? { engine: postSummary.engine, nSamples: postSummary.n_samples, nParams: postSummary.n_params } : null;
 
     // stages
@@ -141,8 +153,10 @@ export class Run {
     this.pngs = this.list("").filter((p) => /\.png$/i.test(p));
     this.pdfs = this.list("").filter((p) => /\.pdf$/i.test(p));
 
-    // perturber catalog (outside the run folder in general); remembered catalogs fill in when missing
-    this.catalogPath = findCatalog(this.index, this.config?.mass?.perturbers?.path || null);
+    // perturber catalog: the run's own copy (01_input/perturbers.json), else data/ of the experiment
+    // folder; remembered catalogs fill in when neither is there
+    this.catalogPath = findCatalog(this.index, this.config?.mass?.perturbers?.path || null, this.root);
+    this.catalogInRun = this.catalogPath === this.p("01_input/perturbers.json");
     this.catalog = this.catalogPath ? await this.index.json(this.catalogPath).catch(() => null) : null;
     this.catalogRestored = false;
     if (this.catalog) catalogStore.remember(this.catalog, this.name);
@@ -168,6 +182,8 @@ export class Run {
       lossCurve: this.stages.some((s) => this.has(`03_multistart/${s.dir}/loss_curve.npy`)),
       refit: this.has("03_multistart/stage2_lens_light_refit/refit.json"),
       nutsDiag: !!this.diagnostics,
+      kinematics: this.massSheet.kinematics,
+      kinImportance: this.has("05_posterior/kinematics_importance/posterior_samples.npz"),
     };
     this.pixScale = this.config?.data?.pix_scale ?? null;
     // Blinding key found next to the samples: load it silently. It is used only
@@ -187,6 +203,43 @@ export class Run {
 
   get sampler() { return this.posteriorSummary?.engine || this.config?.sampling?.sampler || "?"; }
   get sourceType() { return this.config?.stages?.cf_joint?.source?.type || this.config?.model?.source_type || (this.stages.length ? this.stages[this.stages.length - 1].key : "?"); }
+
+  // Mass-sheet setup (alpaca.kinematics): sampled D_dt is the lens-model distance and
+  // D_dt_physical = D_dt / (lambda_int (1 - kappa_ext)), large-core internal MST. From
+  // kinematics_metadata.json, falling back to likelihood.kinematics of the config.
+  get massSheet() {
+    const lik = this.config?.likelihood || {};
+    const kc = lik.kinematics || {};
+    const md = this.kinMeta || {};
+    if (!lik.use_kinematics && !this.kinMeta) return { kinematics: false, sampleLambda: false, lambdaFixed: 1, kappaExt: 0, applies: false };
+    const pick = (a, b, d) => (a !== undefined && a !== null ? a : b !== undefined && b !== null ? b : d);
+    const sampleLambda = !!pick(md.sample_lambda_int, kc.sample_lambda_int, true);
+    const lambdaFixed = +pick(md.lambda_int, kc.lambda_int, 1);
+    const kappaExt = +pick(md.kappa_ext, kc.kappa_ext, 0);
+    return {
+      kinematics: true,
+      mode: pick(md.mode, kc.mode, "aperture"),
+      dynamics: kc.dynamics || "spherical",
+      importance: !!pick(md.importance_sample, kc.importance_sample, false),
+      sampleLambda, lambdaFixed, kappaExt,
+      lambdaRange: pick(md.lambda_int_range, kc.lambda_int_range, [0.5, 1.5]),
+      anisotropyRange: pick(md.anisotropy_ratio_range, kc.anisotropy_ratio_range, null),
+      anisotropyFixed: pick(md.anisotropy_ratio_fixed, kc.anisotropy_ratio_fixed, null),
+      anisotropyModel: kc.anisotropy_model || "constant",
+      observedSigma: pick(md.observed_sigma_kms, kc.observed_sigma, null),
+      sigmaError: pick(md.sigma_error_kms, kc.sigma_error, null),
+      aperture: { kind: kc.aperture_kind, width: kc.aperture_width, height: kc.aperture_height, radius: kc.aperture_radius },
+      ifuFile: pick(md.ifu_file, kc.ifu_file, null),
+      covarianceScale: kc.covariance_scale ?? 1,
+      approximation: md.mass_sheet_approximation || "large-core; not a finite-core imaging refit",
+      // the physical distance differs from the sampled one
+      applies: sampleLambda || lambdaFixed !== 1 || kappaExt !== 0,
+    };
+  }
+
+  // Posterior holding the kinematic mass sheet: the importance-reweighted set when the run used
+  // likelihood.kinematics.importance_sample, else the sampled posterior.
+  get massSheetSource() { return this.features?.kinImportance && this.massSheet.importance ? "kinImportance" : "samples"; }
 
   // ------------------------------------------------------------ arrays
   async fits(rel) {
@@ -276,15 +329,49 @@ export class Run {
   }
 
   // Full posterior (parsed in the worker). Columns are the stored (possibly blinded) values.
-  async posterior() {
-    return this.cached("posterior", async () => {
-      const u8 = await this.index.bytes(this.p("05_posterior/samples/posterior_samples.npz"));
+  // src: a key of POSTERIOR_SOURCES; every set but "samples" carries its own blinding manifest.
+  async posterior(src = "samples") {
+    return this.cached(src === "samples" ? "posterior" : "posterior:" + src, async () => {
+      const dir = POSTERIOR_SOURCES[src]?.dir;
+      if (!dir) throw new Error("unknown posterior set " + src);
+      const u8 = await this.index.bytes(this.p(`${dir}/posterior_samples.npz`));
       const buf = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
       const r = await this.worker.call("posterior", { buffer: buf }, [buf]);
-      r.blindedColumns = (this.blinding?.blinded_columns || []).filter((c) => c in r.columns);
+      r.src = src;
+      r.blinding = src === "samples" ? this.blinding : await this.json(`${dir}/blinding_manifest.json`);
+      r.blindedColumns = (r.blinding?.blinded ? r.blinding.blinded_columns || [] : src === "samples" ? this.blinding?.blinded_columns || [] : []).filter((c) => c in r.columns);
       r.summaries = {};
       return r;
     });
+  }
+
+  posteriorSources() {
+    return Object.entries(POSTERIOR_SOURCES).filter(([k]) => (k === "samples" ? this.features.posterior : k === "kinImportance" ? this.features.kinImportance : false)).map(([value, s]) => ({ value, label: s.label }));
+  }
+
+  // Offsets that unblind a posterior set: the run's key for the sampled set; other sets are
+  // sealed separately (same passphrase, or their own blinding_secret.key).
+  async offsetsFor(post) {
+    if (post.src === "samples" || !post.blindedColumns.length) return this.offsets ? { offsets: this.offsets, mode: this.offsetsMode } : null;
+    if (post.offsets) return { offsets: post.offsets, mode: post.offsetsMode };
+    const dir = POSTERIOR_SOURCES[post.src].dir;
+    const blob = await this.json(`${dir}/blinding_key.json`);
+    if (!blob || !isEncryptedBlob(blob)) return null;
+    const keys = [this._passphrase, (await this.text(`${dir}/blinding_secret.key`, "")).trim()].filter(Boolean);
+    for (const k of keys) { try { const r = await decryptOffsets(blob, k); post.offsets = r.offsets; post.offsetsMode = r.mode; return r; } catch (e) { /* try the next key */ } }
+    return null;
+  }
+
+  // True values of a posterior column (unblinded in memory when needed), or null when the column
+  // is blinded and no key is available. Never display these for blinded columns.
+  async trueColumn(post, name) {
+    const col = post.columns[name];
+    if (!col) return null;
+    if (!post.blindedColumns.includes(name)) return col;
+    const o = await this.offsetsFor(post);
+    if (!o || o.offsets[name] === undefined) return null;
+    const off = o.offsets[name];
+    return Float64Array.from(col, (v) => unblindValue(v, off, o.mode));
   }
 
   async priors() {
@@ -355,6 +442,7 @@ export class Run {
     const r = await decryptOffsets(blob, key.trim());
     this.offsets = r.offsets;
     this.offsetsMode = r.mode;
+    this._passphrase = key.trim(); // memory only: unseals the run's other posterior sets
     return r;
   }
 
@@ -381,6 +469,14 @@ export class Run {
       post.blindedColumns = [];
       post.summaries = {};
     }
+    // other posterior sets already loaded (they are sealed with their own offsets)
+    for (const src of Object.keys(POSTERIOR_SOURCES)) {
+      if (src === "samples" || !this._cache.has("posterior:" + src)) continue;
+      const post = await this.posterior(src);
+      for (const c of [...post.blindedColumns]) { const t = await this.trueColumn(post, c); if (t) post.columns[c] = t; }
+      post.blindedColumns = [];
+      post.summaries = {};
+    }
     for (const r of this.paramSummary) {
       const off = this.offsets[r.name];
       if (off === undefined) continue;
@@ -392,17 +488,31 @@ export class Run {
     this.unblinded = true;
   }
 
-  // H0 samples from the (true) D_dt column; requires the run to be unblinded or not blinded.
-  async h0Samples({ zl, zs, Om = 0.3 }) {
-    const post = await this.posterior();
-    let ddt = post.columns.D_dt;
-    if (!ddt) throw new Error("No D_dt column in the posterior.");
-    if (post.blindedColumns.includes("D_dt")) {
-      if (!this.offsets) throw new Error("D_dt is blinded and no key is loaded.");
-      const off = this.offsets.D_dt;
-      ddt = Float64Array.from(ddt, (v) => (this.offsetsMode === "fractional" ? v * off + off : v + off));
-    }
-    return { ddt, samples: Float64Array.from(ddt, (d) => H0FromDdt(d, zl, zs, Om)) };
+  // Mass-sheet factor lambda_int (1 - kappa_ext) per draw (true values), or null without kinematics.
+  // Throws when lambda_int is sampled but missing from this posterior set or blinded without a key.
+  async massSheetFactor(post) {
+    const ms = this.massSheet;
+    if (!ms.kinematics) return null;
+    if (!ms.sampleLambda) return { lam: null, lamTot: new Float64Array(post.nSamples).fill(ms.lambdaFixed * (1 - ms.kappaExt)), fixed: true };
+    if (!post.columns.kin_lambda_int) throw new Error(ms.importance && post.src === "samples" ? "This is the lensing-only posterior; λ_int is in the kinematics importance update." : "λ_int is sampled but there is no kin_lambda_int column in the posterior.");
+    const lam = await this.trueColumn(post, "kin_lambda_int");
+    if (!lam) throw new Error("kin_lambda_int is blinded and no key is loaded.");
+    return { lam, lamTot: Float64Array.from(lam, (l) => l * (1 - ms.kappaExt)), fixed: false };
+  }
+
+  // H0 samples from the true D_dt. physical=true applies the mass sheet of a kinematics run,
+  // H0_phys = H0(D_dt) * lambda_int (1 - kappa_ext); `model` is always the lens-model (lambda = 1) H0.
+  // Requires the run to be unblinded, not blinded, or a loaded key.
+  async h0Samples({ zl, zs, Om = 0.3, src = null, physical = true }) {
+    const post = await this.posterior(src || this.massSheetSource);
+    if (!post.columns.D_dt) throw new Error("No D_dt column in the posterior.");
+    const ddtModel = await this.trueColumn(post, "D_dt");
+    if (!ddtModel) throw new Error("D_dt is blinded and no key is loaded.");
+    const model = Float64Array.from(ddtModel, (d) => H0FromDdt(d, zl, zs, Om));
+    const f = physical ? await this.massSheetFactor(post) : null;
+    if (!f) return { ddt: ddtModel, ddtModel, samples: model, model, physical: false, src: post.src };
+    const ddt = Float64Array.from(ddtModel, (d, i) => d / f.lamTot[i]);
+    return { ddt, ddtModel, samples: Float64Array.from(ddt, (d) => H0FromDdt(d, zl, zs, Om)), model, lam: f.lam, lamTot: f.lamTot, physical: true, src: post.src };
   }
 
   async unblindedArtifacts(extra = {}) {
@@ -416,9 +526,14 @@ export class Run {
     const record = {
       source_samples_dir: this.name + "/05_posterior/samples", mode: this.offsetsMode || "absolute", reference: this.blinding?.reference || "mean",
       restored_absolute_means: means, written_by: "alpaca-analysis (browser)", written_at: new Date().toISOString(),
-      H0: extra.h0 ? { median: extra.h0.median, lo68: extra.h0.lo68, hi68: extra.h0.hi68, std: extra.h0.std, z_lens: extra.zl, z_source: extra.zs, Om: extra.Om, cosmology: "flat LCDM" } : null,
-      D_dt: extra.ddt ? { median: extra.ddt.median, lo68: extra.ddt.lo68, hi68: extra.ddt.hi68, std: extra.ddt.std } : null,
+      H0: extra.h0 ? { median: extra.h0.median, lo68: extra.h0.lo68, hi68: extra.h0.hi68, std: extra.h0.std, z_lens: extra.zl, z_source: extra.zs, Om: extra.Om, cosmology: "flat LCDM", from: extra.physical ? "D_dt_physical = D_dt / (lambda_int (1 - kappa_ext))" : "D_dt" } : null,
+      D_dt: extra.ddt ? { median: extra.ddt.median, lo68: extra.ddt.lo68, hi68: extra.ddt.hi68, std: extra.ddt.std, coordinate: extra.physical ? "physical" : "lens model" } : null,
     };
+    if (extra.physical) {
+      const ms = this.massSheet;
+      record.H0_lens_model = extra.h0Model ? { median: extra.h0Model.median, lo68: extra.h0Model.lo68, hi68: extra.h0Model.hi68, std: extra.h0Model.std, note: "lambda_int = 1, kappa_ext = 0" } : null;
+      record.mass_sheet = { kappa_ext: ms.kappaExt, sample_lambda_int: ms.sampleLambda, lambda_int: ms.sampleLambda ? null : ms.lambdaFixed, lambda_int_range: ms.lambdaRange, approximation: ms.approximation, posterior: extra.src || "samples" };
+    }
     return { npz, record: new TextEncoder().encode(JSON.stringify(record, null, 2)) };
   }
 

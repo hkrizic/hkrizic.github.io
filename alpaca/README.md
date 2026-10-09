@@ -6,7 +6,8 @@ corner plots, image/model/residual viewers, a **forward-model lab that re-render
 browser** (lens-light components, pixelated source, point sources), a **ray-shooting lab** (click a feature in the
 data, model or residual to trace it to the source reconstruction through the full multi-plane model, with all
 counter images found by Newton iterations on the exact mapping), lensing maps with critical curves and
-caustics, H₀ from D_Δt, PSF comparison, optimisation diagnostics, a plot gallery and two-run comparison.
+caustics, H₀ from D_Δt, a **mass-sheet degeneracy** module, PSF comparison, optimisation diagnostics, a plot gallery and
+two-run comparison.
 
 The default *model* in every viewer is the forward model of the best log-likelihood posterior draw (rendered in the
 browser); residuals use it too. Every residual view has a switch for the PSF-error noise boost
@@ -35,6 +36,18 @@ and `unblinding_record.json`, the same files as `python -m alpaca.unblind`; need
 picker so the browser may write) or *download the files*. The reveal screen animates and then shows H₀; close it to
 analyse the unblinded results in every panel.
 
+**Kinematics and the mass sheet.** Runs with stellar kinematics (ALPACA ≥ 0.5.1, `likelihood.use_kinematics`) sample
+D_dt as the *lens-model* distance; the physical distance is D_dt / [λ_int (1 − κ_ext)] (large-core internal MST), with
+λ_int free (`kin_lambda_int`) or fixed. The H₀ applet and the unblinding reveal use the physical distance (the lens-model
+H₀ is one switch away), read from `kinematics_metadata.json` or the config. The **Mass-sheet degeneracy** applet shows
+the λ_int posterior against its prior, its degeneracies with γ, the anisotropy and D_Δt, the MST family of the
+convergence profile, the kinematic nuisances (anisotropy, IFU centring), the H₀ precision budget (lens model alone vs
+with the mass sheet) and a what-if that propagates external κ_ext and λ_int priors onto H₀. With joint kinematics the
+data constrain λ_int (1 − κ_ext), so an external κ_ext prior only reweights draws against the λ_int prior bounds; without
+kinematics both priors multiply the lens-model H₀. Runs that used `importance_sample` get a posterior selector for the
+`05_posterior/kinematics_importance/` set (sealed with its own blinding offsets). Blinded runs show λ_int and H₀ only as
+deviations from their mean; the convergence-profile plot then uses an isothermal reference with the posterior spread.
+
 ## Launch
 
 The site is static HTML/CSS/JS with no build step.
@@ -50,8 +63,9 @@ Browsers: Chrome/Edge (folder picker + drag & drop), Firefox/Safari (drag & drop
 
 Everything comes from the run folder (`config/`, `01_input/`, `03_multistart/`, `04_sampling/`, `05_posterior/`).
 FITS (2-D images), NPZ/NPY (posterior, priors, best-fit sidecars), JSON and text summaries are parsed in JS
-(`js/core/parsers`). The perturber catalog (`data/perturbers.json`) lives outside the run folder in ALPACA; drop the
-experiment folder containing both `data/` and `run/` so multi-plane redshifts and z_lens / z_source are found.
+(`js/core/parsers`). The perturber catalog is read from the run's own copy, `01_input/perturbers.json` (ALPACA ≥ 0.5.1);
+for older runs it lives outside the run folder (`data/perturbers.json`), so drop the experiment folder containing both
+`data/` and `run/` so multi-plane redshifts and z_lens / z_source are found.
 
 ## Forward model
 

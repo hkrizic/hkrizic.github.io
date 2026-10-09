@@ -12,7 +12,7 @@ export default {
   id: "marginals", title: "1-D marginals", icon: "▥", description: "Small-multiple histograms / KDEs of selected parameters with priors and a second run.", defaultSize: "m",
   available: (run) => run.features.posterior,
   create(ctx, state, panel) {
-    Object.assign(state, { params: state.params || ["lens_theta_E", "lens_gamma", "lens_e1", "lens_e2", "D_dt", "psf_error_b"], mode: state.mode || "hist", bins: state.bins ?? 40, priors: !!state.priors, compare: state.compare ?? true, cols: state.cols ?? 3 });
+    Object.assign(state, { params: state.params || ["lens_theta_E", "lens_gamma", "lens_e1", "lens_e2", "D_dt", "kin_lambda_int", "psf_error_b"], mode: state.mode || "hist", bins: state.bins ?? 40, priors: !!state.priors, compare: state.compare ?? true, cols: state.cols ?? 3 });
     const canvas = el("canvas");
     const wrap = el("div", { class: "canvas-wrap" }, canvas);
     panel.body.append(wrap);
