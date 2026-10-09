@@ -5,6 +5,13 @@ import { summarize } from "./stats.js";
 import { H0FromDdt } from "../physics/cosmology.js";
 import { keyStore, catalogStore } from "./prefs.js";
 import { perturberPositions, detectLensCenter } from "../physics/catalog.js";
+import { unsupportedReason } from "../physics/kinematics.js";
+import { WorkerClient } from "./workerclient.js";
+
+// separate worker for the kinematic predictions (seconds of work) so forward-model panels never wait on it
+let kinWorker = null;
+const kinCall = (...a) => (kinWorker ||= new WorkerClient()).call(...a);
+const KIN_COLUMNS = /^(lens_theta_E|lens_gamma|log_light_amp_L[23]?|light_(Re|n|e1|e2)_L[23]?|kin_(anisotropy_ratio|lambda_int|inner_dgamma))$/;
 
 const STAGE_LABELS = { shapelets: "Shapelets multistart", lens_light_refit: "Lens-light refit", cf_joint: "Joint CF + PSF", cf_warmstart: "CF warm-start" };
 
@@ -580,6 +587,40 @@ export class Run {
     else { m = 0; for (const v of arr) m += v; m /= arr.length; }
     const out = Float64Array.from(arr, (v) => (mode === "fractional" ? (v - m) / m : v - m));
     return { values: out, mode, sigmaFrac: (() => { let s2 = 0; for (const v of arr) s2 += (v - m) ** 2; return Math.sqrt(s2 / Math.max(1, arr.length - 1)) / Math.abs(m); })() };
+  }
+
+  // Why the aperture velocity dispersion cannot be predicted in the browser (null when it can).
+  get kinematicsUnsupported() { return unsupportedReason(this.config); }
+
+  // Predicted aperture velocity dispersion of every posterior draw (spherical Jeans, port of alpaca.kinematics)
+  // from the TRUE parameters, plus the GD MAP. lambdaOne adds the lens-model prediction at lambda_int = 1:
+  // with sigma_obs it reveals lambda_int, so callers request it only when lambda_int is not blinded.
+  async kinematicsPrediction(src = this.massSheetSource, { lambdaOne = false } = {}) {
+    const reason = this.kinematicsUnsupported;
+    if (reason) throw new Error(reason);
+    return this.cached(`kinpred:${src}:${lambdaOne}`, async () => {
+      const post = await this.posterior(src);
+      const columns = {};
+      for (const n of Object.keys(post.columns)) {
+        if (!KIN_COLUMNS.test(n)) continue;
+        const c = await this.trueColumn(post, n);
+        if (!c) throw new Error(`${n} is blinded and no key is loaded.`);
+        columns[n] = Float64Array.from(c);
+      }
+      if (!columns.lens_gamma || !columns.lens_theta_E) throw new Error("the posterior has no EPL lens_theta_E / lens_gamma columns");
+      const config = this.config.likelihood.kinematics;
+      const r = await kinCall("kinPredict", { config, columns, n: post.nSamples, lambdaOne }, Object.values(columns).map((c) => c.buffer));
+      let map = null;
+      if (this.features.map) {
+        try {
+          const bf = await this.bestFit("final");
+          const one = {};
+          for (const [k, v] of Object.entries(bf.params)) if (typeof v === "number" && KIN_COLUMNS.test(k)) one[k] = Float64Array.of(v);
+          if (one.lens_gamma && one.lens_theta_E) { const m = await kinCall("kinPredict", { config, columns: one, n: 1, lambdaOne }); map = { sigma: m.sigma[0], sigma1: m.sigma1 ? m.sigma1[0] : null }; }
+        } catch (e) { console.warn("MAP kinematics", e); }
+      }
+      return { ...r, map, src: post.src };
+    });
   }
 
   // ------------------------------------------------------------ forward model spec

@@ -45,7 +45,12 @@ convergence profile, the kinematic nuisances (anisotropy, IFU centring), the H�
 with the mass sheet) and a what-if that propagates external κ_ext and λ_int priors onto H₀. With joint kinematics the
 data constrain λ_int (1 − κ_ext), so an external κ_ext prior only reweights draws against the λ_int prior bounds; without
 kinematics both priors multiply the lens-model H₀. Runs that used `importance_sample` get a posterior selector for the
-`05_posterior/kinematics_importance/` set (sealed with its own blinding offsets). Blinded runs show λ_int and H₀ only as
+`05_posterior/kinematics_importance/` set (sealed with its own blinding offsets). For aperture kinematics the applet
+also predicts the velocity dispersion of every posterior draw and of the GD MAP (`js/physics/kinematics.js`, a port of
+ALPACA's spherical Jeans solver with the same quadratures; it matches `SphericalPowerLawKinematics.predict` to ~1e-14)
+and plots it against the measured σ; the λ_int = 1 prediction is shown only for unblinded runs. Resolved (IFU) runs
+need the IFU data file, which is not in the run folder; with an importance update the per-bin best fit stored by
+ALPACA is shown instead. Blinded runs show λ_int and H₀ only as
 deviations from their mean; the convergence-profile plot then uses an isothermal reference with the posterior spread.
 
 ## Launch

@@ -142,6 +142,7 @@ export default {
     const body = el("div");
     panel.body.append(body);
     let plots = [];
+    let loadSeq = 0;
 
     const addPlot = (grid, title, caption, opts = {}) => {
       const wrap = el("div", { class: "plot-wrap" });
@@ -153,6 +154,7 @@ export default {
     };
 
     const load = () => busy(panel, "loading posterior", async () => {
+      const seq = ++loadSeq;
       plots.forEach((p) => p.destroy()); plots = [];
       body.innerHTML = "";
       const run = runOf(ctx, state);
@@ -323,6 +325,70 @@ export default {
         };
         plot.draw();
         cap.textContent = A.hasTrue ? `${A.blinded ? "Every curve is centred on its own mean, so only the widths compare (blinding). " : ""}H₀ ∝ 1/D_Δt; the mass sheet multiplies it by λ_int (1 − κ_ext) draw by draw.` : "";
+      }
+
+      // 2b. stellar kinematics: predicted vs observed velocity dispersion (computed in a worker, filled in later)
+      if (ms.kinematics) {
+        const { plot, cap } = addPlot(grid, "Kinematics: predicted vs observed dispersion", "", { xlabel: ms.mode === "resolved" ? "V_rms [km/s]" : "σ_v [km/s]", ylabel: "density" });
+        const message = (t) => { plot.render = (p) => { p.setRange(0, 1, 0, 1); p.axes({ xticks: false, yticks: false }); p.text(p.rect.x + p.rect.w / 2, p.rect.y + p.rect.h / 2, t, { px: true, align: "center", baseline: "middle", color: THEME.muted }); }; plot.draw(); };
+        const imp = run.kinImportance;
+        const unsupported = run.kinematicsUnsupported;
+        if (unsupported && imp?.best_fit?.model_vrms && imp.observed) {
+          // resolved / unported dynamics: ALPACA's own best-fit prediction of the importance update, per bin
+          const obs = imp.observed, sd = imp.sigma_diag || obs.map(() => 0), mod = imp.best_fit.model_vrms;
+          const xs = Float64Array.from(obs, (_, i) => i);
+          plot.opts.xlabel = "bin"; plot.opts.ylabel = "V_rms [km/s]";
+          plot.render = (p) => {
+            let lo = Infinity, hi = -Infinity;
+            obs.forEach((v, i) => { lo = Math.min(lo, v - sd[i], mod[i]); hi = Math.max(hi, v + sd[i], mod[i]); });
+            const pad = (hi - lo) * 0.08;
+            p.setRange(-0.5, obs.length - 0.5, lo - pad, hi + pad); p.clip();
+            obs.forEach((v, i) => p.line([i, i], [v - sd[i], v + sd[i]], { color: THEME.muted, width: 1.2 }));
+            p.scatter(xs, obs, { color: THEME.muted, radius: 2.5 });
+            p.line(xs, mod, { color: THEME.fg, width: 1.6 });
+            p.unclip(); p.axes({ grid: true });
+            p.legend([{ color: THEME.muted, label: "observed ± σ" }, { color: THEME.fg, label: "best-fit model" }], { x: p.rect.x + p.rect.w - 130 });
+          };
+          plot.draw();
+          cap.textContent = `Highest-weight draw of the importance update (ALPACA's importance_summary.json): χ² = ${fmtNum(imp.best_fit.chi2, 2)} for ${obs.length} bins. Per-draw predictions are not available here: ${unsupported}.`;
+        } else if (unsupported) {
+          message("not available in the browser");
+          cap.textContent = `Not available: ${unsupported}. ALPACA does not store per-draw predictions yet.`;
+        } else {
+          message("computing the Jeans model for every draw…");
+          const lambdaOne = !A.lamBlinded;
+          run.kinematicsPrediction(src, { lambdaOne }).then((kp) => {
+            if (seq !== loadSeq) return;
+            const st = summarize(kp.sigma), z = (st.median - kp.observed) / kp.error;
+            const st1 = kp.sigma1 ? summarize(kp.sigma1) : null;
+            const sB = Math.sqrt(st.std ** 2 + kp.error ** 2);
+            plot.render = (p) => {
+              const arrs = [kp.sigma, ...(kp.sigma1 ? [kp.sigma1] : [])];
+              let [lo, hi] = rangeOf(arrs, 0.02);
+              lo = Math.min(lo, kp.observed - 4 * kp.error); hi = Math.max(hi, kp.observed + 4 * kp.error);
+              const kA = kde1d(kp.sigma, { range: [lo, hi] }), k1 = kp.sigma1 ? kde1d(kp.sigma1, { range: [lo, hi] }) : null;
+              const xs = kA.xs, obs = Float64Array.from(xs, (x) => Math.exp(-0.5 * ((x - kp.observed) / kp.error) ** 2) / (kp.error * Math.sqrt(2 * Math.PI)));
+              const ymax = Math.max(...kA.ys, ...obs, ...(k1 ? k1.ys : [0]));
+              p.setRange(lo, hi, 0, ymax * 1.12); p.clip();
+              p.fill(xs, obs, { color: alpha("#8c8c8c", 0.25) });
+              p.line(xs, obs, { color: "#8c8c8c", width: 1.2 });
+              if (k1) p.line(k1.xs, k1.ys, { color: THEME.muted, width: 2, dash: [5, 4] });
+              p.line(kA.xs, kA.ys, { color: THEME.fg, width: 2 });
+              p.vline(kp.observed, { color: "rgba(0,0,0,0.45)" });
+              if (kp.map) p.vline(kp.map.sigma, { color: THEME.fg, dash: [2, 2], width: 1.5 });
+              p.unclip(); p.axes({ grid: true });
+              p.legend([{ color: "#8c8c8c", label: `observed ${kp.observed} ± ${fmtNum(kp.error, 3)}` }, { color: THEME.fg, label: "posterior prediction" }, ...(k1 ? [{ color: THEME.muted, label: "lens model alone (λ_int = 1)" }] : []), ...(kp.map ? [{ color: THEME.fg, label: "GD MAP (dotted)" }] : [])], { x: p.rect.x + p.rect.w - 190 });
+            };
+            plot.draw();
+            cap.textContent = `Spherical Jeans (port of alpaca.kinematics, same quadratures) for all ${kp.sigma.length} draws: σ_pred = ${pm(st, 1)} km/s vs ${kp.observed} ± ${fmtNum(kp.error, 3)} observed; median offset ${z >= 0 ? "+" : ""}${z.toFixed(2)} σ_obs, ${((st.median - kp.observed) / sB).toFixed(2)} σ including the model spread.` +
+              (kp.map ? ` GD MAP: ${kp.map.sigma.toFixed(1)} km/s.` : "") +
+              (st1 ? ` At λ_int = 1 the lens model alone predicts ${pm(st1, 1)} km/s; the sampled λ_int (1 − κ_ext) rescales σ² from there (σ ∝ √λ).` : A.lamBlinded ? " The λ_int = 1 prediction is hidden: next to σ_obs it would reveal λ_int." : "");
+          }).catch((e) => {
+            if (seq !== loadSeq) return;
+            message(/blinded/.test(e.message) ? "needs the blinding key" : "could not be computed");
+            cap.textContent = /blinded/.test(e.message) ? "The prediction uses the true γ and λ_int: load the key (it is used only in the computation; σ_pred itself carries no H₀ information)." : `Error: ${e.message}`;
+          });
+        }
       }
 
       // 3. degeneracy contours

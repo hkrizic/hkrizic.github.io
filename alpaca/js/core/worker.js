@@ -4,6 +4,9 @@ import { parseNpz, listNpz } from "./parsers/npy.js";
 import { ForwardModel } from "../physics/render.js";
 import { buildGeometry, singlePlaneGeometry } from "../physics/multiplane.js";
 import { lensingMaps, findImages, betaGrid } from "../physics/lensing.js";
+import { ApertureKinematics } from "../physics/kinematics.js";
+
+const kinPlans = new Map();
 
 const models = new Map();
 
@@ -95,6 +98,21 @@ const ops = {
     const key = JSON.stringify(params);
     if (!fm._betaCache || fm._betaCache.key !== key) fm._betaCache = { key, grid: betaGrid(fm, params) };
     return { images: findImages(fm, params, bx, by, { grid: fm._betaCache.grid, ...(opts || {}) }) };
+  },
+  // Aperture velocity dispersion per draw (true parameter values in `columns`, one entry per draw).
+  kinPredict({ config, columns, n, lambdaOne }) {
+    const key = JSON.stringify(config);
+    if (!kinPlans.has(key)) kinPlans.set(key, new ApertureKinematics(config));
+    const kin = kinPlans.get(key);
+    const names = Object.keys(columns);
+    const sigma = new Float64Array(n), sigma1 = lambdaOne ? new Float64Array(n) : null;
+    const p = {};
+    for (let i = 0; i < n; i++) {
+      for (const k of names) p[k] = columns[k][i];
+      sigma[i] = kin.predict(p);
+      if (sigma1) sigma1[i] = kin.predict(p, { lambdaOverride: 1 });
+    }
+    return { sigma, sigma1, observed: kin.observed, error: kin.error };
   },
   fmRayShoot({ runId, params, x, y }) {
     const fm = models.get(runId);
