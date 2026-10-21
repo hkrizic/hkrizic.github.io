@@ -1,0 +1,2 @@
+# The site-wide .gitignore excludes *.log, but this dataset is part of the app.
+!data/server.log

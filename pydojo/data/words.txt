@@ -1,0 +1,11 @@
+Data is everywhere. Every click, every search and every purchase leaves a small trace of data.
+Companies that work with big data collect these traces from millions of users every day.
+To make sense of so much data, engineers write programs that read the data, clean the data and count things.
+Python is a popular language for this work because Python code is short, readable and powerful.
+A data engineer builds pipelines that move data from one system to another system.
+A data scientist asks questions, builds models and explains the answers with numbers and charts.
+Both need to think clearly about time, memory and correctness.
+A program that works for one thousand rows might be far too slow for one billion rows.
+That is why we learn about algorithms, about streaming data and about splitting big work into small pieces.
+Map the data, shuffle the data, reduce the data: this simple idea powers many big data systems.
+Start small, test often and let the computer do the boring work.

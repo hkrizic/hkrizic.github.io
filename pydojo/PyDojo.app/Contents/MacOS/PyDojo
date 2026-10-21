@@ -1,0 +1,25 @@
+#!/bin/bash
+# PyDojo launcher: starts the local server in the background (if it isn't
+# running yet) and opens the app. The server keeps running so your iPhone
+# can use PyDojo over Wi-Fi; stop it with:  python3 serve.py --stop
+APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(dirname "$APP_DIR")"
+PORT=8765
+URL="http://localhost:$PORT/"
+
+ping() { /usr/bin/curl -s -m 1 "${URL}__pydojo/ping" >/dev/null 2>&1; }
+
+if ! ping; then
+  PY=/usr/bin/python3
+  for p in /opt/homebrew/bin/python3 /usr/local/bin/python3; do [ -x "$p" ] && PY="$p" && break; done
+  nohup "$PY" -u "$ROOT/serve.py" --port "$PORT" >/tmp/pydojo-server.log 2>&1 &
+  for _ in $(seq 1 60); do ping && break; sleep 0.1; done
+fi
+
+# If you made a Safari web app ("File > Add to Dock"), open that; otherwise the default browser.
+WEBAPP="$HOME/Applications/PyDojo.app"
+if [ -d "$WEBAPP" ] && [ "$WEBAPP" != "$APP_DIR" ] && /usr/bin/grep -q "WebApp" "$WEBAPP/Contents/Info.plist" 2>/dev/null; then
+  open "$WEBAPP"
+else
+  open "$URL"
+fi

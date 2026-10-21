@@ -1,0 +1,1201 @@
+order_id,user_id,order_date,product,category,quantity,unit_price,country,status
+1001,204,2025-01-01,Dumbbells,Sports,1,39.90,DE,completed
+1002,54,2025-01-01,Coffee Beans,Grocery,1,13.90,US,completed
+1003,277,2025-01-02,Olive Oil,Grocery,1,11.50,US,completed
+1004,277,2025-01-02,Puzzle,Toys,1,17.50,US,completed
+1005,91,2025-01-02,Headphones,Electronics,3,59.90,DE,completed
+1006,215,2025-01-02,Puzzle,Toys,3,17.50,IT,completed
+1007,26,2025-01-03,Chocolate,Grocery,2,3.90,ES,completed
+1008,182,2025-01-03,Puzzle,Toys,1,17.50,FR,completed
+1009,86,2025-01-03,Cookbook,Books,2,24.50,UK,completed
+1010,187,2025-01-03,Python Crash Course,Books,1,32.00,FR,completed
+1011,195,2025-01-03,Dumbbells,Sports,1,39.90,IT,completed
+1012,20,2025-01-04,Data Science Handbook,Books,1,45.00,ES,completed
+1013,229,2025-01-04,USB Cable,Electronics,1,9.50,UK,completed
+1014,206,2025-01-05,Chocolate,Grocery,1,3.90,DE,completed
+1015,94,2025-01-06,Mug,Home,1,8.90,UK,completed
+1016,117,2025-01-08,Webcam,Electronics,1,49.00,FR,completed
+1017,134,2025-01-08,Data Science Handbook,Books,1,45.00,FR,completed
+1018,111,2025-01-09,Pillow,Home,2,19.90,DE,completed
+1019,95,2025-01-09,Tea,Grocery,1,6.50,US,completed
+1020,275,2025-01-09,Water Bottle,Sports,3,11.00,US,completed
+1021,124,2025-01-10,Lamp,Home,2,35.00,HR,completed
+1022,25,2025-01-11,Headphones,Electronics,1,59.90,DE,completed
+1023,261,2025-01-11,Keyboard,Electronics,1,79.00,ES,completed
+1024,51,2025-01-11,Python Crash Course,Books,2,32.00,UK,completed
+1025,70,2025-01-11,Plant Pot,Home,2,12.50,DE,completed
+1026,268,2025-01-12,Plant Pot,Home,1,12.50,ES,completed
+1027,204,2025-01-12,Lego Set,Toys,1,59.00,DE,completed
+1028,252,2025-01-12,Mug,Home,1,8.90,US,completed
+1029,222,2025-01-13,Mug,Home,1,8.90,UK,completed
+1030,223,2025-01-14,Webcam,Electronics,1,49.00,HR,completed
+1031,47,2025-01-14,Chocolate,Grocery,2,3.90,DE,completed
+1032,202,2025-01-14,Chocolate,Grocery,1,3.90,US,completed
+1033,292,2025-01-14,Lamp,Home,1,35.00,FR,completed
+1034,233,2025-01-15,Chocolate,Grocery,2,3.90,FR,completed
+1035,57,2025-01-15,Olive Oil,Grocery,1,11.50,DE,completed
+1036,161,2025-01-15,Puzzle,Toys,1,17.50,UK,cancelled
+1037,257,2025-01-15,Cookbook,Books,4,24.50,NL,completed
+1038,289,2025-01-16,Headphones,Electronics,1,59.90,DE,completed
+1039,87,2025-01-16,Keyboard,Electronics,2,79.00,ES,completed
+1040,116,2025-01-16,Plant Pot,Home,3,12.50,FR,completed
+1041,114,2025-01-16,Lamp,Home,1,35.00,HR,completed
+1042,105,2025-01-16,Water Bottle,Sports,3,11.00,UK,completed
+1043,244,2025-01-16,Python Crash Course,Books,2,32.00,DE,completed
+1044,285,2025-01-16,Dumbbells,Sports,1,39.90,FR,completed
+1045,89,2025-01-16,Tea,Grocery,1,6.50,DE,completed
+1046,123,2025-01-17,Olive Oil,Grocery,1,11.50,NL,completed
+1047,185,2025-01-18,Olive Oil,Grocery,3,11.50,DE,returned
+1048,194,2025-01-18,Tea,Grocery,1,6.50,HR,completed
+1049,269,2025-01-19,Novel,Books,2,14.90,UK,cancelled
+1050,278,2025-01-19,USB Cable,Electronics,2,9.50,HR,cancelled
+1051,250,2025-01-19,Webcam,Electronics,4,49.00,UK,completed
+1052,28,2025-01-19,Lamp,Home,1,35.00,DE,completed
+1053,187,2025-01-20,Chocolate,Grocery,1,3.90,FR,completed
+1054,227,2025-01-20,Python Crash Course,Books,1,32.00,UK,completed
+1055,211,2025-01-22,Keyboard,Electronics,1,79.00,DE,completed
+1056,216,2025-01-23,Pillow,Home,1,19.90,DE,completed
+1057,235,2025-01-23,Keyboard,Electronics,1,79.00,IT,completed
+1058,67,2025-01-24,Headphones,Electronics,1,59.90,US,completed
+1059,166,2025-01-24,Pillow,Home,1,19.90,US,completed
+1060,27,2025-01-25,Olive Oil,Grocery,2,11.50,ES,completed
+1061,154,2025-01-25,Olive Oil,Grocery,2,11.50,US,completed
+1062,42,2025-01-26,Lego Set,Toys,4,59.00,NL,completed
+1063,256,2025-01-26,Plant Pot,Home,1,12.50,NL,completed
+1064,54,2025-01-26,Cookbook,Books,2,24.50,US,completed
+1065,71,2025-01-26,Chocolate,Grocery,1,3.90,UK,completed
+1066,21,2025-01-26,Mug,Home,1,8.90,DE,returned
+1067,44,2025-01-27,Running Shoes,Sports,3,89.00,US,completed
+1068,123,2025-01-28,Coffee Beans,Grocery,1,13.90,NL,completed
+1069,245,2025-01-28,Python Crash Course,Books,1,32.00,UK,completed
+1070,260,2025-01-29,Plant Pot,Home,2,12.50,DE,completed
+1071,99,2025-01-29,Data Science Handbook,Books,4,45.00,UK,returned
+1072,284,2025-01-29,Olive Oil,Grocery,4,11.50,HR,completed
+1073,99,2025-01-30,Chocolate,Grocery,1,3.90,UK,returned
+1074,173,2025-01-30,Running Shoes,Sports,1,89.00,UK,completed
+1075,270,2025-01-30,Mug,Home,1,8.90,DE,returned
+1076,144,2025-01-31,Chocolate,Grocery,4,3.90,FR,completed
+1077,99,2025-01-31,Data Science Handbook,Books,2,45.00,UK,completed
+1078,84,2025-01-31,Python Crash Course,Books,1,32.00,US,completed
+1079,31,2025-02-01,Mug,Home,2,8.90,US,completed
+1080,185,2025-02-02,Tea,Grocery,1,6.50,DE,completed
+1081,46,2025-02-03,Data Science Handbook,Books,2,45.00,HR,completed
+1082,212,2025-02-03,USB Cable,Electronics,2,9.50,US,completed
+1083,101,2025-02-03,Chocolate,Grocery,2,3.90,US,cancelled
+1084,190,2025-02-03,Headphones,Electronics,1,59.90,US,completed
+1085,29,2025-02-05,Lego Set,Toys,1,59.00,UK,completed
+1086,139,2025-02-05,Running Shoes,Sports,2,89.00,US,completed
+1087,192,2025-02-05,Chocolate,Grocery,1,3.90,UK,completed
+1088,134,2025-02-05,Puzzle,Toys,2,17.50,FR,completed
+1089,112,2025-02-06,Puzzle,Toys,2,17.50,US,completed
+1090,155,2025-02-06,Pillow,Home,2,19.90,FR,completed
+1091,17,2025-02-06,Cookbook,Books,1,24.50,DE,completed
+1092,286,2025-02-06,Cookbook,Books,2,24.50,ES,completed
+1093,67,2025-02-07,Cookbook,Books,2,24.50,US,completed
+1094,97,2025-02-07,USB Cable,Electronics,1,9.50,NL,completed
+1095,9,2025-02-07,Keyboard,Electronics,1,79.00,NL,completed
+1096,129,2025-02-08,Pillow,Home,1,19.90,FR,cancelled
+1097,59,2025-02-09,Olive Oil,Grocery,1,11.50,FR,completed
+1098,15,2025-02-09,Chocolate,Grocery,3,3.90,UK,completed
+1099,4,2025-02-09,Webcam,Electronics,1,49.00,IT,completed
+1100,134,2025-02-10,Olive Oil,Grocery,1,11.50,FR,returned
+1101,20,2025-02-10,Plant Pot,Home,1,12.50,ES,completed
+1102,2,2025-02-10,Plant Pot,Home,2,12.50,US,completed
+1103,48,2025-02-10,Lamp,Home,1,35.00,HR,completed
+1104,121,2025-02-10,USB Cable,Electronics,1,9.50,ES,completed
+1105,43,2025-02-11,USB Cable,Electronics,1,9.50,ES,completed
+1106,12,2025-02-12,Plant Pot,Home,1,12.50,FR,completed
+1107,248,2025-02-12,Coffee Beans,Grocery,2,13.90,US,completed
+1108,102,2025-02-12,Tea,Grocery,3,6.50,US,completed
+1109,3,2025-02-12,Puzzle,Toys,2,17.50,HR,completed
+1110,147,2025-02-13,Novel,Books,1,14.90,UK,completed
+1111,234,2025-02-14,Board Game,Toys,3,34.00,FR,completed
+1112,119,2025-02-14,Dumbbells,Sports,2,39.90,US,completed
+1113,227,2025-02-14,Novel,Books,1,14.90,UK,completed
+1114,127,2025-02-14,Headphones,Electronics,2,59.90,UK,completed
+1115,7,2025-02-14,Running Shoes,Sports,1,89.00,US,completed
+1116,270,2025-02-15,Running Shoes,Sports,4,89.00,DE,completed
+1117,123,2025-02-15,Water Bottle,Sports,2,11.00,NL,returned
+1118,266,2025-02-16,Mug,Home,2,8.90,UK,completed
+1119,253,2025-02-16,Keyboard,Electronics,1,79.00,UK,completed
+1120,228,2025-02-17,Board Game,Toys,1,34.00,ES,returned
+1121,261,2025-02-17,Yoga Mat,Sports,1,25.00,ES,cancelled
+1122,281,2025-02-17,Yoga Mat,Sports,1,25.00,FR,completed
+1123,276,2025-02-17,Novel,Books,1,14.90,FR,completed
+1124,62,2025-02-18,Coffee Beans,Grocery,3,13.90,UK,cancelled
+1125,197,2025-02-18,Plant Pot,Home,2,12.50,US,completed
+1126,183,2025-02-18,Puzzle,Toys,1,17.50,HR,completed
+1127,131,2025-02-19,Olive Oil,Grocery,1,11.50,US,completed
+1128,271,2025-02-21,Pillow,Home,2,19.90,US,completed
+1129,209,2025-02-22,Chocolate,Grocery,2,3.90,US,cancelled
+1130,181,2025-02-22,Coffee Beans,Grocery,2,13.90,NL,cancelled
+1131,192,2025-02-23,Keyboard,Electronics,3,79.00,UK,completed
+1132,222,2025-02-24,USB Cable,Electronics,1,9.50,UK,completed
+1133,207,2025-02-25,Chocolate,Grocery,1,3.90,NL,completed
+1134,127,2025-02-25,Dumbbells,Sports,1,39.90,UK,completed
+1135,185,2025-02-25,Lamp,Home,1,35.00,DE,completed
+1136,83,2025-02-25,Webcam,Electronics,2,49.00,UK,completed
+1137,65,2025-02-26,Olive Oil,Grocery,2,11.50,FR,completed
+1138,59,2025-02-26,Lamp,Home,1,35.00,FR,completed
+1139,289,2025-02-27,Chocolate,Grocery,1,3.90,DE,completed
+1140,263,2025-02-27,Chocolate,Grocery,1,3.90,ES,completed
+1141,27,2025-02-27,Webcam,Electronics,1,49.00,ES,completed
+1142,291,2025-02-28,Keyboard,Electronics,2,79.00,NL,completed
+1143,109,2025-02-28,Tea,Grocery,2,6.50,HR,completed
+1144,122,2025-02-28,Lamp,Home,1,35.00,NL,completed
+1145,208,2025-02-28,Cookbook,Books,1,24.50,US,completed
+1146,104,2025-02-28,Yoga Mat,Sports,1,25.00,HR,completed
+1147,66,2025-02-28,Tea,Grocery,1,6.50,US,completed
+1148,251,2025-03-01,Python Crash Course,Books,1,32.00,NL,completed
+1149,175,2025-03-01,Novel,Books,1,14.90,DE,completed
+1150,153,2025-03-01,Coffee Beans,Grocery,1,13.90,US,completed
+1151,197,2025-03-01,Mug,Home,2,8.90,US,completed
+1152,229,2025-03-01,Tea,Grocery,1,6.50,UK,completed
+1153,63,2025-03-01,Tea,Grocery,3,6.50,FR,completed
+1154,187,2025-03-02,Olive Oil,Grocery,2,11.50,FR,completed
+1155,207,2025-03-03,Chocolate,Grocery,1,3.90,NL,completed
+1156,76,2025-03-03,Yoga Mat,Sports,1,25.00,ES,completed
+1157,53,2025-03-03,Headphones,Electronics,4,59.90,DE,completed
+1158,165,2025-03-03,Puzzle,Toys,2,17.50,US,completed
+1159,174,2025-03-04,Chocolate,Grocery,1,3.90,US,cancelled
+1160,120,2025-03-04,Tea,Grocery,3,6.50,UK,completed
+1161,111,2025-03-04,Python Crash Course,Books,1,32.00,DE,completed
+1162,238,2025-03-04,Yoga Mat,Sports,5,25.00,DE,completed
+1163,101,2025-03-04,Pillow,Home,1,19.90,US,returned
+1164,284,2025-03-04,Novel,Books,2,14.90,HR,completed
+1165,189,2025-03-04,Olive Oil,Grocery,2,11.50,NL,completed
+1166,210,2025-03-04,Board Game,Toys,1,34.00,DE,completed
+1167,58,2025-03-05,Lamp,Home,2,35.00,ES,returned
+1168,22,2025-03-05,Webcam,Electronics,1,49.00,ES,completed
+1169,173,2025-03-06,Puzzle,Toys,1,17.50,UK,completed
+1170,36,2025-03-06,Headphones,Electronics,1,59.90,IT,completed
+1171,83,2025-03-07,Python Crash Course,Books,1,32.00,UK,completed
+1172,6,2025-03-07,Yoga Mat,Sports,1,25.00,US,completed
+1173,206,2025-03-07,Coffee Beans,Grocery,2,13.90,DE,completed
+1174,33,2025-03-07,Novel,Books,1,14.90,US,completed
+1175,95,2025-03-07,Monitor,Electronics,1,189.00,US,completed
+1176,172,2025-03-08,Plant Pot,Home,2,12.50,US,completed
+1177,180,2025-03-08,Olive Oil,Grocery,4,11.50,UK,completed
+1178,249,2025-03-08,Cookbook,Books,1,24.50,DE,completed
+1179,117,2025-03-08,Python Crash Course,Books,1,32.00,FR,completed
+1180,231,2025-03-08,Plant Pot,Home,2,12.50,UK,completed
+1181,281,2025-03-09,Olive Oil,Grocery,4,11.50,FR,returned
+1182,233,2025-03-09,Water Bottle,Sports,1,11.00,FR,completed
+1183,71,2025-03-09,Python Crash Course,Books,1,32.00,UK,completed
+1184,90,2025-03-09,Pillow,Home,1,19.90,US,completed
+1185,178,2025-03-09,Dumbbells,Sports,1,39.90,US,completed
+1186,133,2025-03-10,Cookbook,Books,1,24.50,US,completed
+1187,239,2025-03-10,Mug,Home,2,8.90,DE,returned
+1188,157,2025-03-10,Olive Oil,Grocery,3,11.50,UK,completed
+1189,4,2025-03-11,USB Cable,Electronics,2,9.50,IT,completed
+1190,162,2025-03-11,Monitor,Electronics,1,189.00,NL,completed
+1191,139,2025-03-11,Webcam,Electronics,3,49.00,US,completed
+1192,145,2025-03-12,Coffee Beans,Grocery,1,13.90,HR,completed
+1193,223,2025-03-12,Dumbbells,Sports,2,39.90,HR,completed
+1194,216,2025-03-12,Water Bottle,Sports,4,11.00,DE,completed
+1195,299,2025-03-13,Olive Oil,Grocery,1,11.50,DE,completed
+1196,239,2025-03-13,Board Game,Toys,1,34.00,DE,completed
+1197,291,2025-03-13,Puzzle,Toys,2,17.50,NL,completed
+1198,8,2025-03-14,USB Cable,Electronics,1,9.50,ES,returned
+1199,118,2025-03-15,Lego Set,Toys,1,59.00,US,completed
+1200,239,2025-03-15,Chocolate,Grocery,2,3.90,DE,completed
+1201,47,2025-03-15,Python Crash Course,Books,1,32.00,DE,completed
+1202,136,2025-03-15,Puzzle,Toys,5,17.50,HR,completed
+1203,135,2025-03-15,Novel,Books,2,14.90,HR,completed
+1204,35,2025-03-16,Tea,Grocery,2,6.50,US,completed
+1205,155,2025-03-16,Headphones,Electronics,2,59.90,FR,completed
+1206,169,2025-03-17,Lamp,Home,2,35.00,US,completed
+1207,186,2025-03-17,Yoga Mat,Sports,1,25.00,FR,completed
+1208,282,2025-03-17,Lamp,Home,3,35.00,UK,completed
+1209,118,2025-03-17,Running Shoes,Sports,4,89.00,US,completed
+1210,128,2025-03-18,Webcam,Electronics,1,49.00,HR,completed
+1211,23,2025-03-18,Lamp,Home,1,35.00,DE,completed
+1212,21,2025-03-18,Coffee Beans,Grocery,1,13.90,DE,completed
+1213,239,2025-03-18,Coffee Beans,Grocery,1,13.90,DE,completed
+1214,27,2025-03-19,Coffee Beans,Grocery,3,13.90,ES,completed
+1215,68,2025-03-19,Novel,Books,1,14.90,UK,completed
+1216,148,2025-03-19,Cookbook,Books,4,24.50,FR,completed
+1217,170,2025-03-19,Dumbbells,Sports,4,39.90,DE,completed
+1218,130,2025-03-19,USB Cable,Electronics,1,9.50,UK,completed
+1219,180,2025-03-20,Webcam,Electronics,5,49.00,UK,completed
+1220,179,2025-03-20,Lamp,Home,1,35.00,US,completed
+1221,210,2025-03-20,USB Cable,Electronics,1,9.50,DE,completed
+1222,101,2025-03-20,Dumbbells,Sports,2,39.90,US,completed
+1223,272,2025-03-20,Coffee Beans,Grocery,2,13.90,DE,returned
+1224,137,2025-03-21,Lamp,Home,1,35.00,DE,completed
+1225,16,2025-03-21,Coffee Beans,Grocery,4,13.90,IT,completed
+1226,174,2025-03-21,Olive Oil,Grocery,2,11.50,US,completed
+1227,15,2025-03-22,Headphones,Electronics,2,59.90,UK,completed
+1228,158,2025-03-22,Webcam,Electronics,2,49.00,US,cancelled
+1229,244,2025-03-22,Monitor,Electronics,4,189.00,DE,completed
+1230,219,2025-03-22,Data Science Handbook,Books,5,45.00,DE,completed
+1231,212,2025-03-22,Novel,Books,5,14.90,US,completed
+1232,165,2025-03-23,Water Bottle,Sports,1,11.00,US,completed
+1233,61,2025-03-23,Tea,Grocery,3,6.50,ES,completed
+1234,200,2025-03-23,Webcam,Electronics,4,49.00,DE,completed
+1235,178,2025-03-23,Water Bottle,Sports,1,11.00,US,completed
+1236,92,2025-03-23,USB Cable,Electronics,1,9.50,NL,completed
+1237,299,2025-03-23,Olive Oil,Grocery,4,11.50,DE,completed
+1238,50,2025-03-23,Monitor,Electronics,5,189.00,US,completed
+1239,50,2025-03-24,Coffee Beans,Grocery,2,13.90,US,completed
+1240,276,2025-03-24,Cookbook,Books,3,24.50,FR,completed
+1241,96,2025-03-25,Data Science Handbook,Books,1,45.00,DE,completed
+1242,236,2025-03-25,Yoga Mat,Sports,2,25.00,IT,completed
+1243,114,2025-03-26,Chocolate,Grocery,1,3.90,HR,completed
+1244,68,2025-03-26,Cookbook,Books,2,24.50,UK,completed
+1245,213,2025-03-27,Novel,Books,2,14.90,NL,returned
+1246,27,2025-03-28,Yoga Mat,Sports,1,25.00,ES,completed
+1247,45,2025-03-28,Lego Set,Toys,2,59.00,ES,completed
+1248,165,2025-03-28,Dumbbells,Sports,1,39.90,US,completed
+1249,200,2025-03-29,Pillow,Home,1,19.90,DE,cancelled
+1250,119,2025-03-29,Yoga Mat,Sports,2,25.00,US,completed
+1251,81,2025-03-29,Pillow,Home,4,19.90,IT,completed
+1252,85,2025-03-29,Coffee Beans,Grocery,1,13.90,DE,completed
+1253,231,2025-03-30,Chocolate,Grocery,1,3.90,UK,completed
+1254,25,2025-03-30,Python Crash Course,Books,2,32.00,DE,completed
+1255,248,2025-03-31,Headphones,Electronics,3,59.90,US,completed
+1256,138,2025-03-31,Lego Set,Toys,1,59.00,UK,cancelled
+1257,197,2025-03-31,Tea,Grocery,5,6.50,US,completed
+1258,259,2025-03-31,Chocolate,Grocery,5,3.90,US,completed
+1259,115,2025-03-31,Webcam,Electronics,2,49.00,FR,completed
+1260,196,2025-03-31,Coffee Beans,Grocery,2,13.90,HR,cancelled
+1261,217,2025-03-31,Keyboard,Electronics,1,79.00,UK,completed
+1262,71,2025-04-01,Novel,Books,5,14.90,UK,completed
+1263,143,2025-04-02,Coffee Beans,Grocery,1,13.90,ES,completed
+1264,64,2025-04-02,Dumbbells,Sports,1,39.90,US,completed
+1265,277,2025-04-02,Plant Pot,Home,5,12.50,US,completed
+1266,143,2025-04-02,Plant Pot,Home,3,12.50,ES,completed
+1267,188,2025-04-02,Plant Pot,Home,3,12.50,US,completed
+1268,223,2025-04-03,Headphones,Electronics,1,59.90,HR,cancelled
+1269,246,2025-04-04,Water Bottle,Sports,1,11.00,DE,completed
+1270,138,2025-04-04,Olive Oil,Grocery,1,11.50,UK,completed
+1271,171,2025-04-05,Plant Pot,Home,1,12.50,ES,completed
+1272,258,2025-04-05,Pillow,Home,2,19.90,US,cancelled
+1273,298,2025-04-05,Water Bottle,Sports,3,11.00,US,completed
+1274,287,2025-04-06,Tea,Grocery,2,6.50,DE,cancelled
+1275,9,2025-04-06,Yoga Mat,Sports,2,25.00,NL,completed
+1276,84,2025-04-07,Water Bottle,Sports,1,11.00,US,completed
+1277,191,2025-04-07,Novel,Books,1,14.90,DE,cancelled
+1278,198,2025-04-08,Cookbook,Books,1,24.50,DE,completed
+1279,14,2025-04-09,Cookbook,Books,1,24.50,IT,completed
+1280,268,2025-04-09,Dumbbells,Sports,2,39.90,ES,completed
+1281,231,2025-04-11,Mug,Home,2,8.90,UK,completed
+1282,68,2025-04-11,Running Shoes,Sports,2,89.00,UK,completed
+1283,182,2025-04-11,Python Crash Course,Books,2,32.00,FR,completed
+1284,293,2025-04-11,Dumbbells,Sports,1,39.90,DE,completed
+1285,32,2025-04-12,Running Shoes,Sports,1,89.00,HR,completed
+1286,79,2025-04-12,Chocolate,Grocery,1,3.90,DE,completed
+1287,208,2025-04-12,Monitor,Electronics,1,189.00,US,completed
+1288,27,2025-04-12,Board Game,Toys,1,34.00,ES,completed
+1289,198,2025-04-13,Chocolate,Grocery,2,3.90,DE,returned
+1290,9,2025-04-13,Running Shoes,Sports,2,89.00,NL,completed
+1291,34,2025-04-13,Python Crash Course,Books,2,32.00,DE,completed
+1292,47,2025-04-14,Novel,Books,4,14.90,DE,completed
+1293,46,2025-04-14,Pillow,Home,1,19.90,HR,completed
+1294,236,2025-04-14,Olive Oil,Grocery,2,11.50,IT,completed
+1295,224,2025-04-15,Yoga Mat,Sports,4,25.00,HR,completed
+1296,233,2025-04-16,Coffee Beans,Grocery,1,13.90,FR,completed
+1297,93,2025-04-16,Lego Set,Toys,1,59.00,DE,completed
+1298,219,2025-04-18,Lamp,Home,1,35.00,DE,completed
+1299,6,2025-04-18,Headphones,Electronics,1,59.90,US,completed
+1300,7,2025-04-18,Lamp,Home,1,35.00,US,completed
+1301,135,2025-04-18,USB Cable,Electronics,2,9.50,HR,completed
+1302,158,2025-04-20,Olive Oil,Grocery,1,11.50,US,completed
+1303,267,2025-04-21,Novel,Books,2,14.90,NL,completed
+1304,171,2025-04-21,Tea,Grocery,1,6.50,ES,completed
+1305,173,2025-04-21,Python Crash Course,Books,1,32.00,UK,returned
+1306,187,2025-04-22,Pillow,Home,1,19.90,FR,completed
+1307,123,2025-04-22,Python Crash Course,Books,1,32.00,NL,completed
+1308,101,2025-04-22,Chocolate,Grocery,5,3.90,US,completed
+1309,171,2025-04-22,USB Cable,Electronics,3,9.50,ES,completed
+1310,44,2025-04-22,Lego Set,Toys,2,59.00,US,completed
+1311,215,2025-04-22,Pillow,Home,1,19.90,IT,completed
+1312,298,2025-04-22,Dumbbells,Sports,2,39.90,US,completed
+1313,194,2025-04-23,Tea,Grocery,1,6.50,HR,completed
+1314,68,2025-04-23,Pillow,Home,2,19.90,UK,completed
+1315,80,2025-04-23,Pillow,Home,1,19.90,FR,cancelled
+1316,34,2025-04-24,Chocolate,Grocery,3,3.90,DE,completed
+1317,40,2025-04-24,Lego Set,Toys,1,59.00,DE,completed
+1318,20,2025-04-25,Running Shoes,Sports,4,89.00,ES,completed
+1319,13,2025-04-26,Mug,Home,1,8.90,ES,completed
+1320,143,2025-04-26,Pillow,Home,2,19.90,ES,completed
+1321,198,2025-04-26,Dumbbells,Sports,1,39.90,DE,completed
+1322,167,2025-04-26,Headphones,Electronics,2,59.90,FR,completed
+1323,220,2025-04-27,Mug,Home,2,8.90,DE,completed
+1324,120,2025-04-29,Plant Pot,Home,1,12.50,UK,completed
+1325,40,2025-04-29,Yoga Mat,Sports,1,25.00,DE,completed
+1326,270,2025-04-29,Coffee Beans,Grocery,1,13.90,DE,cancelled
+1327,29,2025-04-29,USB Cable,Electronics,3,9.50,UK,completed
+1328,29,2025-04-30,Running Shoes,Sports,1,89.00,UK,completed
+1329,274,2025-04-30,Yoga Mat,Sports,3,25.00,US,completed
+1330,90,2025-05-01,Olive Oil,Grocery,3,11.50,US,completed
+1331,141,2025-05-02,Lego Set,Toys,1,59.00,HR,completed
+1332,121,2025-05-02,Coffee Beans,Grocery,2,13.90,ES,completed
+1333,103,2025-05-02,Running Shoes,Sports,1,89.00,FR,completed
+1334,211,2025-05-03,Lego Set,Toys,2,59.00,DE,completed
+1335,38,2025-05-03,Cookbook,Books,1,24.50,UK,completed
+1336,299,2025-05-03,Coffee Beans,Grocery,1,13.90,DE,completed
+1337,217,2025-05-04,Chocolate,Grocery,3,3.90,UK,completed
+1338,156,2025-05-04,Cookbook,Books,1,24.50,HR,completed
+1339,53,2025-05-05,Novel,Books,1,14.90,DE,returned
+1340,50,2025-05-05,Yoga Mat,Sports,2,25.00,US,completed
+1341,37,2025-05-05,USB Cable,Electronics,2,9.50,US,returned
+1342,44,2025-05-05,Webcam,Electronics,2,49.00,US,cancelled
+1343,12,2025-05-06,Lego Set,Toys,1,59.00,FR,completed
+1344,134,2025-05-06,Lego Set,Toys,1,59.00,FR,completed
+1345,90,2025-05-06,Python Crash Course,Books,1,32.00,US,completed
+1346,137,2025-05-06,Lego Set,Toys,3,59.00,DE,completed
+1347,191,2025-05-06,Lamp,Home,1,35.00,DE,completed
+1348,208,2025-05-07,Pillow,Home,1,19.90,US,completed
+1349,8,2025-05-08,Olive Oil,Grocery,1,11.50,ES,completed
+1350,45,2025-05-08,Data Science Handbook,Books,3,45.00,ES,returned
+1351,102,2025-05-08,Dumbbells,Sports,5,39.90,US,completed
+1352,151,2025-05-08,Mug,Home,4,8.90,HR,returned
+1353,234,2025-05-08,Chocolate,Grocery,1,3.90,FR,completed
+1354,179,2025-05-09,Monitor,Electronics,1,189.00,US,completed
+1355,136,2025-05-09,Yoga Mat,Sports,2,25.00,HR,completed
+1356,112,2025-05-10,Puzzle,Toys,2,17.50,US,completed
+1357,133,2025-05-11,Cookbook,Books,4,24.50,US,completed
+1358,27,2025-05-12,Mug,Home,1,8.90,ES,completed
+1359,271,2025-05-12,Yoga Mat,Sports,5,25.00,US,completed
+1360,273,2025-05-12,Headphones,Electronics,2,59.90,ES,completed
+1361,259,2025-05-12,Running Shoes,Sports,1,89.00,US,completed
+1362,294,2025-05-12,Running Shoes,Sports,3,89.00,FR,completed
+1363,53,2025-05-13,Python Crash Course,Books,2,32.00,DE,completed
+1364,45,2025-05-13,USB Cable,Electronics,1,9.50,ES,completed
+1365,138,2025-05-13,Pillow,Home,1,19.90,UK,completed
+1366,265,2025-05-14,USB Cable,Electronics,1,9.50,US,completed
+1367,127,2025-05-14,Novel,Books,1,14.90,UK,cancelled
+1368,195,2025-05-14,Python Crash Course,Books,1,32.00,IT,cancelled
+1369,66,2025-05-14,Python Crash Course,Books,3,32.00,US,completed
+1370,164,2025-05-14,Coffee Beans,Grocery,2,13.90,US,completed
+1371,248,2025-05-15,Tea,Grocery,1,6.50,US,completed
+1372,258,2025-05-15,Yoga Mat,Sports,1,25.00,US,completed
+1373,258,2025-05-16,Monitor,Electronics,1,189.00,US,returned
+1374,282,2025-05-17,Pillow,Home,1,19.90,UK,completed
+1375,191,2025-05-17,Mug,Home,2,8.90,DE,completed
+1376,54,2025-05-17,Plant Pot,Home,3,12.50,US,completed
+1377,184,2025-05-17,Plant Pot,Home,3,12.50,DE,completed
+1378,88,2025-05-17,Plant Pot,Home,1,12.50,FR,completed
+1379,7,2025-05-17,Headphones,Electronics,3,59.90,US,completed
+1380,239,2025-05-18,Board Game,Toys,1,34.00,DE,completed
+1381,197,2025-05-19,Tea,Grocery,1,6.50,US,completed
+1382,245,2025-05-19,Board Game,Toys,1,34.00,UK,completed
+1383,273,2025-05-19,Yoga Mat,Sports,1,25.00,ES,completed
+1384,299,2025-05-20,Lamp,Home,1,35.00,DE,completed
+1385,42,2025-05-20,Webcam,Electronics,1,49.00,NL,completed
+1386,146,2025-05-21,Olive Oil,Grocery,2,11.50,HR,completed
+1387,84,2025-05-21,Dumbbells,Sports,1,39.90,US,completed
+1388,157,2025-05-21,Tea,Grocery,3,6.50,UK,completed
+1389,289,2025-05-21,Yoga Mat,Sports,1,25.00,DE,completed
+1390,103,2025-05-21,Water Bottle,Sports,2,11.00,FR,completed
+1391,179,2025-05-22,Coffee Beans,Grocery,1,13.90,US,completed
+1392,149,2025-05-22,Chocolate,Grocery,2,3.90,DE,completed
+1393,252,2025-05-23,Pillow,Home,1,19.90,US,completed
+1394,211,2025-05-23,Puzzle,Toys,1,17.50,DE,completed
+1395,142,2025-05-23,Mug,Home,1,8.90,FR,completed
+1396,211,2025-05-24,Novel,Books,2,14.90,DE,completed
+1397,44,2025-05-24,Headphones,Electronics,4,59.90,US,returned
+1398,248,2025-05-24,Pillow,Home,1,19.90,US,completed
+1399,300,2025-05-24,Tea,Grocery,4,6.50,UK,completed
+1400,193,2025-05-25,Water Bottle,Sports,1,11.00,UK,completed
+1401,19,2025-05-25,Webcam,Electronics,2,49.00,US,completed
+1402,203,2025-05-26,Monitor,Electronics,1,189.00,ES,completed
+1403,226,2025-05-27,Novel,Books,1,14.90,US,cancelled
+1404,96,2025-05-28,Board Game,Toys,1,34.00,DE,completed
+1405,109,2025-05-28,Headphones,Electronics,4,59.90,HR,completed
+1406,287,2025-05-28,Webcam,Electronics,2,49.00,DE,completed
+1407,142,2025-05-28,Webcam,Electronics,2,49.00,FR,completed
+1408,105,2025-05-30,Lamp,Home,1,35.00,UK,returned
+1409,279,2025-05-30,Yoga Mat,Sports,1,25.00,NL,completed
+1410,79,2025-05-30,Olive Oil,Grocery,2,11.50,DE,completed
+1411,229,2025-05-30,Chocolate,Grocery,1,3.90,UK,completed
+1412,206,2025-05-30,Tea,Grocery,4,6.50,DE,completed
+1413,91,2025-05-30,Lamp,Home,2,35.00,DE,completed
+1414,125,2025-05-30,Olive Oil,Grocery,1,11.50,UK,completed
+1415,199,2025-05-30,Webcam,Electronics,2,49.00,US,completed
+1416,157,2025-05-30,Yoga Mat,Sports,3,25.00,UK,completed
+1417,76,2025-05-31,Python Crash Course,Books,3,32.00,ES,completed
+1418,155,2025-05-31,Yoga Mat,Sports,3,25.00,FR,completed
+1419,3,2025-05-31,USB Cable,Electronics,3,9.50,HR,cancelled
+1420,86,2025-06-01,Tea,Grocery,4,6.50,UK,completed
+1421,74,2025-06-01,Monitor,Electronics,1,189.00,HR,returned
+1422,169,2025-06-02,Novel,Books,1,14.90,US,completed
+1423,195,2025-06-02,Running Shoes,Sports,2,89.00,IT,completed
+1424,294,2025-06-02,Keyboard,Electronics,1,79.00,FR,completed
+1425,267,2025-06-03,Olive Oil,Grocery,1,11.50,NL,completed
+1426,171,2025-06-03,Novel,Books,2,14.90,ES,completed
+1427,188,2025-06-04,Running Shoes,Sports,3,89.00,US,completed
+1428,189,2025-06-04,Data Science Handbook,Books,3,45.00,NL,completed
+1429,65,2025-06-04,Plant Pot,Home,2,12.50,FR,completed
+1430,223,2025-06-05,Water Bottle,Sports,1,11.00,HR,completed
+1431,164,2025-06-06,Chocolate,Grocery,1,3.90,US,completed
+1432,91,2025-06-07,Plant Pot,Home,1,12.50,DE,completed
+1433,104,2025-06-07,Keyboard,Electronics,2,79.00,HR,completed
+1434,28,2025-06-07,Board Game,Toys,1,34.00,DE,completed
+1435,7,2025-06-08,Novel,Books,1,14.90,US,completed
+1436,93,2025-06-08,Water Bottle,Sports,1,11.00,DE,completed
+1437,101,2025-06-08,Chocolate,Grocery,3,3.90,US,completed
+1438,155,2025-06-08,Water Bottle,Sports,5,11.00,FR,completed
+1439,261,2025-06-09,Keyboard,Electronics,1,79.00,ES,completed
+1440,32,2025-06-09,Dumbbells,Sports,1,39.90,HR,completed
+1441,122,2025-06-10,Chocolate,Grocery,5,3.90,NL,completed
+1442,43,2025-06-12,Yoga Mat,Sports,1,25.00,ES,completed
+1443,113,2025-06-12,Headphones,Electronics,1,59.90,US,completed
+1444,222,2025-06-12,Chocolate,Grocery,1,3.90,UK,completed
+1445,249,2025-06-13,Water Bottle,Sports,2,11.00,DE,completed
+1446,189,2025-06-13,Plant Pot,Home,1,12.50,NL,completed
+1447,133,2025-06-14,Python Crash Course,Books,2,32.00,US,completed
+1448,283,2025-06-14,Water Bottle,Sports,2,11.00,US,completed
+1449,66,2025-06-14,Headphones,Electronics,1,59.90,US,completed
+1450,78,2025-06-16,Yoga Mat,Sports,1,25.00,FR,completed
+1451,289,2025-06-18,Headphones,Electronics,1,59.90,DE,completed
+1452,88,2025-06-18,Plant Pot,Home,1,12.50,FR,completed
+1453,226,2025-06-19,Chocolate,Grocery,1,3.90,US,completed
+1454,213,2025-06-20,Lamp,Home,1,35.00,NL,completed
+1455,135,2025-06-20,USB Cable,Electronics,1,9.50,HR,completed
+1456,285,2025-06-21,Tea,Grocery,2,6.50,FR,completed
+1457,198,2025-06-21,Plant Pot,Home,2,12.50,DE,completed
+1458,295,2025-06-21,Monitor,Electronics,2,189.00,US,completed
+1459,155,2025-06-22,Novel,Books,1,14.90,FR,completed
+1460,39,2025-06-23,Novel,Books,1,14.90,FR,completed
+1461,99,2025-06-24,Chocolate,Grocery,3,3.90,UK,completed
+1462,198,2025-06-24,Olive Oil,Grocery,1,11.50,DE,completed
+1463,36,2025-06-25,Olive Oil,Grocery,1,11.50,IT,completed
+1464,38,2025-06-25,Coffee Beans,Grocery,1,13.90,UK,completed
+1465,128,2025-06-26,Coffee Beans,Grocery,1,13.90,HR,completed
+1466,251,2025-06-27,Dumbbells,Sports,2,39.90,NL,completed
+1467,62,2025-06-27,Tea,Grocery,1,6.50,UK,completed
+1468,130,2025-06-28,Pillow,Home,2,19.90,UK,completed
+1469,195,2025-06-29,Olive Oil,Grocery,3,11.50,IT,completed
+1470,213,2025-06-29,Plant Pot,Home,2,12.50,NL,completed
+1471,103,2025-06-29,Water Bottle,Sports,1,11.00,FR,completed
+1472,187,2025-06-29,Coffee Beans,Grocery,2,13.90,FR,completed
+1473,296,2025-06-29,Plant Pot,Home,1,12.50,DE,completed
+1474,171,2025-06-30,Mug,Home,3,8.90,ES,completed
+1475,98,2025-06-30,Dumbbells,Sports,1,39.90,IT,returned
+1476,91,2025-07-01,Data Science Handbook,Books,2,45.00,DE,completed
+1477,291,2025-07-01,Lego Set,Toys,1,59.00,NL,completed
+1478,40,2025-07-01,Headphones,Electronics,1,59.90,DE,returned
+1479,291,2025-07-01,USB Cable,Electronics,1,9.50,NL,completed
+1480,247,2025-07-01,Coffee Beans,Grocery,2,13.90,IT,completed
+1481,138,2025-07-02,Plant Pot,Home,3,12.50,UK,completed
+1482,234,2025-07-02,Cookbook,Books,2,24.50,FR,completed
+1483,263,2025-07-03,Tea,Grocery,3,6.50,ES,cancelled
+1484,224,2025-07-03,Running Shoes,Sports,1,89.00,HR,completed
+1485,36,2025-07-04,Board Game,Toys,1,34.00,IT,completed
+1486,83,2025-07-04,USB Cable,Electronics,1,9.50,UK,completed
+1487,94,2025-07-04,Water Bottle,Sports,1,11.00,UK,completed
+1488,169,2025-07-04,Keyboard,Electronics,2,79.00,US,completed
+1489,184,2025-07-04,Cookbook,Books,4,24.50,DE,completed
+1490,129,2025-07-05,Pillow,Home,4,19.90,FR,completed
+1491,116,2025-07-05,Dumbbells,Sports,2,39.90,FR,completed
+1492,273,2025-07-06,Chocolate,Grocery,2,3.90,ES,completed
+1493,278,2025-07-06,Chocolate,Grocery,1,3.90,HR,completed
+1494,109,2025-07-07,Cookbook,Books,3,24.50,HR,completed
+1495,34,2025-07-07,Data Science Handbook,Books,1,45.00,DE,completed
+1496,252,2025-07-07,Board Game,Toys,2,34.00,US,completed
+1497,32,2025-07-07,Plant Pot,Home,2,12.50,HR,completed
+1498,250,2025-07-09,USB Cable,Electronics,1,9.50,UK,completed
+1499,42,2025-07-09,Mug,Home,1,8.90,NL,completed
+1500,142,2025-07-09,Keyboard,Electronics,2,79.00,FR,completed
+1501,134,2025-07-09,Puzzle,Toys,1,17.50,FR,completed
+1502,168,2025-07-09,Plant Pot,Home,3,12.50,US,completed
+1503,265,2025-07-10,Coffee Beans,Grocery,2,13.90,US,completed
+1504,294,2025-07-11,Olive Oil,Grocery,3,11.50,FR,completed
+1505,63,2025-07-11,Water Bottle,Sports,3,11.00,FR,completed
+1506,17,2025-07-11,Keyboard,Electronics,1,79.00,DE,completed
+1507,176,2025-07-11,USB Cable,Electronics,1,9.50,UK,completed
+1508,174,2025-07-12,Cookbook,Books,2,24.50,US,returned
+1509,218,2025-07-12,Headphones,Electronics,1,59.90,IT,completed
+1510,70,2025-07-12,Webcam,Electronics,2,49.00,DE,completed
+1511,195,2025-07-12,Running Shoes,Sports,1,89.00,IT,completed
+1512,247,2025-07-13,Tea,Grocery,2,6.50,IT,completed
+1513,192,2025-07-13,Keyboard,Electronics,1,79.00,UK,completed
+1514,93,2025-07-13,Plant Pot,Home,1,12.50,DE,completed
+1515,147,2025-07-14,USB Cable,Electronics,1,9.50,UK,completed
+1516,210,2025-07-15,Monitor,Electronics,1,189.00,DE,completed
+1517,87,2025-07-15,Olive Oil,Grocery,2,11.50,ES,completed
+1518,65,2025-07-15,Plant Pot,Home,2,12.50,FR,completed
+1519,208,2025-07-15,Water Bottle,Sports,4,11.00,US,completed
+1520,192,2025-07-15,Cookbook,Books,3,24.50,UK,completed
+1521,221,2025-07-15,Data Science Handbook,Books,5,45.00,US,completed
+1522,217,2025-07-16,Cookbook,Books,1,24.50,UK,completed
+1523,111,2025-07-16,Plant Pot,Home,1,12.50,DE,completed
+1524,3,2025-07-17,Board Game,Toys,2,34.00,HR,completed
+1525,183,2025-07-17,Python Crash Course,Books,3,32.00,HR,completed
+1526,285,2025-07-17,Monitor,Electronics,1,189.00,FR,completed
+1527,84,2025-07-17,Lamp,Home,1,35.00,US,completed
+1528,152,2025-07-18,Pillow,Home,1,19.90,DE,completed
+1529,172,2025-07-19,Running Shoes,Sports,1,89.00,US,completed
+1530,275,2025-07-19,Headphones,Electronics,1,59.90,US,completed
+1531,85,2025-07-19,Plant Pot,Home,1,12.50,DE,completed
+1532,221,2025-07-19,Cookbook,Books,1,24.50,US,completed
+1533,9,2025-07-19,Headphones,Electronics,3,59.90,NL,cancelled
+1534,92,2025-07-19,Chocolate,Grocery,1,3.90,NL,completed
+1535,282,2025-07-20,Dumbbells,Sports,5,39.90,UK,cancelled
+1536,167,2025-07-20,Data Science Handbook,Books,1,45.00,FR,completed
+1537,140,2025-07-20,Chocolate,Grocery,1,3.90,US,completed
+1538,61,2025-07-22,Headphones,Electronics,2,59.90,ES,completed
+1539,254,2025-07-23,Pillow,Home,1,19.90,NL,completed
+1540,134,2025-07-24,Puzzle,Toys,1,17.50,FR,completed
+1541,49,2025-07-27,Puzzle,Toys,1,17.50,US,completed
+1542,227,2025-07-27,Tea,Grocery,3,6.50,UK,completed
+1543,41,2025-07-27,Tea,Grocery,2,6.50,IT,completed
+1544,60,2025-07-28,Lamp,Home,1,35.00,UK,returned
+1545,27,2025-07-28,Webcam,Electronics,5,49.00,ES,completed
+1546,237,2025-07-29,Mug,Home,1,8.90,DE,completed
+1547,261,2025-07-30,Plant Pot,Home,4,12.50,ES,completed
+1548,79,2025-07-30,Tea,Grocery,1,6.50,DE,completed
+1549,35,2025-07-31,Running Shoes,Sports,2,89.00,US,completed
+1550,20,2025-07-31,Monitor,Electronics,4,189.00,ES,completed
+1551,50,2025-07-31,Data Science Handbook,Books,1,45.00,US,completed
+1552,249,2025-07-31,Webcam,Electronics,3,49.00,DE,completed
+1553,21,2025-08-01,Novel,Books,1,14.90,DE,returned
+1554,183,2025-08-01,Plant Pot,Home,1,12.50,HR,completed
+1555,214,2025-08-01,Olive Oil,Grocery,3,11.50,DE,completed
+1556,2,2025-08-01,Novel,Books,1,14.90,US,completed
+1557,79,2025-08-01,USB Cable,Electronics,2,9.50,DE,returned
+1558,271,2025-08-01,Lamp,Home,2,35.00,US,completed
+1559,70,2025-08-01,Headphones,Electronics,1,59.90,DE,completed
+1560,63,2025-08-02,Board Game,Toys,1,34.00,FR,completed
+1561,221,2025-08-02,Python Crash Course,Books,1,32.00,US,completed
+1562,261,2025-08-02,Keyboard,Electronics,2,79.00,ES,completed
+1563,202,2025-08-02,Olive Oil,Grocery,2,11.50,US,completed
+1564,63,2025-08-02,Cookbook,Books,1,24.50,FR,completed
+1565,270,2025-08-02,Chocolate,Grocery,2,3.90,DE,completed
+1566,297,2025-08-03,Olive Oil,Grocery,1,11.50,US,completed
+1567,50,2025-08-03,Cookbook,Books,2,24.50,US,completed
+1568,279,2025-08-04,Novel,Books,1,14.90,NL,cancelled
+1569,50,2025-08-04,Dumbbells,Sports,1,39.90,US,completed
+1570,291,2025-08-04,Tea,Grocery,5,6.50,NL,completed
+1571,242,2025-08-04,Data Science Handbook,Books,1,45.00,ES,completed
+1572,67,2025-08-05,Plant Pot,Home,1,12.50,US,completed
+1573,283,2025-08-05,Lamp,Home,4,35.00,US,completed
+1574,283,2025-08-05,Webcam,Electronics,2,49.00,US,completed
+1575,149,2025-08-05,Data Science Handbook,Books,1,45.00,DE,completed
+1576,243,2025-08-05,Puzzle,Toys,1,17.50,DE,completed
+1577,114,2025-08-06,Coffee Beans,Grocery,1,13.90,HR,completed
+1578,287,2025-08-06,Coffee Beans,Grocery,5,13.90,DE,completed
+1579,275,2025-08-07,Headphones,Electronics,3,59.90,US,completed
+1580,122,2025-08-07,Puzzle,Toys,1,17.50,NL,completed
+1581,18,2025-08-08,Tea,Grocery,2,6.50,US,completed
+1582,2,2025-08-08,Puzzle,Toys,2,17.50,US,completed
+1583,62,2025-08-08,Running Shoes,Sports,5,89.00,UK,completed
+1584,115,2025-08-09,Monitor,Electronics,2,189.00,FR,completed
+1585,145,2025-08-09,Dumbbells,Sports,1,39.90,HR,completed
+1586,205,2025-08-09,Yoga Mat,Sports,1,25.00,US,completed
+1587,194,2025-08-10,Python Crash Course,Books,1,32.00,HR,returned
+1588,88,2025-08-10,Data Science Handbook,Books,1,45.00,FR,completed
+1589,286,2025-08-10,Data Science Handbook,Books,1,45.00,ES,completed
+1590,289,2025-08-10,Webcam,Electronics,1,49.00,DE,completed
+1591,200,2025-08-10,Dumbbells,Sports,2,39.90,DE,completed
+1592,68,2025-08-10,Yoga Mat,Sports,3,25.00,UK,returned
+1593,27,2025-08-11,Webcam,Electronics,1,49.00,ES,completed
+1594,120,2025-08-11,Lego Set,Toys,2,59.00,UK,returned
+1595,46,2025-08-11,Novel,Books,1,14.90,HR,completed
+1596,22,2025-08-11,Headphones,Electronics,1,59.90,ES,completed
+1597,202,2025-08-12,Water Bottle,Sports,2,11.00,US,completed
+1598,182,2025-08-12,Headphones,Electronics,3,59.90,FR,cancelled
+1599,138,2025-08-12,Lamp,Home,2,35.00,UK,completed
+1600,229,2025-08-13,Mug,Home,1,8.90,UK,completed
+1601,21,2025-08-13,Headphones,Electronics,1,59.90,DE,completed
+1602,190,2025-08-13,Novel,Books,1,14.90,US,completed
+1603,192,2025-08-14,Chocolate,Grocery,2,3.90,UK,completed
+1604,100,2025-08-15,Python Crash Course,Books,1,32.00,US,completed
+1605,268,2025-08-16,Keyboard,Electronics,1,79.00,ES,completed
+1606,240,2025-08-17,Olive Oil,Grocery,1,11.50,FR,completed
+1607,91,2025-08-18,Tea,Grocery,2,6.50,DE,completed
+1608,226,2025-08-18,Chocolate,Grocery,2,3.90,US,completed
+1609,143,2025-08-18,Cookbook,Books,1,24.50,ES,completed
+1610,47,2025-08-19,Cookbook,Books,2,24.50,DE,completed
+1611,225,2025-08-19,Data Science Handbook,Books,5,45.00,ES,completed
+1612,106,2025-08-19,Puzzle,Toys,3,17.50,FR,completed
+1613,76,2025-08-19,Monitor,Electronics,1,189.00,ES,completed
+1614,99,2025-08-20,Webcam,Electronics,1,49.00,UK,completed
+1615,2,2025-08-21,Board Game,Toys,4,34.00,US,completed
+1616,69,2025-08-21,Python Crash Course,Books,1,32.00,US,completed
+1617,167,2025-08-22,Running Shoes,Sports,2,89.00,FR,completed
+1618,105,2025-08-23,Mug,Home,1,8.90,UK,completed
+1619,54,2025-08-23,Cookbook,Books,2,24.50,US,completed
+1620,238,2025-08-23,Puzzle,Toys,1,17.50,DE,completed
+1621,297,2025-08-23,Data Science Handbook,Books,1,45.00,US,completed
+1622,73,2025-08-23,Yoga Mat,Sports,1,25.00,DE,completed
+1623,247,2025-08-24,Keyboard,Electronics,1,79.00,IT,completed
+1624,116,2025-08-24,Dumbbells,Sports,1,39.90,FR,completed
+1625,102,2025-08-24,Data Science Handbook,Books,4,45.00,US,completed
+1626,108,2025-08-24,Keyboard,Electronics,1,79.00,DE,completed
+1627,94,2025-08-24,Lego Set,Toys,2,59.00,UK,completed
+1628,63,2025-08-25,Olive Oil,Grocery,1,11.50,FR,completed
+1629,269,2025-08-25,Webcam,Electronics,1,49.00,UK,completed
+1630,118,2025-08-26,Webcam,Electronics,1,49.00,US,cancelled
+1631,19,2025-08-27,USB Cable,Electronics,2,9.50,US,completed
+1632,148,2025-08-27,Board Game,Toys,2,34.00,FR,completed
+1633,42,2025-08-27,Puzzle,Toys,1,17.50,NL,completed
+1634,139,2025-08-27,Chocolate,Grocery,1,3.90,US,completed
+1635,19,2025-08-28,Puzzle,Toys,1,17.50,US,completed
+1636,255,2025-08-30,Novel,Books,5,14.90,DE,completed
+1637,216,2025-08-30,Novel,Books,1,14.90,DE,completed
+1638,24,2025-08-31,Water Bottle,Sports,5,11.00,US,completed
+1639,66,2025-08-31,Running Shoes,Sports,1,89.00,US,completed
+1640,55,2025-08-31,Pillow,Home,1,19.90,ES,completed
+1641,12,2025-09-01,Yoga Mat,Sports,1,25.00,FR,completed
+1642,229,2025-09-01,Headphones,Electronics,1,59.90,UK,completed
+1643,206,2025-09-01,Coffee Beans,Grocery,2,13.90,DE,completed
+1644,277,2025-09-01,Water Bottle,Sports,1,11.00,US,cancelled
+1645,108,2025-09-02,Data Science Handbook,Books,3,45.00,DE,returned
+1646,265,2025-09-02,Yoga Mat,Sports,1,25.00,US,completed
+1647,204,2025-09-02,Monitor,Electronics,3,189.00,DE,cancelled
+1648,50,2025-09-02,Yoga Mat,Sports,1,25.00,US,completed
+1649,73,2025-09-03,Lego Set,Toys,2,59.00,DE,completed
+1650,293,2025-09-04,Olive Oil,Grocery,1,11.50,DE,completed
+1651,280,2025-09-04,Headphones,Electronics,2,59.90,FR,completed
+1652,233,2025-09-04,Mug,Home,1,8.90,FR,completed
+1653,38,2025-09-04,Pillow,Home,1,19.90,UK,completed
+1654,77,2025-09-04,Monitor,Electronics,1,189.00,FR,completed
+1655,127,2025-09-04,Olive Oil,Grocery,2,11.50,UK,completed
+1656,265,2025-09-04,Keyboard,Electronics,2,79.00,US,completed
+1657,232,2025-09-05,USB Cable,Electronics,1,9.50,IT,completed
+1658,269,2025-09-06,Coffee Beans,Grocery,2,13.90,UK,cancelled
+1659,247,2025-09-06,Water Bottle,Sports,1,11.00,IT,completed
+1660,63,2025-09-06,Running Shoes,Sports,1,89.00,FR,completed
+1661,44,2025-09-07,Mug,Home,4,8.90,US,cancelled
+1662,153,2025-09-07,Monitor,Electronics,1,189.00,US,completed
+1663,79,2025-09-07,Tea,Grocery,1,6.50,DE,completed
+1664,81,2025-09-08,Novel,Books,2,14.90,IT,completed
+1665,285,2025-09-08,Dumbbells,Sports,2,39.90,FR,cancelled
+1666,204,2025-09-09,Lamp,Home,1,35.00,DE,completed
+1667,4,2025-09-09,Tea,Grocery,2,6.50,IT,completed
+1668,220,2025-09-10,Monitor,Electronics,5,189.00,DE,completed
+1669,39,2025-09-10,Lamp,Home,1,35.00,FR,completed
+1670,285,2025-09-10,Chocolate,Grocery,5,3.90,FR,completed
+1671,262,2025-09-10,Mug,Home,1,8.90,DE,completed
+1672,122,2025-09-11,Python Crash Course,Books,4,32.00,NL,completed
+1673,188,2025-09-11,Dumbbells,Sports,1,39.90,US,returned
+1674,69,2025-09-11,Yoga Mat,Sports,1,25.00,US,completed
+1675,71,2025-09-11,Lego Set,Toys,1,59.00,UK,completed
+1676,65,2025-09-12,Chocolate,Grocery,5,3.90,FR,completed
+1677,142,2025-09-13,Running Shoes,Sports,3,89.00,FR,completed
+1678,191,2025-09-13,Pillow,Home,1,19.90,DE,completed
+1679,191,2025-09-14,Chocolate,Grocery,2,3.90,DE,completed
+1680,253,2025-09-14,Running Shoes,Sports,1,89.00,UK,completed
+1681,196,2025-09-14,Puzzle,Toys,1,17.50,HR,completed
+1682,219,2025-09-15,Dumbbells,Sports,1,39.90,DE,completed
+1683,36,2025-09-15,Lego Set,Toys,1,59.00,IT,completed
+1684,213,2025-09-15,Tea,Grocery,1,6.50,NL,completed
+1685,102,2025-09-16,Olive Oil,Grocery,1,11.50,US,completed
+1686,144,2025-09-16,Novel,Books,2,14.90,FR,completed
+1687,187,2025-09-16,Keyboard,Electronics,1,79.00,FR,completed
+1688,40,2025-09-16,Novel,Books,3,14.90,DE,cancelled
+1689,167,2025-09-16,Board Game,Toys,5,34.00,FR,completed
+1690,195,2025-09-17,Novel,Books,4,14.90,IT,completed
+1691,139,2025-09-17,Puzzle,Toys,2,17.50,US,completed
+1692,282,2025-09-17,Coffee Beans,Grocery,1,13.90,UK,completed
+1693,31,2025-09-18,Coffee Beans,Grocery,1,13.90,US,completed
+1694,71,2025-09-18,Cookbook,Books,2,24.50,UK,completed
+1695,244,2025-09-18,Mug,Home,1,8.90,DE,completed
+1696,125,2025-09-18,USB Cable,Electronics,1,9.50,UK,completed
+1697,91,2025-09-20,Puzzle,Toys,3,17.50,DE,completed
+1698,107,2025-09-20,Keyboard,Electronics,5,79.00,US,completed
+1699,247,2025-09-21,Olive Oil,Grocery,1,11.50,IT,completed
+1700,299,2025-09-21,Python Crash Course,Books,1,32.00,DE,cancelled
+1701,243,2025-09-22,Plant Pot,Home,2,12.50,DE,completed
+1702,67,2025-09-22,Lamp,Home,1,35.00,US,completed
+1703,196,2025-09-22,Tea,Grocery,1,6.50,HR,completed
+1704,131,2025-09-22,Coffee Beans,Grocery,2,13.90,US,completed
+1705,87,2025-09-22,Dumbbells,Sports,1,39.90,ES,completed
+1706,217,2025-09-24,Data Science Handbook,Books,2,45.00,UK,cancelled
+1707,217,2025-09-24,Olive Oil,Grocery,2,11.50,UK,cancelled
+1708,65,2025-09-25,Puzzle,Toys,1,17.50,FR,completed
+1709,218,2025-09-26,Dumbbells,Sports,1,39.90,IT,completed
+1710,110,2025-09-26,Novel,Books,1,14.90,DE,completed
+1711,38,2025-09-27,Coffee Beans,Grocery,1,13.90,UK,returned
+1712,56,2025-09-27,Lamp,Home,2,35.00,ES,completed
+1713,89,2025-09-27,Headphones,Electronics,1,59.90,DE,completed
+1714,114,2025-09-28,Novel,Books,1,14.90,HR,completed
+1715,289,2025-09-28,Monitor,Electronics,5,189.00,DE,completed
+1716,27,2025-09-30,USB Cable,Electronics,5,9.50,ES,completed
+1717,227,2025-09-30,Pillow,Home,2,19.90,UK,completed
+1718,28,2025-10-01,Water Bottle,Sports,1,11.00,DE,completed
+1719,283,2025-10-01,Novel,Books,3,14.90,US,completed
+1720,291,2025-10-02,Plant Pot,Home,1,12.50,NL,completed
+1721,225,2025-10-02,Chocolate,Grocery,2,3.90,ES,completed
+1722,86,2025-10-02,Water Bottle,Sports,2,11.00,UK,completed
+1723,65,2025-10-03,Lamp,Home,2,35.00,FR,completed
+1724,284,2025-10-03,Olive Oil,Grocery,1,11.50,HR,completed
+1725,24,2025-10-03,Tea,Grocery,1,6.50,US,completed
+1726,237,2025-10-03,Coffee Beans,Grocery,1,13.90,DE,completed
+1727,164,2025-10-03,Headphones,Electronics,1,59.90,US,completed
+1728,136,2025-10-03,Lamp,Home,1,35.00,HR,completed
+1729,125,2025-10-04,Tea,Grocery,2,6.50,UK,completed
+1730,129,2025-10-04,Data Science Handbook,Books,3,45.00,FR,completed
+1731,18,2025-10-04,Puzzle,Toys,1,17.50,US,completed
+1732,53,2025-10-05,Yoga Mat,Sports,1,25.00,DE,completed
+1733,289,2025-10-05,Yoga Mat,Sports,1,25.00,DE,completed
+1734,182,2025-10-05,Headphones,Electronics,3,59.90,FR,completed
+1735,129,2025-10-05,Mug,Home,3,8.90,FR,completed
+1736,45,2025-10-06,Dumbbells,Sports,1,39.90,ES,completed
+1737,95,2025-10-06,Olive Oil,Grocery,1,11.50,US,completed
+1738,20,2025-10-06,Keyboard,Electronics,1,79.00,ES,completed
+1739,95,2025-10-06,Data Science Handbook,Books,1,45.00,US,completed
+1740,98,2025-10-07,Tea,Grocery,1,6.50,IT,completed
+1741,264,2025-10-07,Yoga Mat,Sports,1,25.00,DE,completed
+1742,140,2025-10-08,USB Cable,Electronics,3,9.50,US,completed
+1743,233,2025-10-09,Tea,Grocery,4,6.50,FR,completed
+1744,258,2025-10-09,Chocolate,Grocery,2,3.90,US,completed
+1745,182,2025-10-09,Chocolate,Grocery,1,3.90,FR,completed
+1746,149,2025-10-10,Yoga Mat,Sports,1,25.00,DE,returned
+1747,183,2025-10-10,USB Cable,Electronics,1,9.50,HR,completed
+1748,42,2025-10-13,Mug,Home,2,8.90,NL,completed
+1749,31,2025-10-13,Olive Oil,Grocery,3,11.50,US,completed
+1750,54,2025-10-14,Tea,Grocery,2,6.50,US,completed
+1751,112,2025-10-14,Lamp,Home,2,35.00,US,completed
+1752,226,2025-10-15,Chocolate,Grocery,1,3.90,US,completed
+1753,15,2025-10-15,Lego Set,Toys,3,59.00,UK,completed
+1754,213,2025-10-15,Novel,Books,3,14.90,NL,returned
+1755,101,2025-10-17,Puzzle,Toys,1,17.50,US,completed
+1756,108,2025-10-18,Coffee Beans,Grocery,4,13.90,DE,completed
+1757,182,2025-10-18,Keyboard,Electronics,1,79.00,FR,completed
+1758,249,2025-10-18,Novel,Books,1,14.90,DE,completed
+1759,109,2025-10-18,Coffee Beans,Grocery,2,13.90,HR,completed
+1760,56,2025-10-20,Data Science Handbook,Books,3,45.00,ES,completed
+1761,56,2025-10-20,Chocolate,Grocery,3,3.90,ES,completed
+1762,137,2025-10-20,Olive Oil,Grocery,1,11.50,DE,completed
+1763,184,2025-10-21,Mug,Home,5,8.90,DE,cancelled
+1764,87,2025-10-21,Keyboard,Electronics,2,79.00,ES,completed
+1765,44,2025-10-21,Novel,Books,1,14.90,US,completed
+1766,223,2025-10-22,Plant Pot,Home,3,12.50,HR,completed
+1767,117,2025-10-22,USB Cable,Electronics,2,9.50,FR,completed
+1768,127,2025-10-22,Yoga Mat,Sports,1,25.00,UK,cancelled
+1769,63,2025-10-22,Water Bottle,Sports,1,11.00,FR,completed
+1770,225,2025-10-22,Lamp,Home,2,35.00,ES,completed
+1771,196,2025-10-22,Yoga Mat,Sports,3,25.00,HR,completed
+1772,293,2025-10-23,Chocolate,Grocery,2,3.90,DE,completed
+1773,256,2025-10-23,Novel,Books,1,14.90,NL,completed
+1774,227,2025-10-23,Cookbook,Books,3,24.50,UK,completed
+1775,189,2025-10-23,Water Bottle,Sports,1,11.00,NL,completed
+1776,227,2025-10-23,Lamp,Home,1,35.00,UK,completed
+1777,168,2025-10-24,Monitor,Electronics,2,189.00,US,completed
+1778,267,2025-10-24,Monitor,Electronics,1,189.00,NL,completed
+1779,70,2025-10-24,Lamp,Home,1,35.00,DE,completed
+1780,259,2025-10-24,Water Bottle,Sports,1,11.00,US,cancelled
+1781,171,2025-10-25,Monitor,Electronics,1,189.00,ES,completed
+1782,146,2025-10-25,Novel,Books,1,14.90,HR,completed
+1783,154,2025-10-26,Headphones,Electronics,3,59.90,US,cancelled
+1784,22,2025-10-26,Lamp,Home,1,35.00,ES,completed
+1785,136,2025-10-27,Tea,Grocery,3,6.50,HR,completed
+1786,65,2025-10-27,Lego Set,Toys,2,59.00,FR,completed
+1787,224,2025-10-28,Chocolate,Grocery,1,3.90,HR,completed
+1788,270,2025-10-28,Tea,Grocery,1,6.50,DE,cancelled
+1789,220,2025-10-28,Pillow,Home,2,19.90,DE,completed
+1790,117,2025-10-29,Lamp,Home,4,35.00,FR,completed
+1791,25,2025-10-29,Novel,Books,1,14.90,DE,cancelled
+1792,250,2025-10-29,Water Bottle,Sports,2,11.00,UK,cancelled
+1793,98,2025-10-29,Monitor,Electronics,2,189.00,IT,completed
+1794,300,2025-10-30,USB Cable,Electronics,1,9.50,UK,completed
+1795,50,2025-10-30,Pillow,Home,3,19.90,US,completed
+1796,288,2025-10-30,Tea,Grocery,1,6.50,NL,completed
+1797,196,2025-10-31,Pillow,Home,1,19.90,HR,completed
+1798,262,2025-11-01,Data Science Handbook,Books,2,45.00,DE,completed
+1799,179,2025-11-01,Mug,Home,2,8.90,US,completed
+1800,187,2025-11-01,Python Crash Course,Books,1,32.00,FR,completed
+1801,198,2025-11-01,Dumbbells,Sports,5,39.90,DE,completed
+1802,179,2025-11-01,Tea,Grocery,2,6.50,US,cancelled
+1803,164,2025-11-01,Data Science Handbook,Books,1,45.00,US,completed
+1804,97,2025-11-02,Olive Oil,Grocery,2,11.50,NL,completed
+1805,95,2025-11-02,Chocolate,Grocery,1,3.90,US,completed
+1806,240,2025-11-02,Mug,Home,1,8.90,FR,completed
+1807,238,2025-11-02,Data Science Handbook,Books,1,45.00,DE,completed
+1808,216,2025-11-02,Lamp,Home,5,35.00,DE,completed
+1809,253,2025-11-02,Lamp,Home,3,35.00,UK,completed
+1810,9,2025-11-02,Dumbbells,Sports,2,39.90,NL,cancelled
+1811,195,2025-11-02,Pillow,Home,3,19.90,IT,cancelled
+1812,134,2025-11-02,Tea,Grocery,1,6.50,FR,completed
+1813,147,2025-11-03,Mug,Home,2,8.90,UK,completed
+1814,102,2025-11-03,Puzzle,Toys,1,17.50,US,completed
+1815,24,2025-11-03,Novel,Books,1,14.90,US,completed
+1816,110,2025-11-03,Cookbook,Books,2,24.50,DE,completed
+1817,131,2025-11-03,Mug,Home,2,8.90,US,completed
+1818,269,2025-11-03,Cookbook,Books,1,24.50,UK,completed
+1819,112,2025-11-03,Running Shoes,Sports,3,89.00,US,completed
+1820,122,2025-11-04,Tea,Grocery,1,6.50,NL,completed
+1821,59,2025-11-04,Webcam,Electronics,2,49.00,FR,completed
+1822,262,2025-11-05,Lego Set,Toys,1,59.00,DE,completed
+1823,52,2025-11-05,Olive Oil,Grocery,1,11.50,DE,completed
+1824,18,2025-11-05,Plant Pot,Home,1,12.50,US,cancelled
+1825,184,2025-11-05,Coffee Beans,Grocery,3,13.90,DE,completed
+1826,39,2025-11-05,Mug,Home,2,8.90,FR,completed
+1827,197,2025-11-05,Lamp,Home,4,35.00,US,completed
+1828,258,2025-11-05,USB Cable,Electronics,3,9.50,US,completed
+1829,160,2025-11-05,Monitor,Electronics,2,189.00,FR,completed
+1830,91,2025-11-05,Lego Set,Toys,1,59.00,DE,completed
+1831,234,2025-11-06,Keyboard,Electronics,3,79.00,FR,completed
+1832,250,2025-11-06,Tea,Grocery,1,6.50,UK,completed
+1833,101,2025-11-06,Monitor,Electronics,2,189.00,US,cancelled
+1834,150,2025-11-06,Monitor,Electronics,1,189.00,IT,completed
+1835,62,2025-11-06,Monitor,Electronics,1,189.00,UK,cancelled
+1836,78,2025-11-06,Coffee Beans,Grocery,1,13.90,FR,completed
+1837,48,2025-11-06,Cookbook,Books,2,24.50,HR,completed
+1838,236,2025-11-06,Python Crash Course,Books,1,32.00,IT,completed
+1839,134,2025-11-06,Board Game,Toys,4,34.00,FR,completed
+1840,212,2025-11-06,Plant Pot,Home,1,12.50,US,completed
+1841,177,2025-11-07,USB Cable,Electronics,4,9.50,US,completed
+1842,43,2025-11-07,Yoga Mat,Sports,2,25.00,ES,completed
+1843,108,2025-11-07,Water Bottle,Sports,1,11.00,DE,completed
+1844,272,2025-11-07,Running Shoes,Sports,3,89.00,DE,cancelled
+1845,176,2025-11-07,Pillow,Home,2,19.90,UK,completed
+1846,1,2025-11-08,Monitor,Electronics,2,189.00,DE,completed
+1847,22,2025-11-08,Plant Pot,Home,1,12.50,ES,completed
+1848,97,2025-11-08,Water Bottle,Sports,1,11.00,NL,completed
+1849,235,2025-11-08,Plant Pot,Home,1,12.50,IT,completed
+1850,240,2025-11-08,Mug,Home,2,8.90,FR,completed
+1851,143,2025-11-08,USB Cable,Electronics,1,9.50,ES,cancelled
+1852,71,2025-11-08,Water Bottle,Sports,2,11.00,UK,completed
+1853,49,2025-11-08,Pillow,Home,1,19.90,US,completed
+1854,47,2025-11-08,Headphones,Electronics,1,59.90,DE,completed
+1855,89,2025-11-08,Coffee Beans,Grocery,4,13.90,DE,completed
+1856,21,2025-11-09,Chocolate,Grocery,4,3.90,DE,completed
+1857,243,2025-11-09,Mug,Home,1,8.90,DE,completed
+1858,84,2025-11-09,Novel,Books,1,14.90,US,completed
+1859,15,2025-11-09,Running Shoes,Sports,2,89.00,UK,completed
+1860,154,2025-11-09,Data Science Handbook,Books,1,45.00,US,cancelled
+1861,120,2025-11-09,Water Bottle,Sports,2,11.00,UK,returned
+1862,120,2025-11-09,USB Cable,Electronics,1,9.50,UK,completed
+1863,1,2025-11-09,Board Game,Toys,1,34.00,DE,completed
+1864,74,2025-11-10,Headphones,Electronics,1,59.90,HR,completed
+1865,295,2025-11-10,Water Bottle,Sports,1,11.00,US,completed
+1866,59,2025-11-10,Lego Set,Toys,1,59.00,FR,cancelled
+1867,288,2025-11-10,Running Shoes,Sports,1,89.00,NL,completed
+1868,19,2025-11-10,Cookbook,Books,1,24.50,US,completed
+1869,153,2025-11-11,Chocolate,Grocery,2,3.90,US,completed
+1870,231,2025-11-11,Tea,Grocery,1,6.50,UK,completed
+1871,172,2025-11-11,Olive Oil,Grocery,3,11.50,US,completed
+1872,214,2025-11-11,Python Crash Course,Books,1,32.00,DE,completed
+1873,95,2025-11-12,Lamp,Home,1,35.00,US,cancelled
+1874,73,2025-11-12,Mug,Home,1,8.90,DE,completed
+1875,159,2025-11-12,Python Crash Course,Books,1,32.00,US,completed
+1876,69,2025-11-12,Monitor,Electronics,3,189.00,US,completed
+1877,31,2025-11-12,Data Science Handbook,Books,2,45.00,US,completed
+1878,194,2025-11-12,Novel,Books,4,14.90,HR,completed
+1879,192,2025-11-13,Board Game,Toys,1,34.00,UK,completed
+1880,114,2025-11-13,Tea,Grocery,3,6.50,HR,completed
+1881,201,2025-11-13,Cookbook,Books,1,24.50,NL,cancelled
+1882,300,2025-11-13,USB Cable,Electronics,2,9.50,UK,completed
+1883,177,2025-11-13,Webcam,Electronics,1,49.00,US,completed
+1884,68,2025-11-14,USB Cable,Electronics,1,9.50,UK,completed
+1885,144,2025-11-14,Dumbbells,Sports,1,39.90,FR,completed
+1886,81,2025-11-14,Pillow,Home,2,19.90,IT,completed
+1887,234,2025-11-15,Pillow,Home,2,19.90,FR,returned
+1888,70,2025-11-15,Webcam,Electronics,5,49.00,DE,completed
+1889,293,2025-11-15,Water Bottle,Sports,1,11.00,DE,completed
+1890,131,2025-11-15,Python Crash Course,Books,1,32.00,US,completed
+1891,65,2025-11-15,Headphones,Electronics,2,59.90,FR,completed
+1892,208,2025-11-15,Running Shoes,Sports,3,89.00,US,completed
+1893,107,2025-11-15,Tea,Grocery,4,6.50,US,cancelled
+1894,156,2025-11-15,Tea,Grocery,4,6.50,HR,completed
+1895,263,2025-11-15,Lego Set,Toys,2,59.00,ES,completed
+1896,157,2025-11-16,Dumbbells,Sports,1,39.90,UK,completed
+1897,114,2025-11-16,Running Shoes,Sports,1,89.00,HR,completed
+1898,206,2025-11-16,Lego Set,Toys,4,59.00,DE,cancelled
+1899,149,2025-11-16,Data Science Handbook,Books,1,45.00,DE,completed
+1900,110,2025-11-16,Running Shoes,Sports,1,89.00,DE,completed
+1901,229,2025-11-16,Plant Pot,Home,5,12.50,UK,cancelled
+1902,132,2025-11-16,Board Game,Toys,1,34.00,US,completed
+1903,45,2025-11-16,Python Crash Course,Books,1,32.00,ES,cancelled
+1904,15,2025-11-17,Dumbbells,Sports,1,39.90,UK,completed
+1905,95,2025-11-17,Puzzle,Toys,1,17.50,US,completed
+1906,70,2025-11-17,USB Cable,Electronics,2,9.50,DE,returned
+1907,240,2025-11-17,Webcam,Electronics,2,49.00,FR,completed
+1908,56,2025-11-17,Plant Pot,Home,1,12.50,ES,completed
+1909,250,2025-11-17,Tea,Grocery,3,6.50,UK,completed
+1910,144,2025-11-18,Tea,Grocery,1,6.50,FR,returned
+1911,85,2025-11-18,Board Game,Toys,1,34.00,DE,completed
+1912,53,2025-11-18,Puzzle,Toys,2,17.50,DE,cancelled
+1913,111,2025-11-18,Headphones,Electronics,2,59.90,DE,cancelled
+1914,166,2025-11-18,USB Cable,Electronics,1,9.50,US,completed
+1915,161,2025-11-18,Water Bottle,Sports,4,11.00,UK,completed
+1916,288,2025-11-18,Cookbook,Books,2,24.50,NL,completed
+1917,38,2025-11-18,Tea,Grocery,1,6.50,UK,completed
+1918,213,2025-11-18,Lamp,Home,2,35.00,NL,completed
+1919,159,2025-11-18,Novel,Books,1,14.90,US,cancelled
+1920,35,2025-11-18,Tea,Grocery,3,6.50,US,completed
+1921,5,2025-11-19,Lego Set,Toys,1,59.00,US,completed
+1922,139,2025-11-19,Tea,Grocery,4,6.50,US,completed
+1923,147,2025-11-19,Water Bottle,Sports,3,11.00,UK,completed
+1924,161,2025-11-19,Keyboard,Electronics,1,79.00,UK,completed
+1925,211,2025-11-19,Olive Oil,Grocery,1,11.50,DE,completed
+1926,67,2025-11-19,Python Crash Course,Books,1,32.00,US,completed
+1927,97,2025-11-20,Headphones,Electronics,4,59.90,NL,completed
+1928,91,2025-11-20,Tea,Grocery,2,6.50,DE,completed
+1929,207,2025-11-21,Chocolate,Grocery,1,3.90,NL,completed
+1930,78,2025-11-21,Yoga Mat,Sports,1,25.00,FR,completed
+1931,274,2025-11-21,Chocolate,Grocery,1,3.90,US,completed
+1932,284,2025-11-21,Olive Oil,Grocery,5,11.50,HR,completed
+1933,115,2025-11-22,Chocolate,Grocery,1,3.90,FR,completed
+1934,81,2025-11-22,Chocolate,Grocery,1,3.90,IT,completed
+1935,297,2025-11-22,Coffee Beans,Grocery,1,13.90,US,completed
+1936,153,2025-11-22,Keyboard,Electronics,1,79.00,US,completed
+1937,286,2025-11-22,Keyboard,Electronics,1,79.00,ES,completed
+1938,183,2025-11-22,Lamp,Home,4,35.00,HR,completed
+1939,84,2025-11-22,Water Bottle,Sports,1,11.00,US,completed
+1940,94,2025-11-22,Dumbbells,Sports,1,39.90,UK,completed
+1941,120,2025-11-22,Python Crash Course,Books,2,32.00,UK,completed
+1942,131,2025-11-22,Yoga Mat,Sports,1,25.00,US,completed
+1943,278,2025-11-23,Water Bottle,Sports,1,11.00,HR,completed
+1944,47,2025-11-23,Chocolate,Grocery,2,3.90,DE,completed
+1945,62,2025-11-23,Webcam,Electronics,1,49.00,UK,completed
+1946,110,2025-11-23,Novel,Books,1,14.90,DE,completed
+1947,249,2025-11-23,Yoga Mat,Sports,1,25.00,DE,completed
+1948,79,2025-11-23,Chocolate,Grocery,1,3.90,DE,completed
+1949,272,2025-11-24,Running Shoes,Sports,1,89.00,DE,cancelled
+1950,171,2025-11-24,Data Science Handbook,Books,2,45.00,ES,completed
+1951,113,2025-11-24,Mug,Home,1,8.90,US,completed
+1952,292,2025-11-24,Running Shoes,Sports,1,89.00,FR,completed
+1953,191,2025-11-24,Keyboard,Electronics,1,79.00,DE,completed
+1954,195,2025-11-24,Cookbook,Books,1,24.50,IT,completed
+1955,156,2025-11-24,Monitor,Electronics,4,189.00,HR,completed
+1956,288,2025-11-24,Olive Oil,Grocery,3,11.50,NL,completed
+1957,163,2025-11-24,Yoga Mat,Sports,1,25.00,FR,completed
+1958,95,2025-11-24,Cookbook,Books,2,24.50,US,completed
+1959,228,2025-11-24,Mug,Home,1,8.90,ES,completed
+1960,33,2025-11-24,Headphones,Electronics,2,59.90,US,completed
+1961,42,2025-11-25,Lamp,Home,1,35.00,NL,completed
+1962,159,2025-11-25,Lego Set,Toys,1,59.00,US,completed
+1963,290,2025-11-25,Coffee Beans,Grocery,2,13.90,IT,completed
+1964,287,2025-11-25,Tea,Grocery,1,6.50,DE,completed
+1965,177,2025-11-25,Pillow,Home,1,19.90,US,completed
+1966,214,2025-11-25,Chocolate,Grocery,1,3.90,DE,completed
+1967,17,2025-11-25,Puzzle,Toys,4,17.50,DE,completed
+1968,240,2025-11-25,Chocolate,Grocery,1,3.90,FR,completed
+1969,184,2025-11-26,Novel,Books,3,14.90,DE,completed
+1970,241,2025-11-26,Keyboard,Electronics,3,79.00,DE,completed
+1971,25,2025-11-26,Pillow,Home,1,19.90,DE,completed
+1972,119,2025-11-26,Coffee Beans,Grocery,1,13.90,US,completed
+1973,83,2025-11-27,Python Crash Course,Books,2,32.00,UK,completed
+1974,150,2025-11-27,Lego Set,Toys,1,59.00,IT,completed
+1975,295,2025-11-27,Tea,Grocery,2,6.50,US,completed
+1976,60,2025-11-27,Plant Pot,Home,2,12.50,UK,completed
+1977,80,2025-11-27,Board Game,Toys,2,34.00,FR,completed
+1978,170,2025-11-27,Yoga Mat,Sports,2,25.00,DE,completed
+1979,200,2025-11-27,Pillow,Home,2,19.90,DE,completed
+1980,260,2025-11-27,Tea,Grocery,2,6.50,DE,completed
+1981,6,2025-11-27,Olive Oil,Grocery,2,11.50,US,completed
+1982,22,2025-11-28,Monitor,Electronics,1,189.00,ES,completed
+1983,10,2025-11-28,Chocolate,Grocery,2,3.90,FR,completed
+1984,64,2025-11-28,Running Shoes,Sports,2,89.00,US,completed
+1985,16,2025-11-28,Headphones,Electronics,3,59.90,IT,completed
+1986,76,2025-11-28,Olive Oil,Grocery,1,11.50,ES,completed
+1987,158,2025-11-28,Monitor,Electronics,2,189.00,US,completed
+1988,231,2025-11-28,Headphones,Electronics,1,59.90,UK,completed
+1989,263,2025-11-28,Python Crash Course,Books,1,32.00,ES,completed
+1990,196,2025-11-28,Water Bottle,Sports,2,11.00,HR,completed
+1991,34,2025-11-30,Monitor,Electronics,1,189.00,DE,completed
+1992,239,2025-11-30,Chocolate,Grocery,1,3.90,DE,completed
+1993,160,2025-11-30,Keyboard,Electronics,1,79.00,FR,completed
+1994,157,2025-11-30,Tea,Grocery,1,6.50,UK,completed
+1995,261,2025-12-01,Coffee Beans,Grocery,5,13.90,ES,completed
+1996,127,2025-12-01,Olive Oil,Grocery,1,11.50,UK,completed
+1997,194,2025-12-01,Keyboard,Electronics,1,79.00,HR,cancelled
+1998,166,2025-12-01,Keyboard,Electronics,2,79.00,US,completed
+1999,159,2025-12-01,Cookbook,Books,3,24.50,US,completed
+2000,15,2025-12-02,Running Shoes,Sports,1,89.00,UK,completed
+2001,178,2025-12-02,USB Cable,Electronics,1,9.50,US,returned
+2002,275,2025-12-02,Pillow,Home,1,19.90,US,completed
+2003,121,2025-12-02,Coffee Beans,Grocery,1,13.90,ES,completed
+2004,130,2025-12-02,Coffee Beans,Grocery,3,13.90,UK,completed
+2005,125,2025-12-02,Monitor,Electronics,1,189.00,UK,completed
+2006,125,2025-12-02,Cookbook,Books,2,24.50,UK,completed
+2007,66,2025-12-02,Board Game,Toys,1,34.00,US,completed
+2008,239,2025-12-02,Keyboard,Electronics,1,79.00,DE,returned
+2009,80,2025-12-02,Pillow,Home,2,19.90,FR,completed
+2010,275,2025-12-03,Lamp,Home,1,35.00,US,completed
+2011,31,2025-12-03,Plant Pot,Home,1,12.50,US,cancelled
+2012,206,2025-12-03,Cookbook,Books,1,24.50,DE,cancelled
+2013,95,2025-12-04,Plant Pot,Home,1,12.50,US,completed
+2014,171,2025-12-04,Yoga Mat,Sports,2,25.00,ES,cancelled
+2015,249,2025-12-04,Coffee Beans,Grocery,5,13.90,DE,completed
+2016,212,2025-12-04,Dumbbells,Sports,3,39.90,US,completed
+2017,274,2025-12-04,Webcam,Electronics,3,49.00,US,completed
+2018,154,2025-12-04,Mug,Home,2,8.90,US,completed
+2019,61,2025-12-05,Cookbook,Books,1,24.50,ES,completed
+2020,59,2025-12-05,Olive Oil,Grocery,1,11.50,FR,completed
+2021,78,2025-12-05,USB Cable,Electronics,1,9.50,FR,completed
+2022,256,2025-12-05,Coffee Beans,Grocery,2,13.90,NL,completed
+2023,267,2025-12-05,USB Cable,Electronics,1,9.50,NL,completed
+2024,48,2025-12-05,Puzzle,Toys,1,17.50,HR,completed
+2025,30,2025-12-05,Headphones,Electronics,1,59.90,UK,completed
+2026,279,2025-12-05,Dumbbells,Sports,1,39.90,NL,completed
+2027,292,2025-12-05,Coffee Beans,Grocery,1,13.90,FR,returned
+2028,74,2025-12-06,Plant Pot,Home,1,12.50,HR,completed
+2029,261,2025-12-06,Novel,Books,1,14.90,ES,completed
+2030,174,2025-12-06,Chocolate,Grocery,1,3.90,US,completed
+2031,282,2025-12-06,Mug,Home,5,8.90,UK,completed
+2032,277,2025-12-06,Board Game,Toys,1,34.00,US,completed
+2033,294,2025-12-06,Plant Pot,Home,1,12.50,FR,cancelled
+2034,183,2025-12-06,Olive Oil,Grocery,1,11.50,HR,completed
+2035,154,2025-12-07,Puzzle,Toys,2,17.50,US,completed
+2036,53,2025-12-07,Cookbook,Books,2,24.50,DE,completed
+2037,61,2025-12-07,Data Science Handbook,Books,1,45.00,ES,completed
+2038,295,2025-12-07,Board Game,Toys,1,34.00,US,completed
+2039,234,2025-12-07,Dumbbells,Sports,1,39.90,FR,completed
+2040,270,2025-12-07,Chocolate,Grocery,1,3.90,DE,completed
+2041,93,2025-12-08,Running Shoes,Sports,1,89.00,DE,completed
+2042,97,2025-12-08,Headphones,Electronics,1,59.90,NL,completed
+2043,41,2025-12-08,Dumbbells,Sports,1,39.90,IT,completed
+2044,129,2025-12-08,Yoga Mat,Sports,1,25.00,FR,completed
+2045,44,2025-12-08,Olive Oil,Grocery,2,11.50,US,completed
+2046,62,2025-12-08,Data Science Handbook,Books,1,45.00,UK,completed
+2047,258,2025-12-09,Plant Pot,Home,4,12.50,US,completed
+2048,226,2025-12-09,Yoga Mat,Sports,2,25.00,US,cancelled
+2049,209,2025-12-09,Lego Set,Toys,1,59.00,US,completed
+2050,261,2025-12-09,Data Science Handbook,Books,1,45.00,ES,completed
+2051,34,2025-12-09,Plant Pot,Home,4,12.50,DE,completed
+2052,167,2025-12-09,Data Science Handbook,Books,1,45.00,FR,completed
+2053,288,2025-12-09,Cookbook,Books,1,24.50,NL,cancelled
+2054,42,2025-12-09,Lamp,Home,1,35.00,NL,completed
+2055,20,2025-12-09,Olive Oil,Grocery,1,11.50,ES,completed
+2056,283,2025-12-09,Webcam,Electronics,2,49.00,US,completed
+2057,295,2025-12-09,Data Science Handbook,Books,2,45.00,US,completed
+2058,270,2025-12-09,Monitor,Electronics,1,189.00,DE,completed
+2059,115,2025-12-10,Coffee Beans,Grocery,1,13.90,FR,completed
+2060,227,2025-12-10,Keyboard,Electronics,1,79.00,UK,completed
+2061,209,2025-12-10,Webcam,Electronics,1,49.00,US,completed
+2062,61,2025-12-10,Coffee Beans,Grocery,1,13.90,ES,completed
+2063,214,2025-12-10,Data Science Handbook,Books,1,45.00,DE,completed
+2064,22,2025-12-11,Tea,Grocery,3,6.50,ES,completed
+2065,207,2025-12-11,Data Science Handbook,Books,3,45.00,NL,completed
+2066,97,2025-12-11,Cookbook,Books,1,24.50,NL,completed
+2067,266,2025-12-11,Monitor,Electronics,1,189.00,UK,completed
+2068,72,2025-12-11,Plant Pot,Home,4,12.50,FR,completed
+2069,149,2025-12-11,Puzzle,Toys,3,17.50,DE,completed
+2070,111,2025-12-11,Running Shoes,Sports,3,89.00,DE,completed
+2071,258,2025-12-12,USB Cable,Electronics,5,9.50,US,completed
+2072,268,2025-12-12,Webcam,Electronics,1,49.00,ES,completed
+2073,129,2025-12-12,Lego Set,Toys,1,59.00,FR,completed
+2074,56,2025-12-12,Tea,Grocery,1,6.50,ES,cancelled
+2075,258,2025-12-12,Puzzle,Toys,2,17.50,US,completed
+2076,238,2025-12-12,Board Game,Toys,1,34.00,DE,completed
+2077,217,2025-12-12,Headphones,Electronics,1,59.90,UK,returned
+2078,260,2025-12-12,Mug,Home,1,8.90,DE,completed
+2079,184,2025-12-12,Mug,Home,1,8.90,DE,completed
+2080,202,2025-12-12,Plant Pot,Home,1,12.50,US,completed
+2081,137,2025-12-13,Webcam,Electronics,1,49.00,DE,completed
+2082,223,2025-12-13,Data Science Handbook,Books,2,45.00,HR,completed
+2083,277,2025-12-13,Pillow,Home,1,19.90,US,completed
+2084,248,2025-12-13,Cookbook,Books,1,24.50,US,completed
+2085,161,2025-12-13,Olive Oil,Grocery,1,11.50,UK,completed
+2086,92,2025-12-13,Lego Set,Toys,3,59.00,NL,completed
+2087,272,2025-12-13,Coffee Beans,Grocery,1,13.90,DE,completed
+2088,139,2025-12-14,Cookbook,Books,2,24.50,US,cancelled
+2089,191,2025-12-14,Running Shoes,Sports,5,89.00,DE,completed
+2090,111,2025-12-14,Python Crash Course,Books,1,32.00,DE,completed
+2091,158,2025-12-14,Dumbbells,Sports,1,39.90,US,completed
+2092,295,2025-12-14,USB Cable,Electronics,1,9.50,US,completed
+2093,263,2025-12-15,Coffee Beans,Grocery,3,13.90,ES,returned
+2094,97,2025-12-15,Coffee Beans,Grocery,1,13.90,NL,cancelled
+2095,33,2025-12-15,Lamp,Home,1,35.00,US,cancelled
+2096,170,2025-12-15,Olive Oil,Grocery,1,11.50,DE,completed
+2097,268,2025-12-15,Running Shoes,Sports,2,89.00,ES,completed
+2098,271,2025-12-16,Tea,Grocery,3,6.50,US,completed
+2099,134,2025-12-16,Pillow,Home,1,19.90,FR,completed
+2100,263,2025-12-17,Headphones,Electronics,1,59.90,ES,completed
+2101,79,2025-12-17,Olive Oil,Grocery,1,11.50,DE,completed
+2102,134,2025-12-17,Novel,Books,2,14.90,FR,completed
+2103,93,2025-12-17,Olive Oil,Grocery,1,11.50,DE,returned
+2104,283,2025-12-17,Lamp,Home,2,35.00,US,completed
+2105,207,2025-12-17,Chocolate,Grocery,1,3.90,NL,completed
+2106,154,2025-12-17,Cookbook,Books,1,24.50,US,completed
+2107,143,2025-12-17,Board Game,Toys,1,34.00,ES,completed
+2108,145,2025-12-17,Keyboard,Electronics,3,79.00,HR,cancelled
+2109,161,2025-12-17,Yoga Mat,Sports,1,25.00,UK,completed
+2110,27,2025-12-18,USB Cable,Electronics,4,9.50,ES,completed
+2111,292,2025-12-18,Chocolate,Grocery,1,3.90,FR,cancelled
+2112,131,2025-12-18,Coffee Beans,Grocery,1,13.90,US,completed
+2113,17,2025-12-18,Mug,Home,1,8.90,DE,completed
+2114,45,2025-12-18,Coffee Beans,Grocery,1,13.90,ES,cancelled
+2115,50,2025-12-18,Chocolate,Grocery,1,3.90,US,completed
+2116,20,2025-12-18,Chocolate,Grocery,1,3.90,ES,completed
+2117,82,2025-12-18,Lamp,Home,1,35.00,HR,completed
+2118,183,2025-12-18,Chocolate,Grocery,1,3.90,HR,completed
+2119,7,2025-12-19,Keyboard,Electronics,1,79.00,US,completed
+2120,129,2025-12-19,Puzzle,Toys,2,17.50,FR,completed
+2121,48,2025-12-19,USB Cable,Electronics,4,9.50,HR,completed
+2122,195,2025-12-19,Water Bottle,Sports,2,11.00,IT,completed
+2123,107,2025-12-19,Lamp,Home,1,35.00,US,completed
+2124,127,2025-12-19,Olive Oil,Grocery,1,11.50,UK,completed
+2125,30,2025-12-20,Tea,Grocery,1,6.50,UK,completed
+2126,162,2025-12-21,Monitor,Electronics,2,189.00,NL,completed
+2127,203,2025-12-21,Monitor,Electronics,3,189.00,ES,completed
+2128,3,2025-12-21,Coffee Beans,Grocery,2,13.90,HR,completed
+2129,60,2025-12-21,Lamp,Home,1,35.00,UK,cancelled
+2130,172,2025-12-21,Python Crash Course,Books,5,32.00,US,completed
+2131,53,2025-12-21,Board Game,Toys,4,34.00,DE,completed
+2132,271,2025-12-21,Dumbbells,Sports,1,39.90,US,returned
+2133,277,2025-12-21,Webcam,Electronics,2,49.00,US,completed
+2134,219,2025-12-21,Water Bottle,Sports,2,11.00,DE,completed
+2135,297,2025-12-22,Novel,Books,5,14.90,US,returned
+2136,159,2025-12-22,Monitor,Electronics,1,189.00,US,completed
+2137,286,2025-12-22,Yoga Mat,Sports,2,25.00,ES,completed
+2138,291,2025-12-22,Cookbook,Books,1,24.50,NL,completed
+2139,172,2025-12-22,Yoga Mat,Sports,4,25.00,US,completed
+2140,69,2025-12-22,Mug,Home,1,8.90,US,returned
+2141,286,2025-12-23,Webcam,Electronics,1,49.00,ES,completed
+2142,119,2025-12-23,Cookbook,Books,4,24.50,US,returned
+2143,243,2025-12-23,Olive Oil,Grocery,2,11.50,DE,completed
+2144,97,2025-12-23,USB Cable,Electronics,2,9.50,NL,completed
+2145,165,2025-12-23,Water Bottle,Sports,5,11.00,US,completed
+2146,101,2025-12-23,Tea,Grocery,2,6.50,US,completed
+2147,5,2025-12-23,Chocolate,Grocery,2,3.90,US,completed
+2148,220,2025-12-23,Pillow,Home,2,19.90,DE,returned
+2149,192,2025-12-24,Pillow,Home,1,19.90,UK,completed
+2150,130,2025-12-24,Python Crash Course,Books,1,32.00,UK,completed
+2151,5,2025-12-24,Python Crash Course,Books,1,32.00,US,completed
+2152,207,2025-12-24,Lamp,Home,1,35.00,NL,completed
+2153,10,2025-12-24,Yoga Mat,Sports,1,25.00,FR,completed
+2154,116,2025-12-24,Plant Pot,Home,1,12.50,FR,completed
+2155,120,2025-12-24,Mug,Home,1,8.90,UK,returned
+2156,51,2025-12-25,Olive Oil,Grocery,2,11.50,UK,cancelled
+2157,141,2025-12-25,Headphones,Electronics,5,59.90,HR,completed
+2158,229,2025-12-25,Mug,Home,1,8.90,UK,completed
+2159,79,2025-12-25,Chocolate,Grocery,1,3.90,DE,returned
+2160,67,2025-12-25,Pillow,Home,3,19.90,US,completed
+2161,49,2025-12-25,Puzzle,Toys,1,17.50,US,returned
+2162,199,2025-12-25,Dumbbells,Sports,1,39.90,US,completed
+2163,167,2025-12-25,Cookbook,Books,1,24.50,FR,completed
+2164,46,2025-12-25,Novel,Books,1,14.90,HR,completed
+2165,51,2025-12-25,Coffee Beans,Grocery,1,13.90,UK,completed
+2166,294,2025-12-25,Olive Oil,Grocery,1,11.50,FR,completed
+2167,93,2025-12-25,Running Shoes,Sports,1,89.00,DE,completed
+2168,81,2025-12-25,Pillow,Home,1,19.90,IT,completed
+2169,241,2025-12-25,Olive Oil,Grocery,4,11.50,DE,cancelled
+2170,203,2025-12-25,Coffee Beans,Grocery,5,13.90,ES,completed
+2171,197,2025-12-26,Lamp,Home,2,35.00,US,completed
+2172,267,2025-12-26,Data Science Handbook,Books,3,45.00,NL,completed
+2173,133,2025-12-26,Olive Oil,Grocery,1,11.50,US,completed
+2174,266,2025-12-26,Coffee Beans,Grocery,1,13.90,UK,completed
+2175,285,2025-12-26,Pillow,Home,2,19.90,FR,completed
+2176,142,2025-12-26,Coffee Beans,Grocery,1,13.90,FR,completed
+2177,213,2025-12-27,Tea,Grocery,2,6.50,NL,completed
+2178,35,2025-12-27,Olive Oil,Grocery,1,11.50,US,completed
+2179,267,2025-12-27,Headphones,Electronics,2,59.90,NL,cancelled
+2180,293,2025-12-27,Python Crash Course,Books,1,32.00,DE,cancelled
+2181,149,2025-12-27,Keyboard,Electronics,3,79.00,DE,completed
+2182,24,2025-12-27,Mug,Home,1,8.90,US,cancelled
+2183,43,2025-12-27,Pillow,Home,2,19.90,ES,completed
+2184,289,2025-12-27,Python Crash Course,Books,2,32.00,DE,completed
+2185,272,2025-12-28,Mug,Home,1,8.90,DE,completed
+2186,28,2025-12-28,Python Crash Course,Books,2,32.00,DE,completed
+2187,91,2025-12-28,Dumbbells,Sports,1,39.90,DE,completed
+2188,289,2025-12-28,Plant Pot,Home,1,12.50,DE,completed
+2189,294,2025-12-28,Plant Pot,Home,1,12.50,FR,completed
+2190,224,2025-12-28,Coffee Beans,Grocery,1,13.90,HR,completed
+2191,127,2025-12-28,Dumbbells,Sports,1,39.90,UK,completed
+2192,201,2025-12-28,Dumbbells,Sports,1,39.90,NL,completed
+2193,119,2025-12-29,Pillow,Home,2,19.90,US,completed
+2194,107,2025-12-29,Novel,Books,1,14.90,US,completed
+2195,96,2025-12-29,Mug,Home,2,8.90,DE,completed
+2196,201,2025-12-29,Mug,Home,5,8.90,NL,completed
+2197,250,2025-12-30,Pillow,Home,1,19.90,UK,completed
+2198,156,2025-12-30,Python Crash Course,Books,1,32.00,HR,completed
+2199,216,2025-12-30,Olive Oil,Grocery,3,11.50,DE,completed
+2200,36,2025-12-31,Mug,Home,1,8.90,IT,completed

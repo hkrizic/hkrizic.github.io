@@ -1,0 +1,129 @@
+customer_id,name,email,country,signup_date,spend
+1,  Felix Jansen,felix.jansen@example.com,USA,2024-12-16,n/a
+2,josip martin,josip.martin@example.com,Croatia,2025-03-01,"€2,195.07"
+3,felix bianchi,felix.bianchi@example.com,USA,2024-09-25,542.11
+4,  Emma Smith,emma.smith@example.com,France,2025-07-25,n/a
+5,LEA Visser,lea.visser@example.com,croatia,2025-05-24,1480.19
+6,ivan mueller,ivan.mueller@example.com,DE,2024-11-13,1427.56
+7,EMA Jones,ema.jones@example.com,Croatia,2024-08-05,376.16
+8,hana martin,hana.martin@example.com,France,2025-09-26,€177.00
+9,Tom Smith,,DE,2025-07-21,"€2,455.77"
+10,Lucas Horvat,,France,2024-03-04,
+11,Emma Dubois,emma.dubois@example.com,germany,2025-08-29,
+12,Josip Kovac,josip.kovac@example.com,croatia,2025-09-16,1579.56
+13,  Josip Moreau,josip.moreau@example.com,United States,2024-02-15,
+14,Mia Visser,mia.visser@example.com,FR,2024-12-21,"€2,482.08"
+15,chloe martin,chloe.martin@example.com,France,2024-08-22,347.71
+16,olivia kovac,olivia.kovac@example.com,US,2025-09-24,€757.26
+17,Lena Jones,lena.jones@example.com,france ,2024-09-06,1421.53
+18,JOSIP Martin,josip.martin@example.com,HR,2025-04-27,€562.96
+19,MARKO Rossi,marko.rossi@example.com,Croatia,2024-07-31,€167.44
+20,TOM Novak,tom.novak@example.com,HR,2024-02-23,2440.05
+21,  Josip Dubois,josip.dubois@example.com,US,2024-12-27,"€1,136.23"
+22,  Josip Babic,josip.babic@example.com,Germany,2025-02-02,
+23,iris horvat,,US,2024-09-23,"€1,800.22"
+24,  Ben Jones,ben.jones@example.com,USA,2024-04-02,
+25,  David Smith,david.smith@example.com,FR,2025-01-29,€825.90
+26,IRIS Garcia,iris.garciaexample.com,DE,2024-05-17,
+27,  Mia Mueller,mia.mueller@example.com,USA,2024-08-31,€817.76
+28,emma horvat,emma.horvat@example.com,croatia,2024-12-24,81.58
+29,nina garcia,nina.garcia@example.com,HR,2024-08-25,€415.36
+30,emma babic,emma.babic@example.com,us,2024-02-11,
+31,LUCAS Rossi,,France,2025-07-25,
+32,LEA Dubois,,FR,2025-05-22,"€2,306.74"
+33,  Lena Schmidt,lena.schmidt@example.com,FR,2024-06-28,504.08
+34,CHLOE Lopez,chloe.lopez@example.com,Croatia,2024-10-22,"€1,374.03"
+35,  Iris Horvat,iris.horvat@example.com,france ,2024-10-08,1660.05
+36,  Noah Rossi,noah.rossi@example.com,US,2024-03-24,n/a
+37,lea babic,lea.babic@example.com,croatia,2024-11-28,€531.52
+38,liam jansen,liam.jansen@example.com, Germany ,2025-03-02,
+39,CHLOE Horvat,chloe.horvat@example.com,DE,2024-12-24,"€1,823.63"
+40,Sara Novak,sara.novak@example.com,United States,2024-12-10,
+41,Hana Mueller,hana.mueller@example.com,Croatia,2024-04-01,€155.58
+42,ana schmidt,ana.schmidt@example.com,france ,2024-02-16,346.18
+43,Chloe Jansen,chloe.jansen@example.com,HR,2025-03-15,1666.85
+44,DAVID Jones,david.jones@example.com,USA,2024-08-10,493.40
+45,sophia silva,sophia.silva@example.com,croatia,2024-08-17,
+46,Chloe Moreau,chloe.moreau@example.com,HR,2024-11-04,n/a
+47,  Lucas Rossi,lucas.rossi@example.com,germany,2025-01-24,568.93
+48,  Ema Babic,ema.babicexample.com,US,2024-09-25,
+49,Chloe Garcia,chloe.garcia@example.com,United States,2025-08-21,1608.77
+50,  Leon Garcia,,france ,2024-06-10,
+51,eva novak,eva.novak@example.com,HR,2024-05-17,
+52,NOAH Dubois,noah.dubois@example.com,croatia,2024-08-27,
+53,max dubois,max.duboisexample.com,us,2024-09-19,€126.54
+54,NINA Babic,nina.babic@example.com,France,2024-05-10,"€2,032.39"
+55,SARA Bianchi,sara.bianchi@example.com,france ,2025-06-14,1695.01
+56,  Lucas Smith,lucas.smith@example.com,HR,2024-11-20,
+57,Sara Lopez,sara.lopez@example.com, Germany ,2025-04-17,
+58,Max Silva,max.silva@example.com,France,2024-10-09,600.37
+59,lea jansen,,croatia,2025-01-21,
+60,Ben Martin,ben.martin@example.com,Croatia,2025-01-05,€219.96
+61,NINA Novak,nina.novak@example.com, Germany ,2024-07-06,n/a
+62,Lucas Moreau,lucas.moreau@example.com,DE,2024-01-16,2439.40
+63,  Nina Silva,nina.silva@example.com,FR,2024-08-03,"€1,488.72"
+64,  Lucas Bianchi,lucas.bianchi@example.com,croatia,2025-06-21,"€1,983.41"
+65,  Lucas Moreau,lucas.moreau@example.com,us,2024-06-15,
+66,LENA Visser,lena.visser@example.com,FR,2024-09-15,
+67,Petar Garcia,petar.garcia@example.com,US,2024-08-05,
+68,SOPHIA Bianchi,sophia.bianchiexample.com,USA,2025-05-27,627.55
+69,  Ivan Kovac,ivan.kovac@example.com,france ,2025-06-01,€206.23
+70,Luka Smith,luka.smith@example.com,US,2024-09-17,"€1,635.64"
+71,Ben Bianchi,ben.bianchi@example.com, Germany ,2024-06-16,1649.70
+72,jan horvat,jan.horvat@example.com,US,2024-12-08,
+73,Jan Schmidt,jan.schmidt@example.com,Croatia,2024-04-12,€494.84
+74,emma horvat,emma.horvat@example.com,France,2025-07-18,n/a
+75,EVA Smith,eva.smith@example.com,france ,2025-06-23,683.71
+76,sophia lopez,sophia.lopez@example.com, Germany ,2025-09-19,€913.32
+77,  Leon Jansen,leon.jansen@example.com,Germany,2024-07-22,"€1,538.33"
+78,  Emma Schmidt,emma.schmidt@example.com, Germany ,2025-03-23,"€1,076.71"
+79,lea bianchi,lea.bianchi@example.com,Germany,2025-08-06,2137.78
+80,LENA Mueller,lena.mueller@example.com,US,2025-06-23,2095.05
+81,Liam Kovac,liam.kovac@example.com,United States,2024-06-02,2399.48
+82,LUCAS Garcia,lucas.garcia@example.com,Croatia,2025-02-17,1223.43
+83,  Eva Bianchi,eva.bianchi@example.com,HR,2024-07-17,€217.25
+84,HANA Visser,hana.visser@example.com,DE,2025-07-12,2369.61
+85,SARA Horvat,sara.horvat@example.com,germany,2024-11-30,1553.34
+86,sara rossi,sara.rossi@example.com,FR,2024-10-18,"€2,130.07"
+87,ben martin,ben.martin@example.com,FR,2024-01-31,666.37
+88,Sophia Dubois,sophia.dubois@example.com,Germany,2024-05-20,1896.20
+89,noah smith,noah.smith@example.com,US,2025-06-07,163.68
+90,SARA Smith,sara.smith@example.com, Germany ,2024-09-10,€659.19
+91,CHLOE Horvat,chloe.horvat@example.com,FR,2025-08-22,"€1,636.73"
+92,Tom Martin,tom.martin@example.com,DE,2024-01-14,
+93,Tom Novak,tom.novak@example.com,Croatia,2024-06-01,2228.41
+94,felix silva,felix.silva@example.com,croatia,2024-07-18,
+95,Chloe Schmidt,chloe.schmidt@example.com, Germany ,2025-08-19,
+96,sophia lopez,sophia.lopez@example.com,Germany,2024-05-24,
+97,Olivia Mueller,olivia.mueller@example.com,DE,2025-03-28,
+98,SARA Horvat,sara.horvat@example.com,Croatia,2024-01-23,"€2,105.51"
+99,mia kovac,mia.kovac@example.com,United States,2024-02-09,655.51
+100,Sophia Babic,sophia.babic@example.com,Croatia,2024-10-11,
+101,iris garcia,iris.garcia@example.com,USA,2025-07-22,1261.91
+102,  Emma Novak,emma.novak@example.com,croatia,2024-05-19,2214.42
+103,Lucas Novak,lucas.novak@example.com,US,2024-04-22,
+104,EMMA Kovac,emma.kovac@example.com,USA,2024-09-19,"€1,112.75"
+105,  Jan Smith,jan.smith@example.com,croatia,2024-11-15,1754.62
+106,Tom Dubois,tom.dubois@example.com,us,2024-03-25,
+107,  Eva Smith,eva.smith@example.com,DE,2024-01-25,1516.41
+108,Eva Kovac,eva.kovac@example.com,germany,2024-03-08,n/a
+109,Noah Dubois,noah.dubois@example.com,Croatia,2025-09-28,"€2,203.27"
+110,chloe silva,chloe.silva@example.com,FR,2024-08-21,"€2,498.60"
+111,  Hana Moreau,hana.moreau@example.com,FR,2024-06-15,2419.25
+112,LENA Martin,lena.martin@example.com,Germany,2024-10-27,
+113,hana mueller,hana.mueller@example.com,HR,2024-07-19,664.69
+114,  Mila Visser,,Germany,2024-11-22,
+115,PETAR Jansen,petar.jansen@example.com,croatia,2025-03-10,
+116,  Hana Novak,hana.novakexample.com,France,2025-04-30,"€2,437.25"
+117,ivan moreau,ivan.moreau@example.com,DE,2025-08-16,
+118,emma jones,emma.jones@example.com,HR,2024-03-02,49.33
+119,ana lopez,ana.lopez@example.com,USA,2024-06-12,€731.86
+120,iris silva,iris.silva@example.com,US,2024-02-11,977.36
+112,LENA Martin,lena.martin@example.com,Germany,2024-10-27,
+81,Liam Kovac,liam.kovac@example.com,United States,2024-06-02,2399.48
+83,  Eva Bianchi,eva.bianchi@example.com,HR,2024-07-17,€217.25
+103,Lucas Novak,lucas.novak@example.com,US,2024-04-22,
+26,IRIS Garcia,iris.garciaexample.com,DE,2024-05-17,
+44,DAVID Jones,david.jones@example.com,USA,2024-08-10,493.40
+54,NINA Babic,nina.babic@example.com,France,2024-05-10,"€2,032.39"
+23,iris horvat,,US,2024-09-23,"€1,800.22"
