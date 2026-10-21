@@ -475,7 +475,7 @@ function openPlayground(onExit) {
   kb.onHide = () => { Editor.active?.blur(); upd(); };
   function upd() {
     const show = isTouch() ? !!Editor.active : store.s.settings.kbDesktop;
-    if (show) { if (kb.el.parentNode !== dock) dock.append(kb.el); kb.attach(Editor.active || ed); } else if (kb.el.parentNode === dock) kb.el.remove();
+    if (show) { if (kb.el.parentNode !== dock) dock.append(kb.el); kb.attach(Editor.active || ed); } else if (kb.el.parentNode === dock) kb.unmount();
     root.classList.toggle('kb-open', show);
   }
   upd();
@@ -489,8 +489,8 @@ function openPlayground(onExit) {
     ed.markError(r.error?.line || 0);
     runBtn.disabled = false;
   }
-  function exit() { off(); if (kb.el.parentNode === dock) kb.el.remove(); ed.destroy(); root.remove(); onExit(); }
-  return { close: () => { off(); if (kb.el.parentNode === dock) kb.el.remove(); ed.destroy(); root.remove(); } };
+  function exit() { off(); if (kb.el.parentNode === dock) kb.unmount(); ed.destroy(); root.remove(); onExit(); }
+  return { close: () => { off(); if (kb.el.parentNode === dock) kb.unmount(); ed.destroy(); root.remove(); } };
 }
 
 // ------------------------------------------------------------------ first run
@@ -508,7 +508,7 @@ function welcome() {
 - **Learn by doing.** Short lessons: a concept, then exercises with real Python running in your browser.
 - **Everything is unlocked.** Start at the beginning or jump to pandas, SQL or interview prep.
 - **Exams & interviews** are timed and graded on hidden tests, like the real thing.
-- **On iPhone** the Python keyboard has all the symbols. Hold the space bar and drag to move the cursor.${ios && !standalone ? '\n- Tip: **Share → Add to Home Screen** gives you a full-screen app.' : ''}`) }),
+- **On iPhone** the Python keyboard has all the symbols. Hold a key for variants (é ü č, € £), tap **#+=** for more (° µ ² ≠ →), or 🌐 for the normal iPhone keyboard. Hold the space bar and drag to move the cursor.${ios && !standalone ? '\n- Tip: **Share → Add to Home Screen** gives you a full-screen app.' : ''}`) }),
     h('div.answer-label', { style: { textAlign: 'center' } }, 'Your daily goal'), goals);
   modal({ title: 'Welcome to the dojo!', body, dismissable: false, actions: [
     { label: 'Explore', kind: 'ghost', onClick: () => { store.s.goal = goal; store.setting('onboarded', true); } },

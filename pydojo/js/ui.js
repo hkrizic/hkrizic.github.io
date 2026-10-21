@@ -135,6 +135,9 @@ export function haptic() {
   if (!store.s.settings.haptics) return;
   if (navigator.vibrate && !isIOS) { try { navigator.vibrate(8); } catch { /* ignore */ } return; }
   if (!isIOS) return;
+  // Clicking the switch moves focus to it, which would close the iPhone keyboard.
+  const ae = document.activeElement;
+  if (ae && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && ae.type !== 'checkbox'))) return;
   if (!hapticLabel) {
     hapticLabel = document.createElement('label');
     hapticLabel.setAttribute('aria-hidden', 'true');

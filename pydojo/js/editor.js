@@ -1,7 +1,8 @@
 // A small code editor that renders its own caret and selection.
 //
 // On touch devices nothing focusable is ever focused, so the native iOS
-// keyboard never appears; the PyKeyboard drives the editor instead.
+// keyboard never appears; the PyKeyboard drives the editor instead (until its
+// globe key asks for the iPhone keyboard, see startNative).
 // On desktop a hidden textarea receives physical-keyboard input (including
 // dead keys / IME composition and native copy/cut/paste).
 import { highlightLines, tokenizePython } from './highlight.js';
@@ -31,6 +32,8 @@ export class Editor {
     this.lastTime = 0;
     this.goalCol = null;
     this.focused = false;
+    this.touch = isTouch();
+    this.native = false;
     this.errLine = 0;
     this.sel = this.initialSelection();
     this.build();
@@ -58,12 +61,16 @@ export class Editor {
     this.inner.append(this.selEl, this.linesEl, this.caret);
     this.scroller.append(this.inner);
     this.el.append(this.scroller, this.menu);
-    if (!isTouch()) {
-      this.input = h('textarea.ed-input', { autocapitalize: 'off', autocomplete: 'off', autocorrect: 'off', spellcheck: 'false', tabindex: '0', 'aria-label': 'Code editor' });
+    if (!this.touch) {
+      this.input = this.makeInput();
       this.el.append(this.input);
       this.bindDesktop();
     }
     this.bindPointer();
+  }
+
+  makeInput() {
+    return h('textarea.ed-input', { autocapitalize: 'off', autocomplete: 'off', autocorrect: 'off', spellcheck: 'false', tabindex: '0', 'aria-label': 'Code editor' });
   }
 
   mount(parent) { parent.append(this.el); requestAnimationFrame(() => { this.measure(true); this.renderSel(); }); return this; }
@@ -451,9 +458,43 @@ export class Editor {
       activeListeners.forEach((fn) => fn(this));
       this.opts.onFocus?.(this);
     }
-    if (this.input && document.activeElement !== this.input) this.input.focus({ preventScroll: true });
+    if (this.input && (!this.touch || this.native) && document.activeElement !== this.input) this.input.focus({ preventScroll: true });
     this.syncInput();
     this.renderSel();
+  }
+
+  // ---------------------------------------------------------------- iPhone keyboard
+  // Type with the system keyboard (emoji, accents, any language, dictation):
+  // a hidden textarea at the caret takes the focus. Must run inside a touchend
+  // or click handler, otherwise iOS does not show its keyboard.
+  startNative() {
+    if (!this.input) {
+      this.input = this.makeInput();
+      this.input.classList.add('ed-native');
+      this.inner.append(this.input);
+      this.bindDesktop();
+    }
+    this.native = true;
+    this.input.value = ''; this.taLast = '';
+    this.focus();
+    this.onNative?.(true);
+  }
+
+  /** Back to the Python keyboard; with keepFocus false the editor is left too. */
+  stopNative(keepFocus = true) {
+    if (!this.native) return;
+    this.keepFocusAfterNative = keepFocus;
+    if (document.activeElement === this.input) this.input.blur();
+    else this.nativeEnded();
+  }
+
+  nativeEnded() {
+    if (!this.native) return;
+    this.native = false;
+    const keep = this.keepFocusAfterNative;
+    this.keepFocusAfterNative = false;
+    this.onNative?.(false);
+    if (!keep) this.blur();
   }
   blur() {
     if (!this.focused) return;
@@ -627,6 +668,13 @@ export class Editor {
   // ---------------------------------------------------------------- desktop textarea
   syncInput() {
     if (!this.input || this.composing) return;
+    if (this.touch) {
+      // iPhone keyboard: the field keeps what was typed (see nativeInput) and
+      // starts fresh whenever the caret moves for another reason.
+      if (!this.nativeTyping && this.input.value) { this.input.value = ''; this.taLast = ''; }
+      if (this.caretX !== undefined) { this.input.style.left = `${this.caretX}px`; this.input.style.top = `${this.caretY}px`; }
+      return;
+    }
     const t = this.selectedText();
     if (this.input.value !== t) this.input.value = t;
     if (document.activeElement === this.input) this.input.select();
@@ -635,19 +683,21 @@ export class Editor {
   bindDesktop() {
     const ta = this.input;
     ta.addEventListener('focus', () => { if (!this.focused) this.focus(); });
-    ta.addEventListener('blur', () => this.blur());
+    ta.addEventListener('blur', () => { if (this.native) this.nativeEnded(); else if (!this.touch) this.blur(); });
     ta.addEventListener('compositionstart', () => { this.composing = true; });
     ta.addEventListener('compositionend', (e) => {
       this.composing = false;
-      if (e.data) this.typeText(e.data);
+      if (this.touch) { this.nativeInput(); return; }
+      if (e.data) this.typeText(this.fromSystem(e.data));
       ta.value = ''; this.syncInput();
     });
     ta.addEventListener('input', (e) => {
       if (this.composing || e.isComposing) return;
+      if (this.touch) { this.nativeInput(); return; }
       const v = ta.value;
       if (e.inputType === 'deleteByCut') { this.replaceSel(''); return; }
       if (e.inputType && e.inputType.startsWith('delete')) { this.syncInput(); return; }
-      if (v) this.typeText(v);
+      if (v) this.typeText(this.fromSystem(v));
       ta.value = ''; this.syncInput();
     });
     ta.addEventListener('paste', (e) => {
@@ -657,7 +707,36 @@ export class Editor {
     });
     ta.addEventListener('copy', (e) => { e.preventDefault(); e.clipboardData.setData('text/plain', this.selectedText()); });
     ta.addEventListener('cut', (e) => { e.preventDefault(); e.clipboardData.setData('text/plain', this.selectedText()); this.replaceSel(''); });
-    ta.addEventListener('keydown', (e) => this.onKey(e));
+    ta.addEventListener('keydown', (e) => {
+      this.nativeTyping = this.native; // e.g. Backspace edits the code, the field keeps its text
+      try { this.onKey(e); } finally { this.nativeTyping = false; }
+    });
+  }
+
+  // Clearing the field after every key makes iOS drop keystrokes when typing
+  // fast, so the iPhone keyboard's field accumulates text and the editor
+  // applies the difference to the previous value.
+  nativeInput() {
+    const v = this.input.value; const old = this.taLast || '';
+    if (v === old) return;
+    let p = 0;
+    while (p < old.length && p < v.length && old[p] === v[p]) p++;
+    let q = 0;
+    while (q < old.length - p && q < v.length - p && old[old.length - 1 - q] === v[v.length - 1 - q]) q++;
+    const del = old.length - p - q;
+    const ins = this.fromSystem(v.slice(p, v.length - q));
+    this.taLast = v;
+    this.nativeTyping = true;
+    try {
+      if (del) { const { from, to } = this.range(); this.replace(Math.max(0, from - del), to, '', { kind: 'del' }); }
+      if (ins) this.typeText(ins);
+    } finally { this.nativeTyping = false; }
+  }
+
+  // iOS "smart punctuation" turns quotes curly, which is a syntax error in code.
+  fromSystem(text) {
+    if (!this.native || this.lang !== 'python') return text;
+    return text.replace(/[“”„]/g, '"').replace(/[‘’‚]/g, "'");
   }
 
   onKey(e) {

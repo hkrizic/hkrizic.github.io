@@ -57,7 +57,7 @@ export function runSession(cfg) {
       if (kb.el.parentNode !== dock) dock.append(kb.el);
       if (!ed && view?.editor) view.editor.focus();
       kb.attach(Editor.active);
-    } else if (kb.el.parentNode === dock) kb.el.remove();
+    } else if (kb.el.parentNode === dock) kb.unmount();
     root.classList.toggle('kb-open', show);
   }
   kb.onHide = () => { Editor.active?.blur(); updateDock(); };
@@ -243,7 +243,7 @@ export function runSession(cfg) {
     document.removeEventListener('keydown', onKey);
     offActive();
     view?.destroy();
-    if (kb.el.parentNode === dock) kb.el.remove();
+    if (kb.el.parentNode === dock) kb.unmount();
     root.remove();
     onExit?.({ finished });
   }

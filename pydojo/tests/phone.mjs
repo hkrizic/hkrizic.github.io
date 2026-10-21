@@ -14,7 +14,7 @@ const page = await ctx.newPage();
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`${m.type()}: ${m.text()}`); });
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}\n${e.stack}`));
-const base = 'http://localhost:8765/?nosw';
+const base = process.env.BASE || 'http://localhost:8765/?nosw';
 const shot = async (name) => { await page.screenshot({ path: `${out}/${name}.png` }); console.log('shot', name); };
 const wait = (ms) => page.waitForTimeout(ms);
 const tap = async (sel) => { const el = page.locator(sel).first(); await el.scrollIntoViewIfNeeded(); const b = await el.boundingBox(); await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2); };
@@ -42,7 +42,7 @@ async function typeCode(code) {
     let have = st.before.match(/^ */)[0].length;
     if (st.before.trim() === '') {
       while (have > want) { await tap('.kb-key.fn:last-of-type'); st = await edState(); const h2 = st.before.length; if (h2 === have) break; have = h2; }
-      while (have < want) { await tap('.kb-key.fn:nth-child(2)'); have += 4; }
+      while (have < want) { await tap('.kb-key[aria-label="tab"]'); have += 4; }
     }
     for (const ch of lines[i].trimStart()) await typeChar(ch);
     if (i < lines.length - 1) { await typeChar('\n'); }
@@ -57,6 +57,62 @@ const S = {
     await page.goto(`${base}#/lesson/u01-l1`); await wait(1200); await shot('l-learn');
     await tap('.lesson-foot .btn.primary'); await wait(400); await shot('l-choice');
     await tap('.opt'); await wait(200); await tap('.lesson-foot .btn.primary'); await wait(600); await shot('l-feedback');
+  },
+  // characters beyond ASCII: #+= layer, long-press variants, globe → iPhone keyboard
+  async chars() {
+    await page.goto(`${base}#/lesson/u01-l1/9`); await wait(1200);
+    const eb = await page.locator('.ed-host .ed-scroll').boundingBox();
+    await page.touchscreen.tap(eb.x + eb.width / 2, eb.y + eb.height / 2); await wait(400);
+    await page.evaluate(() => { const ed = window.__pd.view.editor; ed.setValue(''); ed.focus(); });
+    const text = () => page.evaluate(() => window.__pd.view.editor.text);
+    const check = async (what, want) => { const t = await text(); console.log(t === want ? 'OK  ' : 'FAIL', what, JSON.stringify(t)); };
+    // hold a key (synthetic pointer events), optionally slide by dx cells, then release
+    const hold = async (label, cells = 0, shotName = null) => {
+      const el = page.locator('.kb-key').filter({ has: page.locator('.kb-label', { hasText: new RegExp(`^${label}$`) }) }).first();
+      const b = await el.boundingBox();
+      const x = b.x + b.width / 2; const y = b.y + b.height / 2;
+      const fire = (type, cx, cy) => page.evaluate(([type, cx, cy]) => {
+        const t = document.elementFromPoint(cx, cy) || document.body;
+        t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', clientX: cx, clientY: cy, isPrimary: true }));
+      }, [type, cx, cy]);
+      await fire('pointerdown', x, y); await wait(500);
+      if (cells) { const cw = await page.evaluate(() => document.querySelector('.kb-alts span').getBoundingClientRect().width); await fire('pointermove', x + cells * cw, y - 60); await wait(80); }
+      if (shotName) await shot(shotName);
+      await fire('pointerup', x + cells * 40, y - 60); await wait(120);
+    };
+    await key('123'); await key('#+='); await wait(150); await shot('ch-sym');
+    await key('€'); await key('°'); await key('µ'); await key('²'); await key('→');
+    await key('123'); await key('abc');
+    await check('sym layer', '€°µ²→');
+    await hold('e', 1, 'ch-hold-e');                // [3] é è ...
+    await hold('q');                                 // digit stays default
+    await hold('a');                                 // ä
+    await hold('o', -1, 'ch-hold-o');                // right half opens leftwards: [... ó ö 9]
+    await hold('c', 0);                              // č
+    await check('long-press', '€°µ²→é1äöč');
+    await page.evaluate(() => window.__pd.view.editor.setValue(''));
+    // globe: the iPhone keyboard (a focused textarea) types into the editor
+    await tap('.kb-key[aria-label="iPhone keyboard"]'); await wait(300);
+    const st = await page.evaluate(() => ({ focus: document.activeElement?.className, native: document.querySelector('.kb').classList.contains('native'), html: document.documentElement.className }));
+    console.log(st.focus.includes('ed-native') && st.native ? 'OK  ' : 'FAIL', 'native mode', JSON.stringify(st));
+    await page.keyboard.type('x = "Grüezi 👋 ¥"');
+    await page.keyboard.press('Backspace'); await page.keyboard.press('Backspace'); await page.keyboard.type('€"');
+    await page.keyboard.press('Enter'); await page.keyboard.type('print(x)');
+    await check('native typing', 'x = "Grüezi 👋 €"\nprint(x)');
+    await wait(200); await shot('ch-native');
+    await tap('.kb-pykey'); await wait(300);
+    const st2 = await page.evaluate(() => ({ focused: !!window.__pd.view.editor.focused, native: document.querySelector('.kb').classList.contains('native'), html: document.documentElement.className, rows: getComputedStyle(document.querySelector('.kb-rows')).display }));
+    console.log(st2.focused && !st2.native && st2.rows !== 'none' && !st2.html.includes('native-kb') ? 'OK  ' : 'FAIL', 'back to Python keyboard', JSON.stringify(st2));
+    await key('z'); await check('python kb after native', 'x = "Grüezi 👋 €"\nprint(x)z');
+    await shot('ch-back');
+    // globe, then hide key closes everything
+    await tap('.kb-key[aria-label="iPhone keyboard"]'); await wait(200);
+    await tap('.kb-navkey[aria-label="hide"]'); await wait(300);
+    const st3 = await page.evaluate(() => ({ kb: !!document.querySelector('.kb')?.isConnected, active: document.activeElement?.tagName, html: document.documentElement.className }));
+    console.log(!st3.kb && st3.active !== 'TEXTAREA' && !st3.html.includes('native-kb') ? 'OK  ' : 'FAIL', 'hide from native', JSON.stringify(st3));
+    // run the code typed natively
+    await page.evaluate(() => { window.__pd.view.editor.setValue('x = "Grüezi 👋 €"\nprint(x)'); });
+    console.log('errors', errors.length ? errors : 'none');
   },
   async code() {
     await page.goto(`${base}#/lesson/u01-l1/9`); await wait(1200);

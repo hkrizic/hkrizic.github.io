@@ -59,7 +59,7 @@ export function runExam({ entry, onExit }) {
   function updateDock() {
     const ed = Editor.active;
     const show = phase === 'run' && (isTouch() ? !!ed : store.s.settings.kbDesktop && !!view?.editor);
-    if (show) { if (kb.el.parentNode !== dock) dock.append(kb.el); kb.attach(Editor.active); } else if (kb.el.parentNode === dock) kb.el.remove();
+    if (show) { if (kb.el.parentNode !== dock) dock.append(kb.el); kb.attach(Editor.active); } else if (kb.el.parentNode === dock) kb.unmount();
     root.classList.toggle('kb-open', show);
   }
 
@@ -274,7 +274,7 @@ export function runExam({ entry, onExit }) {
     clearInterval(tick);
     if (view) { persist(); view.destroy(); }
     offActive();
-    if (kb.el.parentNode === dock) kb.el.remove();
+    if (kb.el.parentNode === dock) kb.unmount();
     root.remove();
     onExit?.();
   }

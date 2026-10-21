@@ -526,6 +526,21 @@ h1.page-title { font-size: 26px; margin: 4px 4px 14px; letter-spacing: -.01em; }
 .kb.trackpad .kb-rows .kb-key { color: transparent !important; }
 .kb.trackpad .kb-rows .kb-key svg, .kb.trackpad .kb-hint { opacity: 0; }
 .kb.text-mode .kb-nav .kb-navkey:nth-child(2), .kb.text-mode .kb-nav .kb-navkey:nth-child(3) { display: none; }
+.kb-alts {
+  position: absolute; left: 0; top: 0; z-index: 11; pointer-events: none; display: none; padding: 4px; border-radius: 12px; background: var(--key);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25);
+}
+.kb-alts.show { display: flex; }
+.kb-alts span { flex: none; height: var(--cell-h, 50px); display: grid; place-items: center; border-radius: 8px; color: var(--key-ink); font: 400 25px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+.kb-alts span.sel { background: var(--accent); color: #fff; }
+/* iPhone keyboard mode: only the suggestion bar stays, docked above the system keyboard */
+.kb-pykey { display: none; }
+.kb.native { padding-bottom: 3px; }
+.kb.native .kb-rows { display: none; }
+.kb.native .kb-pykey { display: flex; align-items: center; gap: 5px; width: auto; padding: 0 10px; font: 650 13.5px var(--font); background: var(--accent); color: #fff; }
+.kb.native .kb-pykey.down { background: var(--accent-dark); }
+.kb.native .kb-nav .kb-navkey:nth-child(2), .kb.native .kb-nav .kb-navkey:nth-child(3) { display: none; }
+html.native-kb .lesson { bottom: auto; top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
 
 /* desktop keyboard toggle */
 .kb-toggle.on { color: var(--accent); }
