@@ -1,5 +1,5 @@
 // The unblinding ceremony: confirm scope, animate, reveal H0, then continue with unblinded results.
-import { el, button, number, textInput, badge } from "./widgets.js";
+import { el, button, number, textInput, badge, textFileDrop } from "./widgets.js";
 import { summarize } from "../core/stats.js";
 
 const MARK = (size) => el("img", { src: "assets/logo-mark-large.png", alt: "ALPACA", class: "mark", style: { height: size + "px" } });
@@ -20,7 +20,11 @@ export function openUnblindScreen(app, run) {
   const cfg = { zl: zl0, zs: zs0, Om: run.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3, scope: "session", download: false, key: "" };
   const canWrite = !!run.index.handle;
   const status = el("div", { class: "muted small" });
-  const keyRow = run.hasKey ? el("div", { class: "muted small" }, `Blinding key: loaded from ${run.keySource || "input"}.`) : el("div", { class: "ctl-row" }, textInput("", (v) => { cfg.key = v; }, { placeholder: "blinding key (ALPACA_BLINDING_KEY)", width: 300, type: "password" }), run.features.keyFile ? button("use key file in run", async () => { cfg.key = await run.keyFileContents(); status.textContent = "key file read"; }, { small: true }) : null);
+  const keyInput = textInput("", (v) => { cfg.key = v; }, { placeholder: "blinding key (ALPACA_BLINDING_KEY)", width: 300, type: "password" });
+  const keyRow = run.hasKey ? el("div", { class: "muted small" }, `Blinding key: loaded from ${run.keySource || "input"}.`) : el("div", {},
+    el("div", { class: "ctl-row" }, keyInput),
+    el("div", { class: "ctl-row muted small" }, "or drop the .key file here ", textFileDrop(overlay, (k, f) => { cfg.key = keyInput.value = k; status.textContent = `key read from ${f.name}`; }, { label: "choose .key file…", onError: (e) => { status.textContent = e.message; } })),
+    run.keyFiles?.length ? el("div", { class: "muted small" }, `Found in the folder but not this run's key: ${run.keyFiles.join(", ")}.`) : null);
   const scopeRadio = (value, label, desc, disabled = false) => {
     const input = el("input", { type: "radio", name: "unblind-scope", value });
     input.checked = cfg.scope === value; input.disabled = disabled;

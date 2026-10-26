@@ -172,6 +172,22 @@ export class FileIndex {
   }
 }
 
+// How far a file is from the run folder at `root`: levels up to a common prefix, then depth.
+function distanceFrom(root, p) {
+  let r = root, n = 0;
+  while (r && !p.startsWith(r)) { r = r.replace(/[^/]*\/$/, ""); n++; }
+  return n * 100 + p.split("/").length;
+}
+
+// Blinding-key candidates anywhere in the opened folder: small *.key text files, blinding*.key first,
+// then the ones closest to the run at `root`. Each is only a candidate; the sealed offsets' MAC decides.
+export function findKeyFiles(index, root = "", max = 8) {
+  const named = (p) => (/(^|\/)blinding[^/]*\.key$/i.test(p) ? 0 : 1);
+  return index.find(/\.key$/i).filter((p) => (index.size(p) ?? 0) <= 4096)
+    .sort((a, b) => named(a) - named(b) || distanceFrom(root, a) - distanceFrom(root, b) || a.localeCompare(b))
+    .slice(0, max);
+}
+
 // Run roots inside an index: prefixes (ending with '/' or '') that contain a run.
 export function findRunRoots(index) {
   const roots = new Set();
@@ -189,10 +205,7 @@ export function findRunRoots(index) {
 export function findCatalog(index, configPath = null, root = "") {
   const own = root + "01_input/perturbers.json";
   if (index.has(own)) return own;
-  const near = (cands) => {
-    const up = (p) => { let r = root, n = 0; while (r && !p.startsWith(r)) { r = r.replace(/[^/]*\/$/, ""); n++; } return n * 100 + p.split("/").length; };
-    return cands.slice().sort((a, b) => up(a) - up(b) || a.localeCompare(b))[0] || null;
-  };
+  const near = (cands) => cands.slice().sort((a, b) => distanceFrom(root, a) - distanceFrom(root, b) || a.localeCompare(b))[0] || null;
   if (configPath) {
     const parts = normalize(configPath).split("/");
     for (let k = parts.length; k >= 2; k--) {

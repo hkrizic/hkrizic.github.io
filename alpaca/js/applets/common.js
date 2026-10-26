@@ -1,5 +1,5 @@
 // Helpers shared by applets.
-import { el, select, row, button, number, textInput, badge } from "../ui/widgets.js";
+import { el, select, row, button, number, textInput, badge, section, textFileDrop } from "../ui/widgets.js";
 import { summarize } from "../core/stats.js";
 import { keyStore } from "../core/prefs.js";
 import { emit } from "../core/bus.js";
@@ -15,6 +15,46 @@ export function runRow(ctx, state, onChange, label = "Run") {
 }
 
 export function otherRun(ctx, run) { return ctx.app.runs.find((r) => r !== run) || null; }
+
+// ---------------------------------------------------------------- cosmology for H0
+// z_lens, z_source and Ωm that turn a run's D_Δt into H₀: the run's own catalog and config. Values
+// typed into a panel are stored with the lens they were typed for (lensKey) and ignored for any other
+// run, so a restored layout, a switched run or an overlaid run never inherits another lens's redshifts.
+
+// Identity of the lens a run models, for per-lens values typed into panels: its catalog redshifts, or
+// the run folder when there is no catalog.
+export function lensKey(run) {
+  const t = run.catalog?.target;
+  return t?.z_lens != null ? `z:${t.z_lens}|${t.z_source ?? "?"}` : `run:${run.name}`;
+}
+
+export function cosmologyOf(run, state = null) {
+  const t = run.catalog?.target || {};
+  const own = { zl: t.z_lens ?? null, zs: t.z_source ?? null, Om: run.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3 };
+  const typed = state?.cosmo?.key === lensKey(run) ? state.cosmo : {};
+  const c = { zl: typed.zl ?? own.zl, zs: typed.zs ?? own.zs, Om: typed.Om ?? own.Om };
+  return { ...c, hasZ: c.zl != null && c.zs != null, manual: ["zl", "zs", "Om"].some((k) => c[k] !== own[k]) };
+}
+
+export function setCosmology(run, state, name, value) {
+  const key = lensKey(run);
+  if (state.cosmo?.key !== key) state.cosmo = { key };
+  state.cosmo[name] = value;
+}
+
+// Settings section: the run's own redshifts / Ωm, editable for this lens only.
+export function cosmologySection(run, state, onChange, extra = null) {
+  const c = cosmologyOf(run, state);
+  const set = (name) => (v) => { setCosmology(run, state, name, v); onChange(); };
+  return section("Cosmology",
+    row("z_lens", number(c.zl, set("zl"), { step: 0.0001, width: 90 })),
+    row("z_source", number(c.zs, set("zs"), { step: 0.0001, width: 90 })),
+    row("Ωm", number(c.Om, set("Om"), { step: 0.01, width: 70 })),
+    el("div", { class: "muted small" }, `Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm. Defaults: run ${run.label}'s catalog redshifts and config Ωm; values typed here apply to this lens only, every other run uses its own.`),
+    c.manual ? el("div", { class: "ctl-row" }, button("Use the run's values", () => { delete state.cosmo; onChange(); }, { small: true })) : null,
+    extra,
+  );
+}
 
 export function imageLayer(f, run, extent = null) {
   return { data: f.data, rows: f.rows, cols: f.cols, extent: extent || run.extent(f.cols) };
@@ -95,19 +135,25 @@ export async function resolveParams(run, state) {
   return { params, source, label: "posterior median (scalars) + mean source", stageKey: "final", blindedKeys: post.blindedColumns, unblinded: true, renderable: true, note: "Medians of scalar parameters are not a joint sample; use for illustration only." };
 }
 
+// Key files the folder search found but that do not open this run (loading tries them all), or "".
+export function keyFilesNote(run) {
+  const f = run.keyFiles || [];
+  return f.length && !run.hasKey ? el("div", { class: "muted small" }, `Found in the folder but not this run's key: ${f.join(", ")}.`) : "";
+}
+
 // UI to unblind in memory. Calls onDone() after success.
 export function unblindUI(run, onDone) {
   const box = el("div", { class: "unblind" });
   const status = el("div", { class: "muted small" });
   const input = textInput("", () => {}, { placeholder: "blinding key (ALPACA_BLINDING_KEY)", width: 260, type: "password" });
   const opts = { session: true, device: false };
-  const go = async (key) => {
+  const go = async (key, source = "input") => {
     status.textContent = "deriving key…";
     try {
       const r = await run.unblind(key);
       status.textContent = "";
       if (opts.session || opts.device) keyStore.set(key, { remember: opts.device });
-      run.keySource = opts.device ? "campaign key (this device)" : "input";
+      run.keySource = opts.device ? "campaign key (this device)" : source;
       emit("key:loaded", { key, run });
       box.replaceChildren(el("div", { class: "info" }, `Key accepted (covers ${Object.keys(r.offsets).join(", ")}). It is used only inside the forward model and for derived widths; every displayed value stays blinded. Reload the page to forget it.`));
       onDone && onDone();
@@ -116,9 +162,10 @@ export function unblindUI(run, onDone) {
   box.append(
     el("div", { class: "warn" }, badge("BLINDED", "warn"), " This run is TDCOSMO-blinded. Evaluating the forward model needs the true values of ", el("code", {}, (run.blinding?.blinded_columns || []).join(", ")), ". Provide the blinding key: it is used only inside the computation, and no blinded number is ever displayed (H₀ and D_Δt are shown as deviations from their posterior mean)."),
     el("div", { class: "ctl-row" }, input, button("Load key for computations", () => go(input.value), { kind: "primary" })),
+    el("div", { class: "ctl-row muted small" }, "or drop the .key file here ", textFileDrop(box, (key, f) => go(key, `dropped file (${f.name})`), { label: "choose .key file…", onError: (e) => { status.textContent = e.message; } })),
     el("div", { class: "ctl-row" }, el("label", { class: "ctl-check" }, (() => { const c = el("input", { type: "checkbox" }); c.checked = true; c.addEventListener("change", () => { opts.session = c.checked; }); return c; })(), el("span", {}, "use for every run in this browser session (campaign key)")),
       el("label", { class: "ctl-check" }, (() => { const c = el("input", { type: "checkbox" }); c.addEventListener("change", () => { opts.device = c.checked; }); return c; })(), el("span", {}, "remember on this device"), el("span", { class: "muted small" }, " — anyone using this browser profile could then unblind"))),
-    run.features.keyFile ? el("div", { class: "ctl-row" }, button("Use blinding_secret.key found in the run folder", async () => go(await run.keyFileContents()))) : "",
+    keyFilesNote(run),
     status,
   );
   return box;

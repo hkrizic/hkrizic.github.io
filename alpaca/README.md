@@ -6,8 +6,9 @@ corner plots, image/model/residual viewers, a **forward-model lab that re-render
 browser** (lens-light components, pixelated source, point sources), a **ray-shooting lab** (click a feature in the
 data, model or residual to trace it to the source reconstruction through the full multi-plane model, with all
 counter images found by Newton iterations on the exact mapping), lensing maps with critical curves and
-caustics, H₀ from D_Δt, a **mass-sheet degeneracy** module, PSF comparison, optimisation diagnostics, a plot gallery and
-two-run comparison.
+caustics, H₀ from D_Δt, a **mass-sheet degeneracy** module, three **model checks** (residual statistics, flux ratios &
+magnifications, the D_Δt precision budget), PSF comparison, optimisation diagnostics, a plot gallery and two-run
+comparison.
 
 The default *model* in every viewer is the forward model of the best log-likelihood posterior draw (rendered in the
 browser); residuals use it too. Every residual view has a switch for the PSF-error noise boost
@@ -20,8 +21,10 @@ with the wheel and pan by dragging, the corner plot scales with Ctrl/⌘ + wheel
 Nothing is uploaded anywhere: files are read with the browser File API and all computation happens
 client-side (Web Workers).
 
-**Blinding.** Blinded runs stay blinded on screen, always. The blinding key (`blinding_secret.key` next to the
-samples, picked up automatically, or typed in) is used *only inside computations*: to evaluate the forward model
+**Blinding.** Blinded runs stay blinded on screen, always. The blinding key is used *only inside computations*. It is
+picked up automatically from any `*.key` file in the opened folder, like the perturber catalog (`blinding*.key` and the
+files closest to the run first; the sealed offsets' MAC check decides which one is the run's). You can also type it in, or
+drop the `.key` file onto any key box. It is used to evaluate the forward model
 for posterior draws and to derive H₀ from the true D_Δt. H₀ and D_Δt are then shown exclusively as deviations
 from their own posterior mean (TDCOSMO convention), so only widths, shapes and correlations are visible.
 
@@ -35,6 +38,21 @@ restored in memory), *write into the run folder* (produces `05_posterior/samples
 and `unblinding_record.json`, the same files as `python -m alpaca.unblind`; needs the folder opened with the folder
 picker so the browser may write) or *download the files*. The reveal screen animates and then shows H₀; close it to
 analyse the unblinded results in every panel.
+
+**Model checks** (preset *Model checks*).
+* *Residual statistics* asks whether the residual is noise. It shows normalised residuals inside the likelihood
+  mask (with or without the PSF-error term b) against N(0, 1), with tails and a Q–Q plot. It plots χ² against radius
+  in units of θ_E and against the distance to the nearest quasar image, which is the PSF-mismatch signature, and the
+  mean residual against angle in the arc annulus. Finally it compares the residual autocorrelation in the lens region
+  with the empty sky beyond 2 θ_E, which carries the noise's own correlation.
+* *Flux ratios & magnifications* evaluates the exact multi-plane Jacobian at every image of every posterior draw (and
+  of the MAP). It gives parities, the source-plane scatter and model flux ratios. These are compared draw by draw with
+  the fitted point-source amplitudes, and with external fluxes you type in, e.g. mid-IR, stored per lens. It also
+  lists ALPACA's H₀-independent time-delay ratios. Absolute |μ| is withheld while a run is blinded.
+* *What limits D_Δt* decomposes the posterior variance of D_Δt (or any parameter) over parameter groups. It gives the
+  share each group explains, the width left if the group were known exactly, and the strongest single parameters.
+  For D_Δt it adds the floor set by the measured delays and their covariance alone. The analysis is blinding-safe,
+  because the blinding offsets do not change widths or correlations.
 
 **Kinematics and the mass sheet.** Runs with stellar kinematics (ALPACA ≥ 0.5.1, `likelihood.use_kinematics`) sample
 D_dt as the *lens-model* distance; the physical distance is D_dt / [λ_int (1 − κ_ext)] (large-core internal MST), with

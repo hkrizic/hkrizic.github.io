@@ -14,8 +14,11 @@ import psf from "./psf.js";
 import diagnostics from "./diagnostics.js";
 import gallery from "./gallery.js";
 import compare from "./compare.js";
+import residuals from "./residuals.js";
+import fluxratios from "./fluxratios.js";
+import budget from "./budget.js";
 
-export const APPLETS = [overview, image, model, rayshoot, params, corner, marginals, sourcemaps, lensing, h0, msd, stages, psf, diagnostics, gallery, compare];
+export const APPLETS = [overview, image, model, rayshoot, params, corner, marginals, sourcemaps, lensing, residuals, fluxratios, h0, budget, msd, stages, psf, diagnostics, gallery, compare];
 export const APPLET_MAP = Object.fromEntries(APPLETS.map((a) => [a.id, a]));
 
 // Multi-panel presets
@@ -25,5 +28,6 @@ export const PRESETS = [
   { id: "posterior", title: "Posterior deep-dive", panels: [["corner", {}, "l"], ["marginals", {}, "m"], ["diagnostics", {}, "m"], ["h0", {}, "m"], ["sourcemaps", {}, "l"]] },
   { id: "model", title: "Model lab + lensing", panels: [["model", { output: "model" }, "m"], ["model", { output: "resid" }, "m"], ["model", { output: "source" }, "m"], ["lensing", {}, "l"]] },
   { id: "rayshoot", title: "Ray-shooting lab", panels: [["rayshoot", {}, "xl"]] },
+  { id: "checks", title: "Model checks: residuals · flux ratios · D_Δt budget", panels: [["residuals", {}, "xl"], ["fluxratios", {}, "l"], ["budget", {}, "l"]] },
   { id: "msd", title: "Mass sheet & kinematics", panels: [["msd", {}, "xl"], ["h0", {}, "m"], ["corner", { params: ["kin_lambda_int", "lens_gamma", "kin_anisotropy_ratio", "lens_theta_E", "D_dt"] }, "l"]] },
 ];

@@ -5,7 +5,7 @@
 // H0 widths and the what-if use the true values with the key and are displayed relative to their mean.
 import { el, section, row, select, number, checkbox, button, downloadPNG, badge, kv, table } from "../ui/widgets.js";
 import { Plot } from "../ui/plot.js";
-import { runOf, runRow, otherRun, busy, unblindUI, fmtNum } from "./common.js";
+import { runOf, runRow, otherRun, busy, unblindUI, fmtNum, cosmologyOf, cosmologySection } from "./common.js";
 import { H0FromDdt } from "../physics/cosmology.js";
 import { histogram, kde1d, kde2d, massLevels, summarize, pearson, rng, resampleIndex, quantileSorted } from "../core/stats.js";
 import { marchingSquares } from "../core/contours.js";
@@ -71,7 +71,7 @@ function whatIf(a, s) {
 async function analyse(run, src, s, cosmo) {
   const ms = run.massSheet;
   const post = await run.posterior(src);
-  const a = { run, ms, post, src: post.src, mode: post.blinding?.mode || run.blinding?.mode || "absolute" };
+  const a = { run, ms, post, cosmo, src: post.src, mode: post.blinding?.mode || run.blinding?.mode || "absolute" };
   a.hasLam = !!post.columns.kin_lambda_int;
   a.lamShown = a.hasLam ? post.columns.kin_lambda_int : null;
   a.lamBlinded = post.blindedColumns.includes("kin_lambda_int");
@@ -109,11 +109,11 @@ async function analyse(run, src, s, cosmo) {
   return a;
 }
 
-// What to show for an H0 sample set: absolute (unblinded, redshifts known) or relative to its mean.
-function displayH0(arr, a, cosmo) {
+// What to show for an H0 sample set: absolute (unblinded, redshifts of its own run known) or relative to its mean.
+function displayH0(arr, a) {
   if (!arr) return null;
   if (a.blinded) return a.run.blindDerived(arr).values;
-  if (!cosmo.hasZ) { const m = summarize(arr).mean; return Float64Array.from(arr, (v) => (v - m) / m); }
+  if (!a.cosmo.hasZ) { const m = summarize(arr).mean; return Float64Array.from(arr, (v) => (v - m) / m); }
   return arr;
 }
 
@@ -135,10 +135,12 @@ export default {
   available: (run) => run.features.posterior,
   create(ctx, state, panel) {
     Object.assign(state, {
-      Om: state.Om ?? 0.3, compare: state.compare ?? true,
+      compare: state.compare ?? true,
       kext: state.kext || { mode: "run", mu: 0, sigma: 0.025 },
       lamPrior: state.lamPrior || { mode: "run", mu: 1, sigma: 0.05, lo: 0.9, hi: 1.1 },
     });
+    // redshifts / Ωm now come from each run (cosmologyOf); older layouts saved those of whatever run was open
+    delete state.zLens; delete state.zSource; delete state.Om;
     const body = el("div");
     panel.body.append(body);
     let plots = [];
@@ -160,13 +162,10 @@ export default {
       const run = runOf(ctx, state);
       const ms = run.massSheet;
       const src = state.src && run.posteriorSources().some((s) => s.value === state.src) ? state.src : run.massSheetSource;
-      const zl = state.zLens ?? run.catalog?.target?.z_lens ?? null;
-      const zs = state.zSource ?? run.catalog?.target?.z_source ?? null;
-      state.zLens = zl; state.zSource = zs;
-      const cosmo = { zl, zs, Om: state.Om, hasZ: zl != null && zs != null };
+      const cosmo = cosmologyOf(run, state);
       const A = await analyse(run, src, state, cosmo);
       const other = otherRun(ctx, run);
-      const B = other && state.compare && other.features.posterior ? await analyse(other, other.massSheetSource, state, cosmo) : null;
+      const B = other && state.compare && other.features.posterior ? await analyse(other, other.massSheetSource, state, cosmologyOf(other, state)) : null;
       const post = A.post;
       const lamName = A.blinded && A.lamBlinded ? "Δλ_int" : "λ_int";
 
@@ -308,10 +307,11 @@ export default {
         const { plot, cap } = addPlot(grid, "H₀: lens model vs mass sheet", "", { xlabel: lbl, ylabel: "density" });
         const curves = [];
         if (A.hasTrue) {
-          curves.push({ arr: displayH0(A.h0Model, A, cosmo), color: THEME.muted, dash: [5, 4], label: "lens model (λ = 1)" });
-          if (A.h0Phys) curves.push({ arr: displayH0(A.h0Phys, A, cosmo), color: cA, label: ms.sampleLambda ? "with λ_int (kinematics)" : "with fixed λ_int (1 − κ_ext)" });
-          if (A.what?.h0) curves.push({ arr: displayH0(A.what.h0, A, cosmo), color: cA, dash: [2, 2], width: 2.4, label: "what-if" });
-          if (B?.hasTrue) curves.push({ arr: displayH0(B.h0Phys || B.what?.h0 || B.h0Model, B, cosmo), color: cB, label: `${other.label}: ${B.h0Phys ? "with mass sheet" : "lens model"}` });
+          curves.push({ arr: displayH0(A.h0Model, A), color: THEME.muted, dash: [5, 4], label: "lens model (λ = 1)" });
+          if (A.h0Phys) curves.push({ arr: displayH0(A.h0Phys, A), color: cA, label: ms.sampleLambda ? "with λ_int (kinematics)" : "with fixed λ_int (1 − κ_ext)" });
+          if (A.what?.h0) curves.push({ arr: displayH0(A.what.h0, A), color: cA, dash: [2, 2], width: 2.4, label: "what-if" });
+          // run B with its own redshifts; without them its H0 is only relative and cannot share an absolute axis
+          if (B?.hasTrue && B.cosmo.hasZ === cosmo.hasZ) curves.push({ arr: displayH0(B.h0Phys || B.what?.h0 || B.h0Model, B), color: cB, label: `${other.label}: ${B.h0Phys ? "with mass sheet" : "lens model"}${cosmo.hasZ ? ` (z_l=${B.cosmo.zl}, z_s=${B.cosmo.zs})` : ""}` });
         }
         plot.render = (p) => {
           if (!curves.length) { p.setRange(0, 1, 0, 1); p.axes({ xticks: false, yticks: false }); p.text(p.rect.x + p.rect.w / 2, p.rect.y + p.rect.h / 2, !A.hasDdt ? "no D_Δt in this run" : "needs the blinding key", { px: true, align: "center", baseline: "middle", color: THEME.muted }); return; }
@@ -324,7 +324,7 @@ export default {
           p.legend(curves.map((c) => ({ color: c.color, label: c.label })));
         };
         plot.draw();
-        cap.textContent = A.hasTrue ? `${A.blinded ? "Every curve is centred on its own mean, so only the widths compare (blinding). " : ""}H₀ ∝ 1/D_Δt; the mass sheet multiplies it by λ_int (1 − κ_ext) draw by draw.` : "";
+        cap.textContent = A.hasTrue ? `${A.blinded ? "Every curve is centred on its own mean, so only the widths compare (blinding). " : ""}H₀ ∝ 1/D_Δt; the mass sheet multiplies it by λ_int (1 − κ_ext) draw by draw.` + (B?.hasTrue && B.cosmo.hasZ !== cosmo.hasZ ? ` Run ${other.label} is not drawn: ${B.cosmo.hasZ ? `run ${run.label}` : `run ${other.label}`} has no redshifts, so the two H₀ scales differ.` : "") : "";
       }
 
       // 2b. stellar kinematics: predicted vs observed velocity dispersion (computed in a worker, filled in later)
@@ -519,11 +519,7 @@ export default {
       panel.settings.replaceChildren(
         runRow(ctx, state, load) || "",
         sources.length > 1 ? section("Posterior", row("Set", select(sources, state.src || run.massSheetSource, (v) => { state.src = v; load(); }))) : "",
-        section("Cosmology",
-          row("z_lens", number(state.zLens, (v) => { state.zLens = v; load(); }, { step: 0.0001, width: 90 })),
-          row("z_source", number(state.zSource, (v) => { state.zSource = v; load(); }, { step: 0.0001, width: 90 })),
-          row("Ωm", number(state.Om, (v) => { state.Om = v; load(); }, { step: 0.01, width: 70 })),
-        ),
+        cosmologySection(run, state, load),
         names.length ? section("Degeneracy plot",
           row("x", select(opt, names.includes(state.pairX) ? state.pairX : (A.hasLam ? "kin_lambda_int" : "lens_gamma"), (v) => { state.pairX = v; load(); })),
           row("y", select(opt, names.includes(state.pairY) ? state.pairY : (A.hasLam ? "lens_gamma" : "D_dt"), (v) => { state.pairY = v; load(); })),

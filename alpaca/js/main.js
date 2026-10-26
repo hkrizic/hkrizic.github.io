@@ -65,13 +65,14 @@ class App {
   bindDrop() {
     const overlay = document.getElementById("drop-overlay");
     let hideTimer = null;
-    const isFileDrag = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files");
+    // drops on a text-file target (blinding key boxes, widgets.textFileDrop) are theirs, not a run folder
+    const isFileDrag = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files") && !e.target.closest?.("[data-text-drop]");
     const show = () => { overlay.classList.add("on"); clearTimeout(hideTimer); hideTimer = setTimeout(() => overlay.classList.remove("on"), 300); };
     const hide = () => { clearTimeout(hideTimer); overlay.classList.remove("on"); };
     // Only external file drags show the overlay; it hides by itself when dragover events stop
     // (panel reordering uses its own drag type and never triggers it).
     document.addEventListener("dragenter", (e) => { if (isFileDrag(e)) { e.preventDefault(); show(); } });
-    document.addEventListener("dragover", (e) => { if (isFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; show(); } });
+    document.addEventListener("dragover", (e) => { if (isFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; show(); } else if (e.target.closest?.("[data-text-drop]")) hide(); });
     document.addEventListener("dragleave", (e) => { if (e.relatedTarget === null) hide(); });
     document.addEventListener("dragend", hide);
     window.addEventListener("drop", (e) => { if (!isFileDrag(e)) return; e.preventDefault(); hide(); this.handleFileDrop(e); }, true);

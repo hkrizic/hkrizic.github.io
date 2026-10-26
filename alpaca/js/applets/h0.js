@@ -1,6 +1,6 @@
 import { el, section, row, number, checkbox, button, downloadPNG, badge, select } from "../ui/widgets.js";
 import { Plot } from "../ui/plot.js";
-import { runOf, runRow, otherRun, busy, errorBox, unblindUI } from "./common.js";
+import { runOf, runRow, otherRun, busy, errorBox, unblindUI, cosmologyOf, cosmologySection } from "./common.js";
 import { H0FromDdt, timeDelayDistance } from "../physics/cosmology.js";
 import { histogram, kde1d, summarize } from "../core/stats.js";
 import { series } from "../ui/theme.js";
@@ -32,7 +32,9 @@ export default {
   id: "h0", title: "H₀ from D_Δt", icon: "H₀", description: "Time-delay distance posterior converted to H₀ (flat ΛCDM), including the mass sheet λ_int (1 − κ_ext) of kinematics runs. Blinded runs show H₀ and D_Δt as deviations from their posterior mean.", defaultSize: "m",
   available: (run) => run.features.posterior,
   create(ctx, state, panel) {
-    Object.assign(state, { Om: state.Om ?? 0.3, bins: state.bins ?? 40, kde: state.kde ?? true, compare: state.compare ?? true, quantity: state.quantity || "h0", coordinate: state.coordinate || "physical" });
+    Object.assign(state, { bins: state.bins ?? 40, kde: state.kde ?? true, compare: state.compare ?? true, quantity: state.quantity || "h0", coordinate: state.coordinate || "physical" });
+    // redshifts / Ωm now come from each run (cosmologyOf); older layouts saved those of whatever run was open
+    delete state.zLens; delete state.zSource; delete state.Om;
     const plotWrap = el("div", { class: "plot-wrap" });
     const info = el("div", { class: "cards" });
     panel.body.append(plotWrap, info);
@@ -44,22 +46,21 @@ export default {
       const src = state.src && run.posteriorSources().some((s) => s.value === state.src) ? state.src : run.massSheetSource;
       const post = await run.posterior(src);
       if (!post.columns.D_dt) { panel.body.replaceChildren(errorBox("No D_dt column in the posterior (no time delays?).")); return; }
-      const zl = state.zLens ?? run.catalog?.target?.z_lens ?? null;
-      const zs = state.zSource ?? run.catalog?.target?.z_source ?? null;
-      state.zLens = zl; state.zSource = zs;
+      const cosmo = cosmologyOf(run, state);
       const physical = state.coordinate === "physical";
       const runs = [run];
       const other = otherRun(ctx, run);
       if (other && state.compare && other.features.posterior) runs.push(other);
-      sets = [];
+      const next = [];
       for (const r of runs) {
         const p = r === run ? post : await r.posterior(r.massSheetSource);
         if (!p.columns.D_dt) continue;
+        const c = r === run ? cosmo : cosmologyOf(r, state);
         const d = await distanceSet(r, p, physical);
         const ddtStats = d.shown ? summarize(d.shown) : null;
         let h0Shown = null, h0Stats = null, h0Frac = null, h0Mode = null;
-        if (d.ddt && zl != null && zs != null) {
-          const h0 = Float64Array.from(d.ddt, (x) => H0FromDdt(x, zl, zs, state.Om));
+        if (d.ddt && c.hasZ) {
+          const h0 = Float64Array.from(d.ddt, (x) => H0FromDdt(x, c.zl, c.zs, c.Om));
           const st = summarize(h0);
           h0Frac = st.std / st.mean;
           if (d.blindedRun) { const b = r.blindDerived(h0); h0Shown = b.values; h0Mode = b.mode; }
@@ -76,9 +77,11 @@ export default {
           const m = await r.trueColumn(p, "D_dt");
           if (m) { modelFrac = inv(m); physFrac = inv(d.ddt); }
         }
-        sets.push({ run: r, ...d, hasKey: !!d.ddt, ddtStats, ddtFrac, modelFrac, physFrac, h0Shown, h0Stats, h0Frac, h0Mode, src: p.src, color: r === run ? series(0) : series(1) });
+        next.push({ run: r, ...d, hasKey: !!d.ddt, ddtStats, ddtFrac, modelFrac, physFrac, h0Shown, h0Stats, h0Frac, h0Mode, cosmo: c, src: p.src, color: r === run ? series(0) : series(1) });
       }
+      sets = next;
       const s0 = sets[0];
+      const zText = `flat ΛCDM Ωm=${cosmo.Om}, z_l=${cosmo.zl}, z_s=${cosmo.zs}${cosmo.manual ? " (set manually)" : ""}`;
       info.innerHTML = "";
       const cards = [];
       const fmtPm = (st, d) => `+${(st.hi68 - st.median).toFixed(d)} −${(st.median - st.lo68).toFixed(d)}`;
@@ -91,9 +94,9 @@ export default {
           const unit = s0.h0Mode === "fractional" ? "" : " km/s/Mpc";
           cards.push(el("div", { class: "card" }, el("h3", {}, "H₀ (blinded)", badge(s0.h0Mode === "fractional" ? "fractional Δ" : "Δ from posterior mean", "warn"), coordTag ? badge(coordTag) : null),
             el("div", { class: "big" }, `σ = ${st.std.toFixed(s0.h0Mode === "fractional" ? 4 : 2)}${unit}`),
-            el("div", { class: "muted small" }, `68 % interval ${fmtPm(st, s0.h0Mode === "fractional" ? 4 : 2)}${unit} · precision σ/H₀ = ${(100 * s0.h0Frac).toFixed(2)} % · flat ΛCDM Ωm=${state.Om}, z_l=${zl}, z_s=${zs}. Computed from the true values with the key; the absolute value is never shown.${msLine}`)));
+            el("div", { class: "muted small" }, `68 % interval ${fmtPm(st, s0.h0Mode === "fractional" ? 4 : 2)}${unit} · precision σ/H₀ = ${(100 * s0.h0Frac).toFixed(2)} % · ${zText}. Computed from the true values with the key; the absolute value is never shown.${msLine}`)));
         } else {
-          cards.push(el("div", { class: "card" }, el("h3", {}, "H₀", coordTag ? badge(coordTag) : null), el("div", { class: "big" }, `${st.median.toFixed(2)} `, el("span", { class: "muted" }, fmtPm(st, 2))), el("div", { class: "muted small" }, `km/s/Mpc · flat ΛCDM Ωm=${state.Om} · z_l=${zl}, z_s=${zs} · ${(100 * s0.h0Frac).toFixed(2)} % precision (run not blinded)${msLine}`)));
+          cards.push(el("div", { class: "card" }, el("h3", {}, "H₀", coordTag ? badge(coordTag) : null), el("div", { class: "big" }, `${st.median.toFixed(2)} `, el("span", { class: "muted" }, fmtPm(st, 2))), el("div", { class: "muted small" }, `km/s/Mpc · ${zText} · ${(100 * s0.h0Frac).toFixed(2)} % precision (run not blinded)${msLine}`)));
         }
       } else if (s0.blindedRun && !s0.hasKey) {
         cards.push(el("div", { class: "card" }, el("h3", {}, "H₀ needs the blinding key"), el("div", { class: "muted small" }, `D_Δt${ms.sampleLambda && ms.kinematics ? " and λ_int are" : " is"} stored as a deviation from the mean, so H₀ cannot be derived without the key. The key is used only in the computation; H₀ will be shown as a blinded deviation too.`), unblindUI(run, load)));
@@ -102,8 +105,9 @@ export default {
       const sd = s0.ddtStats;
       if (sd) cards.push(el("div", { class: "card" }, el("h3", {}, s0.blindedRun ? "D_Δt (blinded)" : "D_Δt", s0.blindedRun ? badge("Δ from posterior mean", "warn") : null, coordTag ? badge(coordTag) : null),
         el("div", { class: "big" }, s0.blindedRun ? `σ = ${sd.std.toFixed(1)} Mpc` : `${sd.median.toFixed(1)} `, s0.blindedRun ? null : el("span", { class: "muted" }, `${fmtPm(sd, 1)} Mpc`)),
-        el("div", { class: "muted small" }, `68 % interval ${fmtPm(sd, 1)} Mpc` + (s0.ddtFrac != null ? ` · precision σ/D_Δt = ${(100 * s0.ddtFrac).toFixed(2)} %` : (zl != null && zs != null ? ` · for H₀ ≈ 70 this is ≈ ${(100 * sd.std / timeDelayDistance(zl, zs, { H0: 70, Om: state.Om })).toFixed(2)} %` : "")))));
-      if (zl == null || zs == null) cards.push(el("div", { class: "card" }, el("h3", {}, "Redshifts needed"), el("div", { class: "muted small" }, "No perturber catalog found: enter z_lens and z_source in the settings to convert D_Δt to H₀.")));
+        el("div", { class: "muted small" }, `68 % interval ${fmtPm(sd, 1)} Mpc` + (s0.ddtFrac != null ? ` · precision σ/D_Δt = ${(100 * s0.ddtFrac).toFixed(2)} %` : (cosmo.hasZ ? ` · for H₀ ≈ 70 this is ≈ ${(100 * sd.std / timeDelayDistance(cosmo.zl, cosmo.zs, { H0: 70, Om: cosmo.Om })).toFixed(2)} %` : "")))));
+      if (!cosmo.hasZ) cards.push(el("div", { class: "card" }, el("h3", {}, "Redshifts needed"), el("div", { class: "muted small" }, "No perturber catalog found: enter z_lens and z_source in the settings to convert D_Δt to H₀.")));
+      for (const s of sets.slice(1)) if (s.hasKey && !s.cosmo.hasZ && state.quantity === "h0") cards.push(el("div", { class: "card" }, el("h3", {}, `Run ${s.run.label}: no redshifts`), el("div", { class: "muted small" }, `${s.run.name} has no z_lens / z_source in its catalog, so its H₀ is not overlaid (another lens's redshifts would give a wrong H₀). Switch the plot to D_Δt to compare it, or open it as run A to enter its redshifts.`)));
       info.append(...cards);
 
       const useH0 = state.quantity === "h0" && sets.some((s) => s.h0Shown);
@@ -128,7 +132,7 @@ export default {
         for (const it of items) { p.bars(it.hg.edges, it.hg.counts, { color: it.s.color + "66" }); if (it.k) p.line(it.k.xs, it.k.ys, { color: it.s.color, width: 2 }); p.band(it.st.lo68, it.st.hi68, { color: it.s.color + "22" }); p.vline(it.st.median, { color: it.s.color }); }
         p.unclip();
         p.axes({ grid: true });
-        if (sets.length > 1) p.legend(sets.map((s) => ({ color: s.color, label: `${s.run.label}: ${s.run.name}${s.physical ? " (physical)" : ""}` })));
+        if (sets.length > 1) p.legend(sets.map((s) => ({ color: s.color, label: `${s.run.label}: ${s.run.name}${s.physical ? " (physical)" : ""}${useH0 && s.h0Shown ? ` · z_l=${s.cosmo.zl}, z_s=${s.cosmo.zs}` : ""}` })));
       };
       plot.draw();
       panel.setStatus((s0.blindedRun ? (s0.hasKey ? "blinded · widths from true values" : "blinded · no key") : "not blinded") + (s0.physical ? " · physical distance" : ms.applies ? " · lens-model distance" : ""));
@@ -141,12 +145,7 @@ export default {
       panel.settings.replaceChildren(
         runRow(ctx, state, load) || "",
         sources.length > 1 ? section("Posterior", row("Set", select(sources, state.src || run.massSheetSource, (v) => { state.src = v; load(); }))) : "",
-        section("Cosmology",
-          row("z_lens", number(state.zLens, (v) => { state.zLens = v; load(); }, { step: 0.0001, width: 90 })),
-          row("z_source", number(state.zSource, (v) => { state.zSource = v; load(); }, { step: 0.0001, width: 90 })),
-          row("Ωm", number(state.Om, (v) => { state.Om = v; load(); }, { step: 0.01, width: 70 })),
-          el("div", { class: "muted small" }, "Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm."),
-        ),
+        cosmologySection(run, state, load),
         run.massSheet.kinematics ? section("Mass sheet",
           row("Distance", select([{ value: "physical", label: "physical: D_Δt / [λ_int (1 − κ_ext)]" }, { value: "model", label: "lens model (λ_int = 1, κ_ext = 0)" }], state.coordinate, (v) => { state.coordinate = v; load(); })),
           el("div", { class: "muted small" }, `Kinematics run (${run.massSheet.mode}): the sampled D_dt is the lens-model distance. κ_ext = ${run.massSheet.kappaExt}; ${run.massSheet.sampleLambda ? `λ_int sampled, U[${run.massSheet.lambdaRange.join(", ")}]` : `λ_int fixed at ${run.massSheet.lambdaFixed}`}. See the Mass-sheet applet for the degeneracy itself.`),

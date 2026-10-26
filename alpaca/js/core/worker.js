@@ -114,6 +114,38 @@ const ops = {
     }
     return { sigma, sigma1, observed: kin.observed, error: kin.error };
   },
+  // Magnification of every point-source image for each draw (true parameters in `columns`): the Jacobian of
+  // the full multi-plane lens equation by central differences (step h arcsec), its trace (parity type) and
+  // the source-plane position of each image.
+  fmMagnify({ runId, columns, n, nImg, h = 1e-4 }) {
+    const fm = models.get(runId);
+    if (!fm) throw new Error("forward model not initialised");
+    const names = Object.keys(columns);
+    const N = fm.geo.nPlanes;
+    const mu = new Float64Array(n * nImg), trace = new Float64Array(n * nImg), bx = new Float64Array(n * nImg), by = new Float64Array(n * nImg);
+    const x = new Float64Array(5 * nImg), y = new Float64Array(5 * nImg);
+    const p = {};
+    for (let i = 0; i < n; i++) {
+      for (const k of names) p[k] = columns[k][i];
+      for (let j = 0; j < nImg; j++) {
+        const x0 = p[`x_image_${j}`], y0 = p[`y_image_${j}`], o = 5 * j;
+        x[o] = x0; y[o] = y0;
+        x[o + 1] = x0 + h; y[o + 1] = y0; x[o + 2] = x0 - h; y[o + 2] = y0;
+        x[o + 3] = x0; y[o + 3] = y0 + h; x[o + 4] = x0; y[o + 4] = y0 - h;
+      }
+      const r = fm.rayShootPoints(p, x, y);
+      const sx = r.xs[N], sy = r.ys[N];
+      for (let j = 0; j < nImg; j++) {
+        const o = 5 * j, k = i * nImg + j;
+        const a11 = (sx[o + 1] - sx[o + 2]) / (2 * h), a12 = (sx[o + 3] - sx[o + 4]) / (2 * h);
+        const a21 = (sy[o + 1] - sy[o + 2]) / (2 * h), a22 = (sy[o + 3] - sy[o + 4]) / (2 * h);
+        mu[k] = 1 / (a11 * a22 - a12 * a21);
+        trace[k] = a11 + a22;
+        bx[k] = sx[o]; by[k] = sy[o];
+      }
+    }
+    return { mu, trace, bx, by };
+  },
   fmRayShoot({ runId, params, x, y }) {
     const fm = models.get(runId);
     if (!fm) throw new Error("forward model not initialised");

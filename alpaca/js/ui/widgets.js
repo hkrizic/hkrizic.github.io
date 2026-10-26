@@ -69,6 +69,20 @@ export function textInput(value, onChange, { placeholder = "", width = 160, type
   return i;
 }
 
+// Make `target` accept a dropped small text file (e.g. a blinding .key) and return a button that picks
+// one instead; onText gets the trimmed contents. The app's folder drop ignores drops on [data-text-drop].
+export function textFileDrop(target, onText, { label = "choose file…", onError = (e) => console.warn(e) } = {}) {
+  target.dataset.textDrop = "";
+  const read = async (f) => { if (!f) return; try { onText((await f.text()).trim(), f); } catch (e) { onError(new Error(`Could not read ${f.name}: ${e.message}`)); } };
+  const isFile = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+  target.addEventListener("dragover", (e) => { if (!isFile(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; target.classList.add("drop-hover"); });
+  target.addEventListener("dragleave", (e) => { if (!target.contains(e.relatedTarget)) target.classList.remove("drop-hover"); });
+  target.addEventListener("drop", (e) => { if (!isFile(e)) return; e.preventDefault(); target.classList.remove("drop-hover"); read(e.dataTransfer.files[0]); });
+  const input = el("input", { type: "file", hidden: true });
+  input.addEventListener("change", () => { read(input.files[0]); input.value = ""; });
+  return el("span", {}, input, button(label, () => input.click(), { small: true }));
+}
+
 // Toggle chips (multi-select)
 export function chips(items, selected, onToggle) {
   const wrap = el("div", { class: "chips" });

@@ -1,5 +1,5 @@
 // A loaded ALPACA run: feature detection + lazy, cached access to every product.
-import { findCatalog } from "./files.js";
+import { findCatalog, findKeyFiles } from "./files.js";
 import { decryptOffsets, isEncryptedBlob, unblindValue } from "./blinding.js";
 import { summarize } from "./stats.js";
 import { H0FromDdt } from "../physics/cosmology.js";
@@ -175,6 +175,9 @@ export class Run {
       }
     }
 
+    // blinding keys anywhere in the opened folder (tried below, nearest first)
+    this.keyFiles = findKeyFiles(this.index, this.root);
+
     // point sources / lens-light structure from the final best fit
     this.features = {
       posterior: this.has("05_posterior/samples/posterior_samples.npz"),
@@ -183,7 +186,7 @@ export class Run {
       modelImage: this.has("03_multistart/model_image.fits"),
       image: this.has("01_input/fits/image.fits"),
       blinded: !!(blinding && blinding.blinded),
-      keyFile: this.has("05_posterior/samples/blinding_secret.key"),
+      keyFile: this.keyFiles.length > 0,
       sealed: this.has("05_posterior/samples/blinding_key.json"),
       catalog: !!this.catalog,
       lossCurve: this.stages.some((s) => this.has(`03_multistart/${s.dir}/loss_curve.npy`)),
@@ -193,12 +196,16 @@ export class Run {
       kinImportance: this.has("05_posterior/kinematics_importance/posterior_samples.npz"),
     };
     this.pixScale = this.config?.data?.pix_scale ?? null;
-    // Blinding key found next to the samples: load it silently. It is used only
-    // to evaluate the forward model and derived widths; no blinded value is shown.
+    // Blinding key found anywhere in the opened folder (like the catalog): load the first one that opens
+    // the sealed offsets, silently. It is used only to evaluate the forward model and derived widths;
+    // no blinded value is shown.
     this.keySource = null;
-    if (this.features.blinded && this.features.keyFile) {
-      try { await this.unblind(await this.keyFileContents()); this.keySource = "run folder (blinding_secret.key)"; }
-      catch (e) { console.warn("blinding key file could not be used", e); }
+    this.keyPath = null;
+    if (this.features.blinded && this.features.sealed) {
+      for (const path of this.keyFiles) {
+        try { await this.unblind((await this.index.text(path)).trim()); this.keyPath = path; this.keySource = `key file in the folder (${path})`; break; }
+        catch (e) { /* another campaign's key, or not a key */ }
+      }
     }
     // campaign key remembered in this browser (session or device)
     if (this.features.blinded && !this.offsets && this.features.sealed) {
@@ -364,7 +371,8 @@ export class Run {
     const dir = POSTERIOR_SOURCES[post.src].dir;
     const blob = await this.json(`${dir}/blinding_key.json`);
     if (!blob || !isEncryptedBlob(blob)) return null;
-    const keys = [this._passphrase, (await this.text(`${dir}/blinding_secret.key`, "")).trim()].filter(Boolean);
+    const files = [this.p(`${dir}/blinding_secret.key`), ...this.keyFiles].filter((p, i, a) => this.index.has(p) && a.indexOf(p) === i);
+    const keys = [this._passphrase, ...(await Promise.all(files.map(async (p) => (await this.index.text(p)).trim())))].filter(Boolean);
     for (const k of keys) { try { const r = await decryptOffsets(blob, k); post.offsets = r.offsets; post.offsetsMode = r.mode; return r; } catch (e) { /* try the next key */ } }
     return null;
   }
@@ -453,7 +461,7 @@ export class Run {
     return r;
   }
 
-  async keyFileContents() { return (await this.text("05_posterior/samples/blinding_secret.key", "")).trim(); }
+  async keyFileContents() { const p = this.keyPath || this.keyFiles?.[0]; return p ? (await this.index.text(p)).trim() : ""; }
 
   // ------------------------------------------------------------ real unblinding
   // Restore absolute values everywhere for this session: posterior columns/samples, the
@@ -736,6 +744,42 @@ export class Run {
   async findImages(stageKey, params, bx, by, opts = {}) {
     const { runId } = await this.ensureForwardModel(stageKey);
     return (await this.worker.call("fmFindImages", { runId, params, bx, by, opts })).images;
+  }
+
+  // Magnification, Jacobian trace and source-plane position of every point-source image for a thinned set
+  // of posterior draws (at most maxDraws), from the true parameters (needs the key for blinded runs).
+  async imageMagnifications(maxDraws = 1000) {
+    return this.cached(`mag:${maxDraws}`, async () => {
+      const post = await this.posterior();
+      const step = Math.max(1, Math.ceil(post.nSamples / maxDraws));
+      const idx = [];
+      for (let i = 0; i < post.nSamples; i += step) idx.push(i);
+      const columns = {};
+      for (const nm of post.scalarNames) {
+        const c = await this.trueColumn(post, nm);
+        if (!c) throw new Error(`${nm} is blinded and no key is loaded.`);
+        columns[nm] = Float64Array.from(idx, (i) => c[i]);
+      }
+      let nImg = 0;
+      while (columns[`x_image_${nImg}`]) nImg++;
+      const { runId } = await this.ensureForwardModel("final");
+      const r = await this.worker.call("fmMagnify", { runId, columns, n: idx.length, nImg });
+      return { ...r, idx, n: idx.length, nImg, columns };
+    });
+  }
+
+  // The same for the MAP of the final GD stage (null when its blinded parameters are not stored).
+  async mapMagnifications() {
+    return this.cached("mag:map", async () => {
+      const bf = await this.bestFit("final");
+      if ((this.blinding?.blinded_columns || []).some((c) => bf.params[c] === undefined)) return null;
+      const columns = {};
+      for (const [k, v] of Object.entries(bf.params)) if (typeof v === "number") columns[k] = Float64Array.of(v);
+      let nImg = 0;
+      while (columns[`x_image_${nImg}`]) nImg++;
+      const { runId } = await this.ensureForwardModel("final");
+      return { ...(await this.worker.call("fmMagnify", { runId, columns, n: 1, nImg })), nImg, columns };
+    });
   }
 
   async rayShoot(stageKey, params, x, y) {
