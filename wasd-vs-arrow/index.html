@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WASD vs ARROW">
+  <meta name="theme-color" content="#FFE9DC">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <title>WASD vs ARROW</title>
+  <meta name="description" content="Couch 1v1 party games for one keyboard: one player on WASD, one on the arrow keys.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <canvas id="gl"></canvas>
+  <div id="ui" data-screen="loading">
+    <section id="loading" class="screen on">
+      <div class="logo"></div>
+      <div class="bar"><i></i></div>
+      <p>Unboxing the figures…</p>
+    </section>
+
+    <section id="mode" class="screen">
+      <div class="logo"></div>
+      <h2>How are you playing?</h2>
+      <div class="mode-cards">
+        <button class="mode-card" data-mode="keys">
+          <div class="mc-art"><div class="mc-keys"><span class="cl"><kbd class="k0">W</kbd><kbd class="k0">A</kbd><kbd class="k0">S</kbd><kbd class="k0">D</kbd></span><span class="cl"><kbd class="k1">↑</kbd><kbd class="k1">←</kbd><kbd class="k1">↓</kbd><kbd class="k1">→</kbd></span></div></div>
+          <b>One keyboard</b><p>Player 1 on W A S D, player 2 on the arrow keys.</p>
+        </button>
+        <button class="mode-card" data-mode="touch">
+          <div class="mc-art"><div class="mc-tablet"><div class="scr"><i class="l"></i><b class="lb"></b><b class="rb"></b><i class="r"></i></div></div></div>
+          <b>Touch screen</b><p>iPad or tablet: each player gets a joystick and buttons on their side.</p>
+        </button>
+      </div>
+      <p class="mode-hint"><span class="kb-any">Press any key for keyboard · </span>tap or click to choose</p>
+    </section>
+
+    <header id="logo" class="logo"></header>
+
+    <section id="select" class="screen">
+      <div class="pick" data-team="0"></div>
+      <div class="pick" data-team="1"></div>
+      <p class="select-hint"><span class="kb">Pick your figure, then press your <b>UP</b> key. One keyboard, two players!</span><span class="tch">Pick your figure with ◀ ▶, then tap <b>READY</b>. One tablet, two players!</span></p>
+    </section>
+
+    <section id="menu" class="screen">
+      <div class="menu-head"><h2>Choose a game</h2><button class="menu-back">↩ Figures</button><div class="series"></div></div>
+      <div class="cards"></div>
+      <div class="count"></div>
+      <div class="menu-foot tch"><span>Swipe to browse · tap a game · tap it again to play</span></div>
+      <div class="menu-foot kb">
+        <span><kbd class="k0">A</kbd><kbd class="k0">D</kbd> / <kbd class="k1">←</kbd><kbd class="k1">→</kbd> choose</span>
+        <span><kbd class="k0">W</kbd> / <kbd class="k1">↑</kbd> play</span>
+        <span><kbd class="k0">S</kbd> / <kbd class="k1">↓</kbd> change figures</span>
+      </div>
+    </section>
+
+    <div id="layer"></div>
+    <section id="intro" class="screen"></section>
+
+    <section id="hud" class="screen">
+      <div class="hud-p p0"></div>
+      <div class="hud-mid">
+        <div class="hud-row"><div class="hud-title"></div><button class="hud-pause" aria-label="Pause">❚❚</button></div>
+        <div class="hud-timer"></div>
+        <div class="hud-scores"><b class="s0">0</b><i>:</i><b class="s1">0</b></div>
+        <div class="hud-bar"><span class="l0"></span><div class="track-bg"><i class="b0"></i><i class="b1"></i></div><span class="l1"></span></div>
+        <div class="hud-track"><div class="lane"><i class="r0"></i><i class="r1"></i><b class="flag">🏁</b></div></div>
+      </div>
+      <div class="hud-p p1"></div>
+    </section>
+
+    <div id="touch"></div>
+    <div id="big"></div>
+    <div id="toasts"></div>
+    <section id="results" class="screen"></section>
+    <section id="pause" class="screen"></section>
+
+    <nav id="corner">
+      <button data-btn="music" title="Music (M)">♫</button>
+      <button data-btn="sfx" title="Sound effects">🔊</button>
+      <button data-btn="full" title="Fullscreen (F)">⛶</button>
+      <button data-btn="mode" title="Keyboard or touch">🎮</button>
+    </nav>
+  </div>
+  <div id="rotate"><div>📱<b>Turn your tablet sideways</b><p>Two players sit side by side, one on each half of the screen.</p></div></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
