@@ -12,7 +12,8 @@
   <link rel="apple-touch-icon" href="assets/icon-180.png">
   <title>WASD vs ARROW</title>
   <meta name="description" content="Couch 1v1 party games for one keyboard: one player on WASD, one on the arrow keys.">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icon-64.png" type="image/png" sizes="64x64">
+  <link rel="icon" href="assets/icon-32.png" type="image/png" sizes="32x32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Pacifico&display=swap" rel="stylesheet">
@@ -32,6 +33,7 @@
 
     <section id="mode" class="screen">
       <div class="logo"></div>
+      <div class="mode-step1">
       <h2>How are you playing?</h2>
       <div class="mode-cards">
         <button class="mode-card" data-mode="keys">
@@ -44,41 +46,48 @@
         </button>
       </div>
       <p class="mode-hint"><span class="kb-any">Press any key for keyboard · </span>tap or click to choose</p>
+      </div>
+      <button class="install-pill" data-install>📲 Add to Home Screen</button>
+      <div class="mode-step2">
+        <h2>How are you sitting?</h2>
+        <div class="mode-cards">
+          <button class="mode-card" data-seat="facing">
+            <div class="mc-art"><div class="mc-seat facing"><div class="tab"></div><b class="c0"></b><i class="c0 a"></i><i class="c0 b"></i><b class="c1"></b><i class="c1 a"></i><i class="c1 b"></i></div></div>
+            <span class="mc-default">Recommended</span>
+            <b>Facing each other</b><p>Tablet flat on the table between you. Each of you sits at one end, with your controls turned toward you.</p>
+          </button>
+          <button class="mode-card" data-seat="side">
+            <div class="mc-art"><div class="mc-seat side"><div class="tab"></div><b class="c0"></b><i class="c0 a"></i><i class="c0 b"></i><b class="c1"></b><i class="c1 a"></i><i class="c1 b"></i></div></div>
+            <b>Side by side</b><p>Both on the same side of the tablet, each holding one half of the screen.</p>
+          </button>
+        </div>
+        <p class="mode-hint">You can switch this any time in the pause menu.</p>
+      </div>
     </section>
 
     <header id="logo" class="logo"></header>
 
     <section id="select" class="screen">
-      <div class="pick" data-team="0"></div>
-      <div class="pick" data-team="1"></div>
-      <p class="select-hint"><span class="kb">Pick your figure, then press your <b>UP</b> key. One keyboard, two players!</span><span class="tch">Pick your figure with ◀ ▶, then tap <b>READY</b>. One tablet, two players!</span></p>
+      <div class="pick solo" data-team="0"></div>
+      <div class="pick solo" data-team="1"></div>
+      <p class="select-hint solo"><span class="kb">Pick your figure, then press your <b>UP</b> key. One keyboard, two players!</span><span class="tch">Pick your figure with ◀ ▶, then tap <b>READY</b>. One tablet, two players!</span></p>
     </section>
 
-    <section id="menu" class="screen">
-      <div class="menu-head"><h2>Choose a game</h2><button class="menu-back">↩ Figures</button><div class="series"></div></div>
-      <div class="cards"></div>
-      <div class="count"></div>
-      <div class="menu-foot tch"><span>Swipe to browse · tap a game · tap it again to play</span></div>
-      <div class="menu-foot kb">
-        <span><kbd class="k0">A</kbd><kbd class="k0">D</kbd> / <kbd class="k1">←</kbd><kbd class="k1">→</kbd> choose</span>
-        <span><kbd class="k0">W</kbd> / <kbd class="k1">↑</kbd> play</span>
-        <span><kbd class="k0">S</kbd> / <kbd class="k1">↓</kbd> change figures</span>
-      </div>
-    </section>
+    <section id="menu" class="screen"></section>
 
     <div id="layer"></div>
     <section id="intro" class="screen"></section>
 
     <section id="hud" class="screen">
-      <div class="hud-p p0"></div>
-      <div class="hud-mid">
+      <div class="hud-p p0 solo"></div>
+      <div class="hud-mid solo">
         <div class="hud-row"><div class="hud-title"></div><button class="hud-pause" aria-label="Pause">❚❚</button></div>
         <div class="hud-timer"></div>
         <div class="hud-scores"><b class="s0">0</b><i>:</i><b class="s1">0</b></div>
         <div class="hud-bar"><span class="l0"></span><div class="track-bg"><i class="b0"></i><i class="b1"></i></div><span class="l1"></span></div>
         <div class="hud-track"><div class="lane"><i class="r0"></i><i class="r1"></i><b class="flag">🏁</b></div></div>
       </div>
-      <div class="hud-p p1"></div>
+      <div class="hud-p p1 solo"></div>
     </section>
 
     <div id="touch"></div>
@@ -86,12 +95,16 @@
     <div id="toasts"></div>
     <section id="results" class="screen"></section>
     <section id="pause" class="screen"></section>
+    <section id="finale" class="screen"></section>
+    <div id="board"></div>
+    <div id="install"></div>
 
     <nav id="corner">
       <button data-btn="music" title="Music (M)">♫</button>
       <button data-btn="sfx" title="Sound effects">🔊</button>
       <button data-btn="full" title="Fullscreen (F)">⛶</button>
       <button data-btn="mode" title="Keyboard or touch">🎮</button>
+      <button data-btn="install" data-install title="Add to Home Screen">📲</button>
     </nav>
   </div>
   <div id="rotate"><div>📱<b>Turn your tablet sideways</b><p>Two players sit side by side, one on each half of the screen.</p></div></div>

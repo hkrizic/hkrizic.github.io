@@ -108,6 +108,15 @@ export const sfx = {
   popgun: () => { noise({ dur: 0.08, vol: 0.25, from: 4000, to: 1500, q: 0.7, attack: 0.002 }); tone(900, { dur: 0.09, slide: -600, vol: 0.12, type: 'square' }); },
   lap: () => [79, 84, 91].forEach((n, i) => tone(N(n), { at: i * 0.07, dur: 0.16, vol: 0.08, type: 'triangle' })),
   thud: () => { tone(110, { dur: 0.14, slide: -50, vol: 0.2 }); noise({ dur: 0.08, vol: 0.05, from: 600, to: 200 }); },
+  rocket: () => noise({ dur: 0.7, vol: 0.05, from: 500, to: 2600, q: 0.9 }),
+  bang: () => {
+    noise({ dur: 0.9, vol: 0.16, from: 1600, to: 120, q: 0.5, type: 'lowpass', attack: 0.004 });
+    for (let i = 0; i < 7; i++) noise({ at: 0.18 + Math.random() * 0.6, dur: 0.05, vol: 0.05, from: 5000, to: 7000, q: 3 }); // crackle
+  },
+  fanfare: () => {
+    [67, 72, 76, 79, 76, 79, 84].forEach((n, i) => tone(N(n), { at: i * 0.13, dur: i === 6 ? 1.2 : 0.2, vol: 0.1, type: 'square' }));
+    [48, 55, 60, 64].forEach(n => tone(N(n), { at: 0.78, dur: 1.4, vol: 0.06, type: 'triangle', attack: 0.03 }));
+  },
   goal: () => { sfx.cheer(); [72, 76, 79, 84].forEach((n, i) => tone(N(n), { at: 0.05 + i * 0.08, dur: 0.3, vol: 0.09, type: 'square' })); },
 };
 

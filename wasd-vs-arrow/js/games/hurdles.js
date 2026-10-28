@@ -30,6 +30,7 @@ export class HurdleHustle extends BaseGame {
 
   build() {
     this.touchLift = 0.1; // the track sits higher on touch screens, above the pads
+    this.rig.facingFit = 1.15;
     this.lights = studio(this.scene, this.app.engine, { sky: ['#9CD2FF', '#D4ECFF', '#FFF2E2'], fog: '#E9F4FF', fogNear: 35, fogFar: 95, shadow: 12, sun: [4, 16, 9] });
     STRIPE_H ||= stripeTex('#FFFFFF', PAL.coral, 6);
     STRIPE_B ||= stripeTex(PAL.ink, PAL.mustard, 8);

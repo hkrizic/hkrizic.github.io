@@ -51,7 +51,7 @@ export class Engine {
       const cam = this.view.camera, w = innerWidth, h = innerHeight;
       cam.aspect = this.aspect;
       // touch: game scenes sit a touch higher so the controls in the bottom corners cover less of the action
-      const lift = this.touch && !this.view.noLift ? this.view.touchLift ?? 0.03 : 0;
+      const lift = this.touch && !this.facing && !this.view.noLift ? this.view.touchLift ?? 0.03 : 0; // facing: controls are at the sides
       if (lift) cam.setViewOffset(w, h, 0, Math.round(h * lift), w, h);
       else cam.clearViewOffset();
       cam.updateProjectionMatrix();
@@ -192,7 +192,10 @@ export class CameraRig {
     this.pos.lerp(this.tPos, k);
     this.look.lerp(this.tLook, k);
     // narrow windows: back the camera off so the arena still fits
-    const fit = clamp(this.designAspect / this.camera.aspect, 1, 2.2) * (this.menu ? 1 : CameraRig.touchFit ?? 1);
+    // touch: pulled back a little; facing each other: games whose action sits near the side edges (where the
+    // control strips are) pull back further with their own facingFit
+    const touchFit = this.menu ? 1 : (CameraRig.touchFit ?? 1) * (CameraRig.facing ? this.facingFit ?? 1 : 1);
+    const fit = clamp(this.designAspect / this.camera.aspect, 1, 2.2) * touchFit;
     const cam = this.camera;
     cam.position.copy(this.pos).sub(this.look).multiplyScalar(fit).add(this.look);
     if (this.shakeT > 0) {

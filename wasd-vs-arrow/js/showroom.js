@@ -125,6 +125,11 @@ export class Showroom {
     this.figs[team] = fig;
     return fig;
   }
+  // same figure, new name on the box
+  renameFigure(team, look) {
+    this.boxes[team].setLook(look);
+    this.boxes[team].bounce();
+  }
   place(team, fig, out) {
     const box = this.boxes[team];
     if (out) {

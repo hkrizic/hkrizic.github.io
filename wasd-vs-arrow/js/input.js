@@ -32,6 +32,7 @@ export class Input {
   emit(ev) { for (const fn of this.listeners) fn(ev); }
   down(e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return; // leave browser shortcuts alone
+    if (e.target?.closest?.('input, textarea, [contenteditable]')) return; // typing a name, not playing
     const m = MAP[e.code];
     if (!m) {
       if (['Space', 'Enter', 'Escape', 'Tab'].includes(e.code)) e.preventDefault();

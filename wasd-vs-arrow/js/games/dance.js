@@ -44,6 +44,8 @@ const CSS = `
 .dd-hw.touch.t1 { right: max(20px, env(safe-area-inset-right)); }
 .dd-hw.touch .dd-note, .dd-hw.touch .dd-rec, .dd-hw.touch .dd-judge, .dd-hw.touch .dd-combo { scale: 1 -1; }
 @media (max-width: 1000px) { .dd-hw.touch { width: 305px; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 100px); } }
+/* facing each other: the highway lives in the player's turned strip, right above their pads */
+.dd-hw.touch.facing.t0, .dd-hw.touch.facing.t1 { left: calc(50% - 171px); right: auto; width: 342px; top: 150px; bottom: 124px; }
 @keyframes ddjudge { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: 1; transform: scale(1.12); } 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-14px); } }
 .dd-combo { position: absolute; left: 0; right: 0; top: calc(34% + 44px); text-align: center; font: 800 18px var(--font); color: #fff; opacity: .9; }
 .dd-combo b { font-size: 30px; display: block; line-height: 1; }
@@ -243,8 +245,19 @@ export class DanceDuel extends BaseGame {
   mult(c) { return c >= 25 ? 3 : c >= 10 ? 2 : 1; }
 
   // ---------- play ----------
+  // touch + facing each other: each highway moves into its player's turned control strip; otherwise the overlay
+  onTouchLayout() {
+    if (!this.dom) return;
+    const facing = this.input.mode === 'touch' && this.app.touch.facing;
+    for (const d of this.dom) {
+      const t = d.hw.classList.contains('t1') ? 1 : 0;
+      d.hw.classList.toggle('facing', facing);
+      (facing ? this.app.touch.sides[t] : this.ui.layer).append(d.hw);
+    }
+  }
   onCountdown() {
     this.ensureDom();
+    this.onTouchLayout();
     this.ui.hudScores(0, 0);
     music.setMuted(true);
   }

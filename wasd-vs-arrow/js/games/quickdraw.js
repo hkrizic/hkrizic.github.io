@@ -46,7 +46,7 @@ const CSS = `
 
 export class QuickDraw extends BaseGame {
   static meta = {
-    touch: { pads: { up: '▲', left: '◀', right: '▶', down: '▼' }, layout: 'cross', tip: 'Tap the arrow shown on the sign' },
+    touch: { pads: { up: '▲', left: '◀', right: '▶', down: '▼' }, layout: 'cross', spatial: true, tip: 'Tap the pad pointing the same way as the sign' },
     id: 'quickdraw', title: 'Quick Draw', icon: '🤠', color: '#FFB86B', ink: '#5A2A0A', rounds: 5, quick: true, figScale: S,
     tagline: 'Wait for the sign… then draw faster than your rival!',
     goal: 'When the sign flips, press the arrow it shows on YOUR keys. Fastest wins the duel. Too early, wrong key or fooled by a fake sign? You’re out of that duel.',
@@ -56,6 +56,7 @@ export class QuickDraw extends BaseGame {
 
   build() {
     this.touchLift = 0.14; // duelists stand above the arrow pads on touch screens
+    this.rig.facingFit = 1.45; // …or, facing each other, further from the side edges
     this.lights = studio(this.scene, this.app.engine, { sky: ['#FF9A7A', '#FFBE8C', '#FFE3BC'], fog: '#FFD7AE', fogNear: 24, fogFar: 70, shadow: 9, sun: [-9, 6, 6], sunI: 2.1, hemiI: 1.05 });
     this.lights.follow(new THREE.Vector3(0, 0, -1));
     // dusty ground + the street

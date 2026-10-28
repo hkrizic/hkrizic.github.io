@@ -30,6 +30,12 @@ export const ROSTER = [
   { no: 10, name: 'KOJI', skin: SKIN[3], hair: '#1E1A18', hairStyle: 'topknot', torso: 'vest', sleeves: 'long', top: '#232B45', accent2: '#FF6F59', pants: '#C2A878', legs: 'LegSneaker', shoes: '#FF6F59', face: ['Brows_thick', 'Goatee'] },
   { no: 11, name: 'BIBI', skin: SKIN[7], hair: '#3B2A20', hairStyle: 'braid', torso: 'shirt', sleeves: 'long', top: '#FF8FB1', accent2: '#FFFFFF', pants: '#2C3E5C', legs: 'LegSneaker', shoes: '#FFFFFF', face: ['Brows_arch'], extra: 'BucketHat', accentHat: '#FFC145' },
   { no: 12, name: 'TURBO', skin: SKIN[2], hair: '#2EC4B6', hairStyle: 'mohawk', torso: 'jacket', sleeves: 'long', top: '#232B45', accent2: '#FFC145', pants: '#4A505C', legs: 'LegBoot', shoes: '#23252B', face: ['Brows_thick', 'Earrings'] },
+  { no: 13, name: 'MEI', skin: SKIN[1], hair: '#1E1A18', hairStyle: 'bob', torso: 'hoodie', sleeves: 'long', top: '#FF8FB1', accent2: '#FFFFFF', pants: '#7FB3E6', legs: 'LegSneaker', shoes: '#FFFFFF', face: ['Brows_thin', 'Blush'], extra: 'Glasses' },
+  { no: 14, name: 'HARUTO', skin: SKIN[2], hair: '#2B211C', hairStyle: 'spiky', torso: 'jacket', sleeves: 'long', top: '#FFC145', accent2: '#232B45', pants: '#232B45', legs: 'LegSneaker', shoes: '#FF6F59', face: ['Brows_thick'], extra: 'Headphones', accent: '#232B45' },
+  { no: 15, name: 'YUNA', skin: SKIN[0], hair: '#3B2A20', hairStyle: 'ponytail', torso: 'overalls', sleeves: 'short', top: '#A594F9', accent2: '#FFFFFF', pants: '#A594F9', legs: 'LegSneaker', shoes: '#FFC145', face: ['Brows_arch', 'Blush'], extra: 'Cap', accentHat: '#2EC4B6' },
+  { no: 16, name: 'LUCÍA', skin: SKIN[4], hair: '#2B211C', hairStyle: 'wavy', torso: 'shirt', sleeves: 'short', top: '#7ED6A5', accent2: '#FFFFFF', pants: '#2C3E5C', legs: 'LegShorts', shoes: '#FFFFFF', face: ['Brows_arch', 'Earrings'], extra: 'Headband', accentHat: '#FFC145' },
+  { no: 17, name: 'MATEO', skin: SKIN[5], hair: '#1E1A18', hairStyle: 'curly', torso: 'polo', sleeves: 'short', top: '#5B8DEF', accent2: '#FFFFFF', pants: '#E9E1D0', legs: 'LegSneaker', shoes: '#232B45', face: ['Brows_thick'] },
+  { no: 18, name: 'VALENTINA', skin: SKIN[3], hair: '#6B4423', hairStyle: 'long', torso: 'stripes', sleeves: 'long', top: '#F28C28', accent2: '#FFFFFF', pants: '#232B45', legs: 'LegBoot', shoes: '#8B5A3C', face: ['Brows_thin', 'Blush', 'Earrings'], extra: 'Sunglasses' },
 ];
 
 // ---------- random figures (the shuffle button) ----------
@@ -40,6 +46,10 @@ const SHOES = ['#F4F1EC', '#23252B', '#FF6F59', '#2EC4B6', '#FFC145', '#232B45',
 const HAT = ['#E8744F', '#2EC4B6', '#FFC145', '#232B45', '#A594F9', '#F6F1EA', '#FF5CA8'];
 const HAIRSTYLES = { short: 1, swoop: 0, bun: 0, curly: 0, long: 1, buzz: 1, ponytail: 1, afro: 0, mohawk: 0, bob: 1, puffs: 0, spiky: 0, sidepart: 1, topknot: 0, wavy: 1, braid: 1 };
 const OUTFITS = { tee: ['short'], hoodie: ['long'], shirt: ['long', 'short'], sweater: ['long'], jacket: ['long'], overalls: ['short', 'long'], stripes: ['short', 'long'], polo: ['short'], vest: ['long'] };
+// random figures get a real name half the time, a silly one otherwise
+const NAMES = ['KAI', 'AIKO', 'REN', 'SORA', 'HANA', 'RIKU', 'KENTA', 'MIKU', 'LING', 'WEI', 'JIN', 'XIAO', 'BAO', 'LAN', 'YU',
+  'SOFÍA', 'DIEGO', 'CAMILA', 'TOMÁS', 'XIMENA', 'PILAR', 'RAFA', 'INÉS', 'JOAQUÍN', 'MARISOL', 'NICO', 'PAZ',
+  'AMARA', 'NOOR', 'ELIF', 'OLLIE', 'FREYA', 'ZURI', 'ARJUN', 'LEILANI', 'TAMI', 'IVO', 'MILA', 'ODIN'];
 const SYL_A = ['ZIG', 'POP', 'BUB', 'WIG', 'NOO', 'MO', 'PIX', 'DOO', 'FIZ', 'BOO', 'TOF', 'KIK', 'JEL', 'WOB', 'SQUI', 'TAR', 'GOO', 'MUF'];
 const SYL_B = ['GY', 'PY', 'BLES', 'DLE', 'CHI', 'ZY', 'LO', 'BOP', 'MO', 'FIN', 'TO', 'NUT', 'SY', 'KO', 'RIO'];
 
@@ -59,7 +69,7 @@ export function randomLook(seed = Math.random()) {
   if (r() < 0.3) face.push('Blush');
   if (r() < 0.2) face.push('Earrings');
   return {
-    no: 0, name: p(SYL_A) + p(SYL_B), skin: p(SKIN), hair: p(HAIR), hairStyle, torso, sleeves: p(OUTFITS[torso]),
+    no: 0, name: r() < 0.5 ? p(NAMES) : p(SYL_A) + p(SYL_B), skin: p(SKIN), hair: p(HAIR), hairStyle, torso, sleeves: p(OUTFITS[torso]),
     top: p(TOPS), accent2: p(['#FFFFFF', '#FFC145', '#2EC4B6', '#FF8FB1', '#232B45', '#A594F9']), pants: p(PANTS),
     legs: p(['LegSneaker', 'LegSneaker', 'Leg', 'LegBoot', 'LegShorts']), shoes: p(SHOES), face, extra,
     accent: p(['#FFFFFF', '#FF5CA8', '#FFC145', '#2EC4B6']), accentHat: p(HAT), cape: r() < 0.15 ? p(HAT) : null, random: true,
@@ -161,6 +171,9 @@ export class Figure {
       if (f.startsWith('Brows')) this.brows = p;
     }
     if (look.extra) { const e = part(look.extra); recolor(e, look.accentHat ? { accent: look.accentHat } : {}); attach(this.head, e, neck); }
+    this._part = part;
+    // how high a crown floats: above the tallest hair
+    this.crownY = { afro: 0.74, mohawk: 0.64, spiky: 0.64, puffs: 0.62, topknot: 0.66, bun: 0.62, swoop: 0.6, curly: 0.6 }[look.hairStyle] ?? 0.53;
 
     // dizzy stars orbit the head
     this.stars = new THREE.Group();
@@ -189,6 +202,16 @@ export class Figure {
     this.dizzy = 0;
     this.steer = 0;        // -1..1 for the 'drive' pose
     this.custom = null;
+  }
+
+  // a floating golden crown (the game-night champion)
+  addCrown() {
+    if (this.crown) return this.crown;
+    const c = this._part('Crown');
+    c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.kit = true; } });
+    c.position.set(0, this.crownY, 0);
+    this.head.add(c);
+    return (this.crown = c);
   }
 
   // ring under the feet in the team colour + a floating badge so you always know who is who
@@ -341,6 +364,7 @@ export class Figure {
       this.brows.position.y += (this._browY + lift - this.brows.position.y) * k;
     }
 
+    if (this.crown) { this.crown.position.y = this.crownY + Math.sin(t * 2) * 0.015; this.crown.rotation.y = t * 0.6; }
     const showStars = pose === 'dizzy' || this.dizzy > 0;
     this.stars.visible = showStars;
     if (showStars) {
