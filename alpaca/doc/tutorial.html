@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ALPACA tutorials</title>
-  <meta name="description" content="Two step-by-step ALPACA tutorials on real data: the lensed quasar HE0435-1223 (JWST) and the galaxy-galaxy lens COSMOS 5921+0638 (HST)." />
+  <meta name="description" content="Two step-by-step ALPACA tutorials on real JWST data, written for people new to lens modelling: the Einstein ring SPT0418-47 (galaxy-galaxy lens) and the lensed quasar HE0435-1223." />
   <link rel="stylesheet" href="../css/app.css" />
   <link rel="stylesheet" href="doc.css" />
+  <link rel="stylesheet" href="tutorial-applets.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="../assets/favicon-64.png" />
 </head>
 <body>
@@ -15,40 +16,105 @@
     <nav class="navlinks">
       <a class="btn primary" href="tutorial.html">Tutorial</a>
       <a class="btn" href="documentation.html">Documentation</a>
+      <a class="btn" href="../configurator.html">Configurator</a>
       <a class="btn" href="../app.html">Analysis</a>
       <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
     </nav>
   </header>
   <main class="doc-main" style="margin: 0 auto;">
     <h1>Tutorials</h1>
-    <p class="sub">Two real lenses, from the raw image to a model you can judge. Pick the kind of lens you work on;
-      both follow the same steps, so you can read the other one afterwards for the differences.</p>
+    <p class="sub">Two real lenses observed with JWST, from the image to a posterior you can judge. Written for people
+      who have never modelled a lens: every input file, every setting and every figure is explained. If you are new,
+      start with the galaxy–galaxy lens, then read the quasar tutorial for what changes.</p>
     <div class="tut-cards">
+      <a class="tut-card" href="tutorial-galaxy.html">
+        <img src="img/card_galaxy.png" alt="SPT0418-47" />
+        <div class="b"><span class="k muted small" style="letter-spacing:.14em;text-transform:uppercase">Galaxy–galaxy · JWST/NIRCam F444W · start here</span>
+          <div class="t">SPT0418−47</div>
+          <div class="muted">An almost complete Einstein ring around one elliptical galaxy. Download the data from the
+            public archive, build every input yourself (or download them), fit, fix the source smoothness by
+            cross-validation, sample. Residuals at the noise level.</div></div>
+      </a>
       <a class="tut-card" href="tutorial-quasar.html">
         <img src="img/card_quasar.png" alt="HE0435-1223" />
         <div class="b"><span class="k muted small" style="letter-spacing:.14em;text-transform:uppercase">Lensed quasar · JWST/NIRCam F150W</span>
           <div class="t">HE0435−1223</div>
-          <div class="muted">Four quasar images, a lensed host ring, five perturbers, time delays. PSF from stars, the
-            PSF-error term, blinding.</div></div>
-      </a>
-      <a class="tut-card" href="tutorial-galaxy.html">
-        <img src="img/card_galaxy.png" alt="COSMOS 5921+0638" />
-        <div class="b"><span class="k muted small" style="letter-spacing:.14em;text-transform:uppercase">Galaxy–galaxy · HST/ACS F814W</span>
-          <div class="t">COSMOS 5921+0638</div>
-          <div class="muted">A compact elliptical with an Einstein ring, from public archive data. Building every input
-            yourself: noise, masks, a PSF from stars, the θ<sub>E</sub> prior.</div></div>
+          <div class="muted">Four quasar images, a lensed host ring, five nearby galaxies, time delays. The inputs ship
+            with ALPACA. Image positions, delays, multi-plane lensing, the PSF-error term, blinding.</div></div>
       </a>
     </div>
+
+    <h2 id="primer"><span class="step">Primer</span>Lens modelling in ten minutes</h2>
+    <p><b>Strong lensing.</b> When a massive galaxy sits almost exactly in front of a more distant one, its gravity
+      bends the light of the background galaxy into arcs, a ring or several images. The foreground galaxy is the
+      <b>lens</b>, the background object the <b>source</b>. The radius of the ring is the <b>Einstein radius</b>
+      θ<sub>E</sub>, typically about 1″ (one arcsecond, 1/3600 of a degree) for a galaxy.</p>
+    <p><b>Two kinds of lens.</b> In a <b>galaxy–galaxy lens</b> the source is an ordinary galaxy: you see extended arcs
+      or a ring. In a <b>lensed quasar</b> the source has a tiny, extremely bright nucleus: you see two or four point
+      images, often on top of the arcs of the quasar's host galaxy. Quasars vary in brightness, and the delays between
+      their images measure cosmological distances and the Hubble constant.</p>
+    <p><b>What is in the image.</b> Every pixel contains the light of the lens galaxy, the lensed light of the source,
+      the sky background and noise; everything is blurred by the telescope's <b>point-spread function</b> (PSF).</p>
+    <p><b>A lens model</b> is a forward simulation of that image. It has ingredients with parameters:</p>
+    <table>
+      <tr><th>ingredient</th><th>typical description</th><th>what it tells you</th></tr>
+      <tr><td>mass of the lens</td><td>an elliptical power law (EPL: θ<sub>E</sub>, slope γ, ellipticity, centre) plus an
+        external shear from the environment; sometimes other galaxies along the line of sight</td>
+        <td>how much mass, how it is distributed</td></tr>
+      <tr><td>lens light</td><td>Sérsic profiles</td><td>where the stars are</td></tr>
+      <tr><td>source</td><td>a smooth function or a pixel image of the background galaxy</td><td>what the source looks like
+        without the lens, magnified</td></tr>
+      <tr><td>point images</td><td>scaled copies of the PSF (quasars only)</td><td>image positions and fluxes</td></tr>
+      <tr><td>PSF</td><td>measured on stars, refined in the fit</td><td>the blurring</td></tr>
+    </table>
+    <p><b>Fitting.</b> For given parameters, the model predicts every pixel. The <b>normalised residual</b> is
+      (data − model) / noise. A good model leaves residuals that look like noise: values around ±1 and no pattern.
+      <b>χ²<sub>red</sub></b> is the mean squared normalised residual: about 1 for uncorrelated noise, and lower
+      (about 0.5) for JWST mosaics, whose neighbouring pixels are correlated. Fitting means finding the parameters
+      with the smallest residuals, the <b>best fit</b> (MAP); <b>sampling</b> then finds all parameters that fit about as
+      well, the <b>posterior</b>, which gives every number its uncertainty.</p>
+    <p><b>Why it is hard.</b> Many different combinations of mass and source can produce similar images (degeneracies);
+      a very flexible source can imitate the arcs without any lensing; the PSF and the lens light are never perfect. A
+      good modeller therefore looks at the residuals, changes one thing at a time and checks that the answer does not
+      depend on arbitrary choices. The tutorials show how.</p>
+    <p><b>Play with a lens.</b> Change the mass of the lens and drag the source (right) across the red caustic: watch
+      a ring, arcs, two or four images appear on the left. Every slider is a parameter ALPACA fits.</p>
+    <div class="applet" data-applet="lens-playground"><span class="k">Applet · build a lens</span></div>
+
+    <h2 id="workflow"><span class="step">How ALPACA works</span>One run, from the inputs to the posterior</h2>
+    <table>
+      <tr><th>what</th><th>you provide / ALPACA does</th><th>where</th></tr>
+      <tr><td>1 · inputs</td><td>an image of the lens, its noise map, two masks, a PSF (from stars) and, optionally, a
+        catalogue of nearby galaxies, as FITS / JSON files</td><td><code>data/</code></td></tr>
+      <tr><td>2 · configuration</td><td>every modelling choice in one JSON file: start from the one that ships with
+        ALPACA and change what is specific to your lens, or build it in the
+        <a href="../configurator.html">configurator</a></td><td><code>config.json</code></td></tr>
+      <tr><td>3 · run script</td><td>file paths, the lens position, quasar image labels</td><td><code>run_alpaca.py</code></td></tr>
+      <tr><td>4 · best fit</td><td>three stages of gradient descent: many random starts with a smooth source; the lens
+        light on a larger frame; a pixelated source with everything fitted together</td><td><code>run/03_multistart/</code></td></tr>
+      <tr><td>5 · judge</td><td>you look at the residuals, χ² per region and the warnings in the log, and fix what is
+        wrong</td><td><code>run/03_multistart/best_model/</code></td></tr>
+      <tr><td>6 · posterior</td><td>NUTS sampling from the best fit</td><td><code>run/04_sampling/</code>, <code>run/05_posterior/</code></td></tr>
+    </table>
+    <p>The command is the same for every lens:</p>
+    <pre><code>python run_alpaca.py config.json --fit-only     # steps 4-5: the best fit
+python run_alpaca.py config.json                # the same folder: the best fit is reloaded, then step 6</code></pre>
+
     <h2 id="before"><span class="step">Before you start</span>What you need</h2>
     <ul>
-      <li>ALPACA installed (<a href="documentation.html#install">installation</a>); <code>alpaca-device</code> shows your device;</li>
-      <li>about an hour; the runs take minutes (a quick look on a laptop) to hours (a production budget);</li>
-      <li>no prior knowledge of ALPACA; some lensing background helps.</li>
+      <li>Python 3.11 or newer and ALPACA installed (<a href="documentation.html#install">installation</a>);
+        <code>alpaca-device</code> shows your device;</li>
+      <li>for the best fit: a laptop works for a quick look, a GPU (NVIDIA, 16–24 GB) takes 20–40 min; for sampling:
+        ideally two GPUs, a few hours;</li>
+      <li>no prior knowledge of lens modelling: the primer above and the tutorials explain everything you need;
+        basic Python and the command line help.</li>
     </ul>
     <div class="callout ai"><span class="k">Prefer to let an AI assistant drive?</span>
       <p>The repository's <code>llm/</code> folder has instruction files for Claude Code, Codex or the Gemini CLI. The
         assistant sets up the environment, prepares your data and starts a first model with you (see the
         <a href="documentation.html#ai">AI-assisted workflow</a>). The tutorials explain what it does and why.</p></div>
   </main>
+  <script src="doc.js"></script>
+  <script type="module" src="tutorial-applets.js"></script>
 </body>
 </html>

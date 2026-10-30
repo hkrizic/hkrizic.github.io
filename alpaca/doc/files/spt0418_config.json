@@ -1,0 +1,399 @@
+{
+  "run": {
+    "output_dir": "run/",
+    "random_seed": 42,
+    "verbose": true,
+    "multistart": true,
+    "sampling": true,
+    "resume_from_previous": false,
+    "resume_multistart_path": null
+  },
+  "data": {
+    "pix_scale": 0.06300817082234353,
+    "source_oversample": 3,
+    "likelihood_mask_path": "data/mask_likelihood.fits",
+    "ps_min_sep": null,
+    "ps_lens_mask_radius": 0.35,
+    "ps_min_peak_frac": 0.15,
+    "lens_center_search_radius": 0.35,
+    "n_ps_detect": null,
+    "cutout_size": 109
+  },
+  "mass": {
+    "main": {
+      "profile": "EPL+Shear",
+      "multipoles": {
+        "orders": [],
+        "sigma": null,
+        "sigma_default": 0.02,
+        "r_ref_m1": 1.0
+      },
+      "bpl": {
+        "gamma_in": {
+          "loc": 2.0,
+          "scale": 0.3,
+          "low": 1.3,
+          "high": 2.7
+        },
+        "gamma_out": {
+          "loc": 2.0,
+          "scale": 0.3,
+          "low": 1.3,
+          "high": 2.7
+        },
+        "r_break_frac": [
+          0.5,
+          2.0
+        ]
+      },
+      "theta_E_prior": {
+        "center": 1.3,
+        "sigma": 10.0
+      }
+    },
+    "perturbers": {
+      "path": null,
+      "mode": "auto",
+      "z_tolerance": 0.01,
+      "min_flexion_shift_arcsec": null,
+      "include_ids": null,
+      "exclude_ids": null,
+      "priors": {
+        "theta_E_max_factor": 3.0,
+        "position_sigma_arcsec": 0.3,
+        "fix_positions": false
+      },
+      "cosmology": {
+        "H0_fid": 70.0,
+        "Om0": 0.3
+      }
+    }
+  },
+  "light": {
+    "lens": {
+      "initial": "double-sersic",
+      "refit": {
+        "enabled": true,
+        "ps_treatment": "mask",
+        "ps_downweight_radius": 0.5,
+        "sky_anchor": null,
+        "mask_path": "data/mask_lens_only.fits",
+        "profile": "triple-sersic",
+        "simple_source": "stage1",
+        "uncouple_ellipticities": true,
+        "ellipticity_twist_sigma": 10.0,
+        "uncouple_centers": false,
+        "mge_n_components": null,
+        "adam_steps": 3000,
+        "ps_sigma_clip": null,
+        "ps_sigma_clip_iters": 3,
+        "smooth_bounds": false,
+        "n_sersic_min": 0.2,
+        "n_sersic_max": 8.0,
+        "mask_arc": true,
+        "init_cf_joint": true
+      },
+      "couple_sersic_ellipticities": false,
+      "mge": {
+        "n_components": 20,
+        "sigma_min": 0.03,
+        "sigma_max": 2.5
+      },
+      "couple_sersic_centers": true
+    },
+    "sky_background": true,
+    "sky_psf": "unconvolved",
+    "point_sources": {
+      "enabled": false,
+      "fft_rendering": false
+    }
+  },
+  "stages": {
+    "gd": {
+      "source": {
+        "type": "shapelets",
+        "n_max": 16
+      },
+      "optimizer": {
+        "adam": {
+          "steps": 1000,
+          "lr": 0.003,
+          "warmup_fraction": 0.1,
+          "grad_clip": 10.0,
+          "cosine_decay": true
+        },
+        "lbfgs": {
+          "maxiter": 1200,
+          "tol": 1e-05,
+          "impl": "optax"
+        },
+        "anneal": {
+          "mode": "discrete",
+          "levels": [
+            16,
+            8,
+            4,
+            2,
+            1
+          ],
+          "adam_steps": 400,
+          "lbfgs_maxiter": 400,
+          "ramp": true
+        },
+        "halving": {
+          "keep": [
+            64,
+            32,
+            16,
+            8,
+            4
+          ]
+        },
+        "refine": {
+          "top": 4,
+          "perturbations_per_top": 1,
+          "perturbation_scale": 0.1,
+          "adam_steps": 2600,
+          "lbfgs_maxiter": 3000
+        },
+        "mean_init": {
+          "enabled": true,
+          "sigma": 0.1,
+          "fraction": 0.8
+        },
+        "retry": {
+          "max_iterations": 1,
+          "chi2_red_threshold": 2.0
+        },
+        "save_phase_results": true
+      }
+    },
+    "cf_warmstart": {
+      "enabled": true,
+      "adam_steps": 8000,
+      "adam_lr": 0.001,
+      "patience": 400
+    },
+    "cf_joint": {
+      "enabled": true,
+      "lens_light": "free",
+      "source": {
+        "type": "corr_field",
+        "num_pixels": 128,
+        "mean_intensity": 0.004,
+        "offset_std": [
+          0.1,
+          0.001
+        ],
+        "loglogavgslope": [
+          -2.0,
+          0.001
+        ],
+        "fluctuations": [
+          20.0,
+          0.02
+        ],
+        "flexibility": null,
+        "asperity": null,
+        "cropped_border_size": 20,
+        "exponentiate": true,
+        "interpolation_type": "fast_bilinear",
+        "adaptive_grid": true,
+        "arc_mask": {
+          "mode": "auto",
+          "inner_radius": "auto",
+          "outer_radius": 2.8,
+          "custom_path": null,
+          "signal_threshold": 3.0,
+          "signal_dilate_pix": 3,
+          "signal_inner_factor": 0.0,
+          "signal_min_area": 50
+        },
+        "source_grid_scale": 0.5
+      },
+      "adam_steps": 80000,
+      "adam_lr": 0.001,
+      "lbfgs_maxiter": 0,
+      "prior": "seed",
+      "convergence": {
+        "enabled": true,
+        "window": 4000,
+        "abs_tol": 2.0,
+        "rel_tol": 0.0,
+        "min_steps": 0
+      }
+    }
+  },
+  "psf": {
+    "mode": "joint",
+    "input": {
+      "oversample": 3,
+      "error_map_path": "data/psf_error_map.fits"
+    },
+    "iterative": {
+      "n_iterations": 2,
+      "n_starts_per_iteration": 20,
+      "starred_oversample": null,
+      "cutout_size_pix": "auto",
+      "parallelized": true,
+      "rotation_mode": "none",
+      "negative_sigma_clip": 2.0,
+      "masking": {
+        "mask_other_peaks": true,
+        "radius_pix": 8,
+        "smoothing": "cosine",
+        "smoothing_width_pix": 4.0
+      },
+      "error_map_during_recon": {
+        "enabled": false,
+        "b_max": null
+      }
+    },
+    "joint": {
+      "seed_path": "data/psf_starred_seed.npz",
+      "free": [
+        "moffat",
+        "background"
+      ],
+      "oversample": null,
+      "supersampled": true,
+      "convolution_method": "fft",
+      "priors": {
+        "moffat_rel_sigma": 0.1,
+        "moffat_phi_sigma": 0.1,
+        "background": {
+          "type": "error_map",
+          "rel": 3.5,
+          "floor": 1e-08,
+          "sigma": null,
+          "error_map_alpha": 1.0,
+          "space": "kernel",
+          "noncentered": true
+        }
+      },
+      "regularization": {
+        "lambda_scales": 3.0,
+        "lambda_hf": 3.0,
+        "lambda_positivity": 1000000.0
+      }
+    }
+  },
+  "likelihood": {
+    "use_time_delays": false,
+    "time_delays": null,
+    "use_rayshoot_consistency": false,
+    "rayshoot_sigma": 0.001,
+    "rayshoot_against_source_pos": true,
+    "use_rayshoot_sys_error": false,
+    "rayshoot_sys_error_range": [
+      5e-05,
+      0.005
+    ],
+    "use_image_pos_offsets": false,
+    "image_pos_offset_sigma": null,
+    "astrometry_mode": "image_plane",
+    "sigma_ast": 0.005,
+    "td_common_source": true,
+    "D_dt_prior": {
+      "type": "uniform",
+      "low": 500.0,
+      "high": 10000.0
+    },
+    "kappa_ext_prior": {
+      "mean": 0.0,
+      "sigma": 0.0
+    },
+    "noise_model": {
+      "noise_boost": false,
+      "noise_boost_kwargs": {
+        "f_max": 1.0,
+        "radius": null,
+        "frac_min_sep": 0.4,
+        "min_npix": 2.5,
+        "max_npix": 6.0
+      },
+      "use_psf_error_map": false,
+      "psf_error_b_max": 0.3,
+      "psf_error_b_mode": "post_gd_free"
+    },
+    "use_kinematics": false
+  },
+  "sampling": {
+    "sampler": "nifty",
+    "nifty": {
+      "mode": "nuts_only",
+      "vi": {
+        "algorithm": "geoVI",
+        "n_iterations": 25,
+        "n_samples_per_iteration": 8,
+        "init_spread": 0.1,
+        "quick_run": false,
+        "cg_maxiter": 100,
+        "n_resample": 500,
+        "resample_batch_size": 16,
+        "use_multi_gpu": true
+      },
+      "nuts": {
+        "n_warmup": 500,
+        "n_samples": 500,
+        "n_chains": 2,
+        "target_accept": 0.8,
+        "max_tree_depth": 12,
+        "mass_matrix": "adaptive_diag",
+        "dense_block_names": null,
+        "init_perturbation": 0.001,
+        "chain_method": "auto"
+      }
+    },
+    "n_posterior_samples_final": 5000,
+    "marginalize_psf": false,
+    "marginalize_psf_background": false,
+    "marginalize_psf_background_fwhm_box": 80.0,
+    "nuts": {
+      "n_warmup": 3000,
+      "n_samples": 5000,
+      "n_chains": null,
+      "target_accept": 0.8
+    },
+    "nautilus": {
+      "n_live": 1000,
+      "use_jax": true,
+      "use_multi_device": true,
+      "batch_per_device": 64,
+      "uniform_priors": true
+    }
+  },
+  "plotting": {
+    "save_plots": true,
+    "plot_format": "png",
+    "dpi": 300,
+    "plot_psf": true,
+    "plot_model_summary": true,
+    "plot_model_summary_extended": true,
+    "plot_residuals": true,
+    "plot_corner": true,
+    "plot_chains": true,
+    "plot_posterior_draws": true,
+    "n_posterior_draws_to_plot": 3,
+    "corner_params": [
+      "lens_theta_E",
+      "lens_gamma",
+      "lens_e1",
+      "lens_e2",
+      "lens_gamma1",
+      "lens_gamma2",
+      "lens_center_x",
+      "lens_center_y"
+    ],
+    "max_corner_params": 10,
+    "save_priors": true
+  },
+  "blinding": {
+    "enabled": false,
+    "mode": "absolute",
+    "reference": "mean",
+    "scenario": "previously_analyzed",
+    "parameters": null,
+    "blind_stored_samples": true
+  }
+}

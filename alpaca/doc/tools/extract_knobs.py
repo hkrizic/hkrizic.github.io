@@ -2,13 +2,18 @@
 
 Run inside an environment where `alpaca` imports (the version being documented):
 
-    ALPACA_BACKEND=cpu python extract_knobs.py <alpaca repo> <curated reference html> <out knobs.json>
+    ALPACA_BACKEND=cpu python extract_knobs.py <alpaca repo> <curated source> <out knobs.json>
+
+<curated source> is either the previous build's knobs.json (its hand-written explanations, warnings and related keys
+are carried forward) or a curated configuration-reference HTML page (<article class="opt"> entries).
 
 Sources, in order of precedence for the explanation text:
-  1. the curated ALPACA configuration reference (hand-written explanations, warnings, related keys);
+  1. curated.py (hand-written for this version; it fails loudly on keys that no longer exist), then the curated source;
   2. the numpy-style docstrings of the dataclasses in alpaca/config.py;
   3. comments next to the field definitions in alpaca/config.py.
-Types and defaults always come from the code / the shipped config.json of the documented version.
+Types and defaults always come from the code / the shipped config.json of the documented version. For the JSON
+layout the default is what the loader uses when the key is left out (alpaca.utils.config_format.to_runtime_dict),
+which for the optimizer and stage blocks differs from the internal dataclass defaults.
 """
 import dataclasses
 import html
@@ -131,8 +136,15 @@ def walk_dataclass(cls, prefix, skip=(), rename=None, nested=None):
 
 # ------------------------------------------------------------------ the JSON layout -> dataclasses
 walk_dataclass(C.DataConfig, "data")
-walk_dataclass(C.LikelihoodConfig, "likelihood", nested={"noise_model": (C.NoiseModelConfig, "likelihood.noise_model")})
+walk_dataclass(C.LikelihoodConfig, "likelihood", nested={
+    "noise_model": (C.NoiseModelConfig, "likelihood.noise_model"),
+    "kinematics": (C.KinematicsConfig, "likelihood.kinematics"),
+    "D_dt_prior": (C.DdtPriorConfig, "likelihood.D_dt_prior"),
+    "kappa_ext_prior": (C.KappaExtPriorConfig, "likelihood.kappa_ext_prior")})
 walk_dataclass(C.NoiseModelConfig, "likelihood.noise_model")
+walk_dataclass(C.StageConvergenceConfig, "stages.cf_joint.convergence")
+walk_dataclass(C.PerturberFieldConfig, "stages.cf_joint.perturber_fields.pertN", nested={
+    "grid": (C.PlaneFieldGridConfig, "stages.cf_joint.perturber_fields.pertN.grid")})
 walk_dataclass(C.PSFConfig, "psf", nested={"input": (C.PSFInputConfig, "psf.input"),
                                           "iterative": (C.IterativePSFConfig, "psf.iterative"),
                                           "joint": (C.JointPSFConfig, "psf.joint")})
@@ -151,7 +163,8 @@ walk_dataclass(C.SamplerConfig, "sampling", rename={"nifty_mode": "nifty.mode"},
 walk_dataclass(C.PlottingConfig, "plotting")
 walk_dataclass(C.BlindingConfig, "blinding")
 walk_dataclass(C.LensMassConfig, "mass.main", nested={
-    "multipoles": (C.MultipoleConfig, "mass.main.multipoles"), "bpl": (C.BrokenPowerLawConfig, "mass.main.bpl")})
+    "multipoles": (C.MultipoleConfig, "mass.main.multipoles"), "bpl": (C.BrokenPowerLawConfig, "mass.main.bpl"),
+    "flexion": (C.ExternalFlexionConfig, "mass.main.flexion")})
 walk_dataclass(C.PerturbersConfig, "mass.perturbers", nested={
     "priors": (C.PerturberPriorConfig, "mass.perturbers.priors"),
     "cosmology": (C.PerturbersCosmologyConfig, "mass.perturbers.cosmology")})
@@ -165,19 +178,21 @@ GD = C.GDConfig
 gd_docs, _ = parse_doc(GD)
 gd_comments = field_comments(GD)
 explicit = {
-    "run.output_dir": ("str", "run/", "Directory for all outputs of this run. A new directory per model variant: "
-                       "re-running into an existing directory resumes it.", "output_dir"),
+    "run.output_dir": ("str | null", None, "Directory for all outputs of this run. A new directory per model "
+                       "variant: re-running into an existing directory resumes it. A `{date}` placeholder is "
+                       "replaced by the start time; `null` = `./results/run_{date}/`. `--output` on the command "
+                       "line overrides it.", "output_dir"),
     "run.random_seed": ("int", 42, "Seed for every random choice (multistart draws, perturbations, sampler).", "random_seed"),
     "run.verbose": ("bool", True, "Print progress to stdout.", "verbose"),
     "run.multistart": ("bool", True, "Run the gradient-descent stages (MAP).", "run_multistart"),
     "run.sampling": ("bool", True, "Run posterior sampling after the GD stages.", "run_sampling"),
     "run.resume_from_previous": ("bool", False, "Skip GD and load a previous MAP (for sampling only).", "resume_from_previous"),
     "run.resume_multistart_path": ("str | null", None, "Folder of the previous 03_multistart to load when resuming.", "resume_multistart_path"),
-    "config_version": ("int", 2, "Layout version of the file; written automatically.", None),
+    "config_version": ("int | null", None, "Optional layout stamp (1 = legacy, 2 = current). Not needed: the layout is detected from the keys, and ALPACA no longer writes the stamp.", None),
     "light.lens.initial": ("str", "sersic", "Lens-light model of the GD stage 1 (e.g. 'sersic', 'double-sersic', 'triple-sersic', 'MGE+double-sersic').", None),
     "light.lens.couple_sersic_ellipticities": ("bool", False, "Share one ellipticity between the Sérsic components.", None),
     "light.lens.couple_sersic_centers": ("bool", False, "Share one centre between the Sérsic components.", None),
-    "light.lens.ellipticity_max": ("float | null", None, "Upper bound on the lens-light ellipticity components.", None),
+    "light.lens.ellipticity_max": ("float", 0.4, "Upper bound on the lens-light ellipticity components |e1|, |e2| (default 0.4).", "model.lens_light_ellipticity_max"),
     "light.lens.mge.n_components": ("int", 20, "Number of Gaussians in the MGE lens-light model.", None),
     "light.lens.mge.sigma_min": ("float", 0.03, "Smallest MGE width (arcsec).", None),
     "light.lens.mge.sigma_max": ("float", 2.5, "Largest MGE width (arcsec).", None),
@@ -185,6 +200,8 @@ explicit = {
     "light.sky_background_fixed_amp": ("float | null", None, "Fix the sky at this value (model units) instead of fitting it.", "model.sky_background_fixed_amp"),
     "light.point_sources.enabled": ("bool", True, "Lensed point sources (quasar images). false = galaxy-galaxy mode.", "model.use_point_sources"),
     "light.point_sources.fft_rendering": ("bool", False, "Render point sources by FFT convolution instead of direct PSF placement.", "model.ps_fft_rendering"),
+    "light.point_sources.position_bound_px": ("float | null", None, "Half-width (pixels) of a bounded prior on each point-image position around its detected position. null = an unbounded Normal(detected, 1 px).", "model.ps_position_bound_px"),
+    "light.sky_psf": ("str", "unconvolved", "'unconvolved' (default): the sky is added after the PSF convolution; 'convolved': the sky is part of the convolved model (pre-0.5.3 behaviour).", "model.sky_psf"),
     "mass.main.theta_E_prior": ("object | null", None, "{center, sigma} in arcsec: TruncatedNormal prior on the Einstein radius. Required for galaxy-galaxy lenses.", "model.lens_theta_E_prior"),
     "stages.gd.source.type": ("str", "shapelets", "Source model of the GD stage: shapelets | sersic | double-sersic | corr_field. 'shapelets' is required for the staged CorrField pipeline.", None),
     "stages.gd.source.n_max": ("int", 16, "Maximum shapelet order of the stage-1 source.", "model.shapelets_n_max"),
@@ -193,7 +210,7 @@ explicit = {
     "stages.cf_warmstart.adam_lr": ("float", 1e-3, "Learning rate of the source warm-up.", "psf.joint.stages.stage2.adam_lr"),
     "stages.cf_warmstart.patience": ("int", 200, "Early-stopping patience (steps) of the source warm-up.", "psf.joint.stages.stage2.patience"),
     "stages.cf_joint.enabled": ("bool", True, "Run the CorrField joint stage (stage 3): source, lens, lens light and PSF fitted together.", None),
-    "stages.cf_joint.lens_light": ("str", "fixed", "'free' or 'fixed': whether the lens light from the refit stays free in stage 3.", "refit.freeze_in_cf_joint"),
+    "stages.cf_joint.lens_light": ("str", "free", "'free' or 'fixed': whether the lens light from the refit stays free in stage 3.", "refit.freeze_in_cf_joint"),
     "stages.cf_joint.source.type": ("str", "corr_field", "Must be 'corr_field'.", None),
     "stages.cf_joint.adam_steps": ("int", 4000, "Adam steps of the joint CorrField stage.", "psf.joint.stages.stage3.adam_steps"),
     "stages.cf_joint.adam_lr": ("float", 1e-3, "Learning rate of the joint stage.", "psf.joint.stages.stage3.adam_lr"),
@@ -215,20 +232,72 @@ gd_map = {
     "save_phase_results": "save_phase_results", "exec_mode": "exec_mode", "vmap_chunk_sizes": "vmap_chunk_sizes",
 }
 gd_fields = {f.name: f for f in dataclasses.fields(GD)}
+# the default of a JSON key = what the loader puts in when the key is absent
+from alpaca.utils.config_format import to_runtime_dict  # noqa: E402
+_RT = to_runtime_dict({"run": {}, "stages": {"gd": {"source": {"type": "shapelets"}},
+                                             "cf_joint": {"enabled": True, "source": {"type": "corr_field"}}}})
 for jkey, fname in gd_map.items():
     f = gd_fields.get(fname)
-    add("stages.gd.optimizer." + jkey, type_str(f.type) if f else "", default_of(f) if f else None,
+    dflt = _RT["gd"][fname] if fname in _RT["gd"] else (default_of(f) if f else None)
+    add("stages.gd.optimizer." + jkey, type_str(f.type) if f else "", dflt,
         (gd_docs.get(fname) or gd_comments.get(fname)) if f else None, "GDConfig", fname)
 for k, (t, d, doc, rt) in explicit.items():
     add(k, t, d, doc)
     if rt:
         KNOBS[k]["runtime"] = rt
 
+# ------------------------------------------------------------------ keys without a dataclass field of their own
+# likelihood.time_delays is a free-form dict (alpaca.utils.time_delays); multiband is read by run_multiband.py
+# (alpaca.multiband.config.load_multiband_config); both are documented key by key here.
+MORE = {
+    "likelihood.time_delays.delays": ("dict", None, None),
+    "likelihood.time_delays.convention": ("str", "t_X - t_Y", None),
+    "likelihood.time_delays.covariance": ("str | list | dict", "independent", None),
+    "likelihood.time_delays.pair_noise": ("float", 0.0, None),
+    "likelihood.time_delays.reference_image": ("str | null", None, None),
+    "multiband.reference_band": ("str | null", None, None),
+    "multiband.bands": ("dict", None, None),
+    "multiband.bands.BAND.data_dir": ("str", None, None),
+    "multiband.bands.BAND.image": ("str", None, None),
+    "multiband.bands.BAND.noise_map": ("str", None, None),
+    "multiband.bands.BAND.psf": ("str", None, None),
+    "multiband.bands.BAND.psf_seed": ("str", None, "psf.joint.seed_path"),
+    "multiband.bands.BAND.psf_error_map": ("str", None, "psf.input.error_map_path"),
+    "multiband.bands.BAND.likelihood_mask": ("str", None, "data.likelihood_mask_path"),
+    "multiband.bands.BAND.lens_light_mask": ("str", None, "light.lens.refit.mask_path"),
+    "multiband.bands.BAND.pix_scale": ("float", None, "data.pix_scale"),
+    "multiband.bands.BAND.cutout_size": ("int", None, "data.cutout_size"),
+    "multiband.bands.BAND.overrides": ("dict", {}, None),
+    "multiband.image_positions": ("dict | null", None, None),
+    "multiband.reference_image": ("str | null", None, None),
+    "multiband.lens_position": ("[float, float]", [0.0, 0.0], None),
+    "multiband.sharing.preset": ("str", "lensing", None),
+    "multiband.sharing.GROUP": ("str", None, None),
+    "multiband.frame_offsets.enabled": ("bool", True, None),
+    "multiband.frame_offsets.sigma_arcsec": ("float", 0.05, None),
+    "multiband.kinematics.tracer_band": ("str | null", None, None),
+    "multiband.joint.name": ("str", "joint", None),
+    "multiband.joint.polish.maxiter": ("int", 3000, None),
+    "multiband.joint.polish.gtol": ("float", 1.0, None),
+    "multiband.joint.init_from": ("str | null", None, None),
+    "multiband.joint.sampling": ("bool", False, None),
+    "multiband.joint.nuts.n_warmup": ("int", 300, None),
+    "multiband.joint.nuts.n_samples": ("int", 500, None),
+    "multiband.joint.nuts.n_chains": ("int", 2, None),
+    "multiband.joint.nuts.max_tree_depth": ("int", 11, None),
+    "multiband.joint.nuts.target_accept": ("float", 0.95, None),
+    "multiband.joint.nuts.mass_matrix": ("str", "adaptive_diag", None),
+}
+for k, (t, d, rt) in MORE.items():
+    add(k, t, d, None)
+    if rt:
+        KNOBS[k]["runtime"] = "sets " + rt + " of that band"
+
 # ------------------------------------------------------------------ shipped config: values + keys we missed
 def leaves(d, p=""):
     for k, v in d.items():
         path = f"{p}.{k}" if p else k
-        if isinstance(v, dict) and v and not path.endswith("theta_E_prior"):
+        if isinstance(v, dict) and v and not path.endswith(("theta_E_prior", "time_delays.delays")):
             yield from leaves(v, path)
         else:
             yield path, v
@@ -243,7 +312,15 @@ for path, v in leaves(SHIPPED):
     KNOBS[path]["shipped"] = v
 
 # ------------------------------------------------------------------ curated explanations
-cur = open(REF_HTML).read()
+if REF_HTML.endswith(".json"):
+    for prev in json.load(open(REF_HTML))["knobs"]:
+        entry = KNOBS.get(prev["key"])
+        if entry is None:
+            continue   # documented key no longer exists in this version
+        for fld in ("curated_html", "warnings", "related"):
+            if prev.get(fld):
+                entry[fld] = prev[fld]
+cur = "" if REF_HTML.endswith(".json") else open(REF_HTML).read()
 for art in re.findall(r'<article class="opt"[^>]*>.*?</article>', cur, re.S):
     key = re.search(r'<span class="kpre">([^<]*)</span><span class="kleaf">([^<]*)</span>', art)
     if not key:
@@ -293,6 +370,36 @@ for k, txt in MANUAL.items():
     if k in KNOBS and not KNOBS[k].get("curated_html") and not KNOBS[k].get("code_doc"):
         KNOBS[k]["code_doc"] = txt
 
+# docstrings carry development notes (dates, run names, timings); keep the rules, drop the anecdotes
+_ANECDOTE = re.compile(r"HE0435|J1721|tonoise|[Vv]alidated on|[Mm]easured on|regression|flagship|campaign|"
+                       r"bit-for-bit|\b\d[\d,]* s\b")
+
+
+def sanitize(txt):
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z`\"(])", txt)
+    txt = " ".join(x for x in sentences if not _ANECDOTE.search(x))
+    txt = re.sub(r",?\s*(?:default since |since )?\b20\d\d-\d\d(?:-\d\d)?\b", "", txt)
+    txt = re.sub(r"\(\s*\)", "", txt)
+    return re.sub(r"\(\s*,\s*", "(", txt).strip()
+
+
+for e in KNOBS.values():
+    if e.get("code_doc"):
+        e["code_doc"] = sanitize(e["code_doc"])
+
+# hand-written explanations for this version (curated.py) override everything above
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from curated import COMMON_NEW, CURATED, ESSENTIAL_NEW  # noqa: E402
+
+for k, c in CURATED.items():
+    if k not in KNOBS:
+        raise SystemExit(f"curated.py documents {k!r}, which is not a key of this version")
+    if "html" in c:
+        KNOBS[k]["curated_html"] = c["html"]
+    for fld in ("warnings", "related"):
+        if fld in c:
+            KNOBS[k][fld] = c[fld]
+
 ESSENTIAL = {
     "run.output_dir", "run.sampling", "run.random_seed", "data.pix_scale", "data.cutout_size", "data.likelihood_mask_path",
     "mass.main.profile", "mass.main.theta_E_prior", "mass.main.multipoles.orders", "mass.perturbers.path",
@@ -311,8 +418,13 @@ COMMON_PREFIXES = ("stages.gd.optimizer.anneal", "stages.gd.optimizer.halving", 
                    "stages.cf_joint.source.source_grid_scale", "mass.main.multipoles", "plotting.save_plots",
                    "psf.joint.free", "light.lens.refit.uncouple", "light.lens.refit.simple_source",
                    "blinding.scenario", "sampling.nifty.nuts.max_tree_depth", "sampling.nifty.nuts.mass_matrix")
+ESSENTIAL |= ESSENTIAL_NEW
+COMMON_PREFIXES += COMMON_NEW
 for k, e in KNOBS.items():
     e["level"] = "essential" if k in ESSENTIAL else ("common" if k.startswith(COMMON_PREFIXES) else "advanced")
+bad = sorted({r for e in KNOBS.values() for r in e.get("related") or [] if r not in KNOBS})
+if bad:
+    print("WARNING: related keys that do not exist:", bad)
 
 # ------------------------------------------------------------------ write
 def jsonable(v):

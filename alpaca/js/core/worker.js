@@ -5,6 +5,7 @@ import { ForwardModel } from "../physics/render.js";
 import { buildGeometry, singlePlaneGeometry } from "../physics/multiplane.js";
 import { lensingMaps, findImages, betaGrid } from "../physics/lensing.js";
 import { ApertureKinematics } from "../physics/kinematics.js";
+import { projectBand } from "./mbview.js";
 
 const kinPlans = new Map();
 
@@ -37,11 +38,16 @@ const ops = {
     return out;
   },
   npzList({ buffer }) { return listNpz(new Uint8Array(buffer)); },
-  posterior({ buffer }) {
+  // view (multiband joint posterior): { band, reference, sep, frameOffsets } -> that band's view (mbview.js), so the
+  // result looks like a single-band posterior of the band
+  posterior({ buffer, view = null }) {
     const r = parseNpz(new Uint8Array(buffer));
-    const names = r.param_names.data;
-    const samples = r.samples.data;
-    const [nS, nP] = r.samples.shape;
+    let names = r.param_names.data;
+    let samples = r.samples.data;
+    const nS = r.samples.shape[0];
+    let nP = r.samples.shape[1];
+    let shifted = null;
+    if (view) ({ names, samples, nP, shifted } = projectBand(names, samples, nS, nP, view));
     const scalarIdx = [];
     const pixelIdx = [];
     names.forEach((nm, i) => (/^source_pixels_\d+$/.test(nm) ? pixelIdx : scalarIdx).push(i));
@@ -70,8 +76,23 @@ const ops = {
     return {
       names: Array.from(names), nSamples: nS, nParams: nP, scalarNames: scalarIdx.map((i) => names[i]),
       columns, logL: r.log_likelihood ? r.log_likelihood.data : null,
-      pixelIdx: Int32Array.from(pixelIdx), pixMean, pixStd, samples,
+      pixelIdx: Int32Array.from(pixelIdx), pixMean, pixStd, samples, shifted,
     };
+  },
+  // Scalar columns of a (joint) posterior only: every name without "source_pixels", all bands (multiband applets).
+  posteriorScalars({ buffer }) {
+    const r = parseNpz(new Uint8Array(buffer));
+    const names = r.param_names.data;
+    const samples = r.samples.data;
+    const [nS, nP] = r.samples.shape;
+    const columns = {};
+    names.forEach((nm, i) => {
+      if (/source_pixels/.test(nm)) return;
+      const col = new Float64Array(nS);
+      for (let s = 0; s < nS; s++) col[s] = samples[s * nP + i];
+      columns[nm] = col;
+    });
+    return { names: Object.keys(columns), nSamples: nS, columns, logL: r.log_likelihood ? r.log_likelihood.data : null };
   },
   // Extract one flat posterior row (scalars + source pixels) from the sample matrix kept in the worker? No: the
   // matrix is transferred back to the main thread; rows are sliced there.

@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lensed quasar tutorial · ALPACA</title>
-  <meta name="description" content="Model the quadruply lensed quasar HE0435-1223 in JWST/NIRCam F150W data with ALPACA, step by step." />
+  <meta name="description" content="Model the quadruply lensed quasar HE0435-1223 in JWST/NIRCam F150W data with ALPACA, step by step: inputs, image positions, time delays, perturbers, blinding, the configuration, the fit and the posterior. No lens-modelling experience needed." />
   <link rel="stylesheet" href="../css/app.css" />
   <link rel="stylesheet" href="doc.css" />
+  <link rel="stylesheet" href="tutorial-applets.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="../assets/favicon-64.png" />
 </head>
 <body>
@@ -15,6 +16,7 @@
     <nav class="navlinks">
       <a class="btn primary" href="tutorial.html">Tutorial</a>
       <a class="btn" href="documentation.html">Documentation</a>
+      <a class="btn" href="../configurator.html">Configurator</a>
       <a class="btn" href="../app.html">Analysis</a>
       <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
     </nav>
@@ -22,227 +24,570 @@
   <div class="doc-layout">
     <nav class="doc-nav">
       <h4>Lensed quasar · HE0435−1223</h4>
-      <a href="#goal"><span class="n">0</span>The lens and the goal</a>
-      <a href="#setup"><span class="n">1</span>Install and get the data</a>
-      <a href="#look"><span class="n">2</span>Look at the data</a>
-      <a href="#noise"><span class="n">3</span>Check the noise map</a>
-      <a href="#masks"><span class="n">4</span>Masks</a>
-      <a href="#psf"><span class="n">5</span>The PSF</a>
-      <a href="#perturbers"><span class="n">6</span>Perturbers</a>
-      <a href="#delays"><span class="n">7</span>Images and time delays</a>
-      <a href="#config"><span class="n">8</span>The configuration</a>
-      <a href="#run"><span class="n">9</span>Run it</a>
-      <a href="#stages"><span class="n">10</span>Read the stages</a>
-      <a href="#judge"><span class="n">11</span>Judge the model</a>
-      <a href="#next"><span class="n">12</span>Sampling and next steps</a>
-      <a href="#ai"><span class="n">★</span>The same with an AI assistant</a>
+      <a href="#goal"><span class="n">0</span>What you will do</a>
+      <a href="#basics"><span class="n">1</span>Quasar lenses in a nutshell</a>
+      <a href="#install"><span class="n">2</span>Install ALPACA</a>
+      <a href="#files"><span class="n">3</span>The input files</a>
+      <a href="#look"><span class="n">4</span>Look at the data</a>
+      <a href="#noise"><span class="n">5</span>Check the noise</a>
+      <a href="#masks"><span class="n">6</span>Masks</a>
+      <a href="#psf"><span class="n">7</span>The PSF</a>
+      <a href="#perturbers"><span class="n">8</span>Nearby galaxies</a>
+      <a href="#images"><span class="n">9</span>Image positions</a>
+      <a href="#delays"><span class="n">10</span>Time delays</a>
+      <a href="#config"><span class="n">11</span>Build the configuration</a>
+      <a href="#blinding"><span class="n">12</span>Blinding</a>
+      <a href="#run"><span class="n">13</span>Run the fit</a>
+      <a href="#stages"><span class="n">14</span>Read the stages</a>
+      <a href="#judge"><span class="n">15</span>Judge the model</a>
+      <a href="#sample"><span class="n">16</span>Sample the posterior</a>
+      <a href="#next"><span class="n">17</span>Where to go next</a>
+      <a href="#ai"><span class="n">★</span>With an AI assistant</a>
       <h4>More</h4>
       <a href="tutorial-galaxy.html">Galaxy–galaxy tutorial →</a>
+      <a href="../configurator.html">Configurator →</a>
       <a href="documentation.html">Documentation →</a>
     </nav>
     <main class="doc-main">
       <h1>Lensed quasar: HE0435−1223</h1>
-      <p class="sub">JWST/NIRCam F150W · a quadruply imaged quasar with measured time delays · about 45 min of reading,
-        the run itself takes 10 min to a few hours depending on the budget.</p>
+      <p class="sub">JWST/NIRCam F150W · a quasar lensed into four images, with measured time delays · all inputs ship
+        with ALPACA · no lens-modelling experience needed · about 1 h of reading; the fit takes 40 min on a GPU,
+        sampling a few hours on two GPUs.</p>
 
-      <h2 id="goal"><span class="step">Step 0</span>The lens and the goal</h2>
-      <p>HE0435−1223 is a quasar at z = 1.689 lensed by an elliptical galaxy at z = 0.455 into four images, A to D,
-        about 1.2″ from the lens. Its host galaxy is lensed too and forms an Einstein ring. The COSMOGRAIL monitoring
-        measured the time delays between the images. Together with a lens model they give the time-delay distance
-        and H<sub>0</sub>, which is why this lens is a TDCOSMO system.</p>
-      <p>We build the model ALPACA's production run used. The image, the noise map, the masks, the PSF and the
-        perturber catalogue <b>ship with ALPACA</b> in <code>data/</code>, and the configuration is the shipped
-        <code>config.json</code>.</p>
+      <!-- ============================================================== 0 -->
+      <h2 id="goal"><span class="step">Step 0</span>What you will do</h2>
+      <p>HE0435−1223 is a quasar (a very bright active galactic nucleus) at redshift z = 1.689, lensed by an elliptical
+        galaxy at z = 0.455 into four images, A to D, about 1.2″ from the lens. The quasar's host galaxy is lensed too
+        and forms a faint Einstein ring through the images. The brightness of the quasar varies, and the variations
+        arrive at the four images days apart: these <b>time delays</b> were measured by the COSMOGRAIL monitoring
+        campaign. Combined with a lens model they measure the Hubble constant H<sub>0</sub>, which is why HE0435 is one
+        of the TDCOSMO lenses.</p>
+      <p>You will fit ALPACA's worked example. Everything it needs <b>ships with ALPACA</b> in <code>data/</code>, so you
+        do not prepare any data; instead, every input is explained so that you can make the same files for your own
+        lens. By the end you will have a best-fit model and a posterior, and you will know how to judge both.</p>
       <dl class="kv-mini">
-        <dt>data</dt><dd>JWST/NIRCam F150W i2d mosaic (GO 1198), 0.0312″/px</dd>
+        <dt>data</dt><dd>JWST/NIRCam F150W i2d mosaic (programme 1198), 0.0312″/px</dd>
         <dt>lens / source z</dt><dd>0.4546 / 1.689</dd>
-        <dt>θ<sub>E</sub></dt><dd>≈ 1.18″</dd>
-        <dt>model</dt><dd>EPL + shear, double → triple Sérsic lens light, shapelets → correlated-field source, joint PSF, 5 perturbers</dd>
+        <dt>Einstein radius</dt><dd>≈ 1.1″</dd>
+        <dt>model</dt><dd>power-law mass (EPL) + external shear · 5 nearby galaxies (multi-plane) · double → triple Sérsic
+          lens light · point images for the quasar · shapelets → pixelated host galaxy · PSF from stars, refined in the fit</dd>
+        <dt>constraints</dt><dd>the image, the four image positions, three time delays</dd>
+        <dt>hardware</dt><dd>one GPU for the fit (40 min); two GPUs for sampling; a laptop for a quick look</dd>
       </dl>
-      <div class="callout"><span class="k">Blinding</span><p>HE0435 is a cosmography lens, so its analysis is blinded.
-        This tutorial shows data, models, residuals and θ<sub>E</sub>, but never the power-law slope γ,
-        D<sub>Δt</sub> or H<sub>0</sub>.</p></div>
+      <p>If you are new to lens modelling, read the <a href="tutorial.html#primer">primer</a> first, or step 1 of the
+        <a href="tutorial-galaxy.html#basics">galaxy–galaxy tutorial</a> (with a lens you can build yourself): it explains
+        what a lens model is and what residuals and χ² mean. This tutorial adds what is special about quasars.</p>
 
-      <h2 id="setup"><span class="step">Step 1</span>Install and get the data</h2>
+      <!-- ============================================================== 1 -->
+      <h2 id="basics"><span class="step">Step 1</span>Quasar lenses in a nutshell</h2>
+      <p>A lensed quasar adds two kinds of information to the image:</p>
+      <ul>
+        <li><b>Point images.</b> The quasar is so small that each image is a copy of the PSF. Their positions are measured
+          to a few milliarcseconds and must all trace back to one point in the source plane: a very precise constraint
+          on the mass. ALPACA models each image as a scaled PSF (<code>light.point_sources</code>) and checks the
+          positions in the image plane (<code>likelihood.astrometry_mode: "image_plane"</code>, the default).</li>
+        <li><b>Time delays.</b> Light from the four images travels different paths through the lens's potential, so
+          they arrive at different times. The delays depend on the mass model and on the <b>time-delay distance</b>
+          D<sub>Δt</sub>, which is inversely proportional to H<sub>0</sub>.</li>
+      </ul>
+      <p>The rest is as for any lens: the lens light, the host galaxy (an extended, lensed source like the ring of a
+        galaxy–galaxy lens) and the PSF. Two things make quasars harder: the bright point images make every PSF error
+        visible, and the cosmology result must be protected from your expectations, which is what blinding is for
+        (step 12).</p>
+      <div class="quiz"><details><summary>Try it: why four images?</summary>
+        <p>In the <a href="tutorial-galaxy.html#basics">lens playground</a>, make the source small (0.03″), give the lens
+          an axis ratio of 0.7 and drag the source inside the red diamond (the caustic): four images. Move it out: two.
+          HE0435's quasar sits inside the diamond, close to its centre, which is why its four images form an almost
+          symmetric cross.</p></details></div>
+
+      <!-- ============================================================== 2 -->
+      <h2 id="install"><span class="step">Step 2</span>Install ALPACA</h2>
       <pre><code>git clone https://github.com/hkrizic/alpaca.git && cd alpaca
-python3.12 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip
-python -m pip install -e ".[apple]"      # Apple Silicon; or ".[cpu]", ".[gpu]"
-alpaca-device
-ls data/      # image.fits noise_map.fits mask_*.fits psf_supersampled.fits psf_error_map.fits psf_starred_seed.npz perturbers.json</code></pre>
+python3.12 -m venv .venv && source .venv/bin/activate      # a new, empty Python environment
+python -m pip install --upgrade pip
+python -m pip install -e ".[gpu]"      # NVIDIA GPU on Linux (CUDA 12)
+# python -m pip install -e ".[cpu]"    # CPU only
+# python -m pip install -e ".[apple]"  # Apple M-series Mac (GPU, float32)
+alpaca-device                          # prints the device ALPACA will use
+ls data/</code></pre>
+      <p>The repository root is your run folder: <code>data/</code> holds the inputs, <code>config.json</code> the
+        configuration, <code>run_alpaca.py</code> the run script. More options are in the
+        <a href="documentation.html#install">installation guide</a>.</p>
 
-      <h2 id="look"><span class="step">Step 2</span>Look at the data</h2>
-      <p>Always start by looking. <code>image.fits</code> is the <b>full frame</b> (499 × 499 pixels, 15.6″), centred on
-        the lens, with the sky pedestal subtracted. ALPACA models only the central <b>cutout</b>
-        (<code>data.cutout_size: 219</code>, 6.8″). The lens-light refit later uses the whole frame to pin down the
-        faint wings and the sky.</p>
-      <figure><img src="img/qso_01_data.png" alt="HE0435 full frame and cutout" />
-        <figcaption>(a) The full frame with the model cutout (blue). (b) The cutout: four quasar images A–D, the lensed
-          host forming a ring, the lens galaxy in the centre. The dotted circle is θ<sub>E</sub> ≈ 1.18″.</figcaption></figure>
-      <p>Things to notice: bright point images with JWST's six diffraction spikes, a smooth elliptical lens, and the ring
-        connecting the images. The ring carries most of the information on the mass profile.</p>
+      <!-- ============================================================== 3 -->
+      <h2 id="files"><span class="step">Step 3</span>The input files</h2>
+      <table>
+        <tr><th>file</th><th>what it is</th><th>size</th><th>where it is set</th></tr>
+        <tr><td><code>image.fits</code></td><td>full frame centred on the lens, sky subtracted</td><td>499 × 499 px (15.6″)</td><td><code>IMAGE_PATH</code> in <code>run_alpaca.py</code></td></tr>
+        <tr><td><code>noise_map.fits</code></td><td>1σ per pixel, same units</td><td>499 × 499</td><td><code>NOISE_MAP_PATH</code></td></tr>
+        <tr><td><code>mask_likelihood.fits</code></td><td>pixels of the model cutout used in the fit (1 = use)</td><td>219 × 219 (6.8″)</td><td><code>data.likelihood_mask_path</code></td></tr>
+        <tr><td><code>mask_lens_only.fits</code></td><td>lens and sky on the full frame, for the lens-light refit</td><td>499 × 499</td><td><code>light.lens.refit.mask_path</code></td></tr>
+        <tr><td><code>psf_supersampled.fits</code></td><td>the PSF, 3× supersampled, sum 1</td><td>447 × 447</td><td><code>PSF_PATH</code></td></tr>
+        <tr><td><code>psf_starred_seed.npz</code></td><td>STARRED parameters; the live PSF is built from them</td><td></td><td><code>psf.joint.seed_path</code></td></tr>
+        <tr><td><code>psf_error_map.fits</code></td><td>uncertainty of each PSF pixel</td><td>447 × 447</td><td><code>psf.input.error_map_path</code></td></tr>
+        <tr><td><code>perturbers.json</code></td><td>nearby galaxies: positions, redshifts, masses</td><td>5 galaxies</td><td><code>mass.perturbers.path</code></td></tr>
+      </table>
+      <p>The quasar's image positions and the time delays are not files: the positions go into
+        <code>run_alpaca.py</code> (step 9), the delays into <code>config.json</code> (step 10). How such files are made
+        from a raw JWST mosaic is shown in the <a href="tutorial-galaxy.html#inputs">galaxy–galaxy tutorial</a>
+        (steps 4–9); for a quasar the same procedure works, plus the image positions. The
+        <a href="../configurator.html">configurator</a> can crop and mask a FITS file in the browser.</p>
 
-      <h2 id="noise"><span class="step">Step 3</span>Check the noise map</h2>
-      <p>The noise map (1σ per pixel, same units as the image) weights every pixel. If it is wrong, every χ² is wrong.
-        Compare it with the real scatter in empty sky:</p>
+      <!-- ============================================================== 4 -->
+      <h2 id="look"><span class="step">Step 4</span>Look at the data</h2>
+      <figure><img src="img/qso_he_01_data.png" alt="HE0435 full frame and model cutout" />
+        <figcaption>(a) <code>image.fits</code>, the full frame, with the model cutout (green). Two galaxies to the east
+          and south-east are perturbers (step 8). (b) The cutout: the four quasar images A–D with JWST's diffraction
+          spikes, the lens galaxy (+), and the faint ring of the host galaxy through the images. Asinh stretch.</figcaption></figure>
+      <p>The ring carries most of the information on the radial profile of the mass; the images pin down its overall
+        scale and shape. ALPACA models only the central <b>cutout</b> (219 × 219 px, <code>data.cutout_size</code>); the
+        full frame is used once, to fit the lens light's faint wings and the sky.</p>
+
+      <!-- ============================================================== 5 -->
+      <h2 id="noise"><span class="step">Step 5</span>Check the noise</h2>
+      <p>Compare the noise map with the real scatter of the image in empty sky. In the viewer, choose <i>data</i>,
+        untick <i>grey out masked pixels</i> and drag a box over an empty corner (the <i>model</i> and <i>residual</i>
+        tabs show the best fit of step 15):</p>
+      <div class="applet" data-applet="blink" data-base="data/applets/he0435" data-pix="0.031229"><span class="k">Applet · data, model, residual · noise check</span></div>
       <pre><code>import numpy as np
 from astropy.io import fits
 img, err = fits.getdata("data/image.fits"), fits.getdata("data/noise_map.fits")
-box = (slice(20, 70), slice(20, 70))                      # an empty corner: check it on the image first!
-print(np.std(img[box]) / np.mean(err[box]))               # ~1; drizzled mosaics: below 1 (correlated noise)</code></pre>
-      <p>A ratio far from 1 needs an explanation before modelling. In one real dataset the RMS map overstated the noise
-        by 1.7× (a unit bug), which made every fit look wonderful.</p>
+box = (slice(20, 52), slice(20, 52))                      # an empty 1" box (look at the image first!)
+print(np.std(img[box]) / np.mean(err[box]))               # about 0.7: drizzled mosaics have correlated noise</code></pre>
+      <p>About 0.7 is expected for JWST mosaics (see the <a href="tutorial-galaxy.html#noise">galaxy–galaxy tutorial</a>
+        for why). It means a perfect model sits near χ²<sub>red</sub> ≈ 0.5–0.7 in empty sky, not at 1. A ratio far from
+        that points to a unit error: fix it before modelling.</p>
 
-      <h2 id="masks"><span class="step">Step 4</span>Masks</h2>
-      <p>Two different masks (1 = use the pixel):</p>
-      <ul>
-        <li>the <b>likelihood mask</b> on the cutout (<code>data.likelihood_mask_path</code>): the lens, the ring and the
-          images, with unrelated objects excluded;</li>
-        <li>the <b>lens-only mask</b> on the full frame (<code>light.lens.refit.mask_path</code>): the lens and sky, every
-          other source masked, for the lens-light refit.</li>
-      </ul>
-      <figure><img src="img/qso_02_masks.png" alt="Likelihood and lens-only masks" />
-        <figcaption>Shaded pixels are excluded. (a) The likelihood mask: an aperture around lens and ring, with the
-          neighbouring galaxy to the east masked. (b) The lens-only mask on the full frame: every other source is
-          masked.</figcaption></figure>
-      <div class="callout"><span class="k">Look at every mask</span><p>Overlay both masks on the data before every run
-        and check them by eye. A stray hole or a misplaced edge changes the fit, and a χ² will not tell you.</p></div>
+      <!-- ============================================================== 6 -->
+      <h2 id="masks"><span class="step">Step 6</span>Masks</h2>
+      <figure><img src="img/qso_he_02_masks.png" alt="HE0435 masks" />
+        <figcaption>Grey: excluded. (a) The likelihood mask on the cutout: lens, images and ring are kept; the edge
+          towards the bright galaxy G22 in the east is cut. (b) The lens-only mask on the full frame: every other source
+          is cut out.</figcaption></figure>
+      <p>The likelihood mask keeps the lens, the four images and the ring, and removes everything that is not modelled.
+        The lens-only mask removes every source except the lens. The quasar images may stay in the lens-only mask:
+        ALPACA masks them itself in the lens-light refit (<code>light.lens.refit.ps_treatment: "mask"</code>).</p>
 
-      <h2 id="psf"><span class="step">Step 5</span>The PSF</h2>
-      <p>The PSF matters most near the quasar images: there, a PSF error of 1 % of the peak is many σ. ALPACA's default
+      <!-- ============================================================== 7 -->
+      <h2 id="psf"><span class="step">Step 7</span>The PSF</h2>
+      <p>For a quasar the PSF matters most: each image is a copy of it, and the images are 100–1000 times brighter
+        than the noise, so a PSF that is wrong by 1 % of its peak leaves residuals of many σ. ALPACA's default
         <code>psf.mode: "joint"</code> starts from a PSF built with <a href="https://gitlab.com/cosmograil/starred">STARRED</a>
-        from stars in the same mosaic and refines it during the fit. Three files describe it:</p>
-      <ul>
-        <li><code>psf_supersampled.fits</code>: the kernel, 3× supersampled (447² pixels), normalised to 1;</li>
-        <li><code>psf_starred_seed.npz</code>: STARRED's parameters (a Moffat plus a pixel grid). <b>Joint mode builds the
-          PSF from this seed</b>, so the seed and the kernel must describe the same PSF;</li>
-        <li><code>psf_error_map.fits</code>: how uncertain each PSF pixel is. This sets how far the live PSF may move.
-          About 1–10 % of the kernel is right. Much looser, and the PSF starts fitting the noise around the bright
-          images.</li>
-      </ul>
-      <figure><img src="img/qso_03_psf.png" alt="STARRED PSF and error map" />
-        <figcaption>(a) The STARRED PSF (log stretch): the six spikes of JWST's hexagonal mirror. (b) The error map.
-          (c) Radial profiles: the error sits about two orders of magnitude below the PSF.</figcaption></figure>
+        from stars in the same mosaic and refines it during the fit, within the error map. The point images themselves
+        then help to correct the PSF.</p>
+      <figure><img src="img/qso_he_03_psf.png" alt="HE0435 PSF and error map" />
+        <figcaption>(a) The STARRED PSF, 3× supersampled, with the spikes of JWST's hexagonal mirror. (b) Its error
+          map: how far each pixel may move in the fit. (c) Radial profiles relative to the PSF peak.</figcaption></figure>
+      <p>Even so, the cores of the images are never fitted to the noise level: tiny PSF variations across the field,
+        pixel sampling and detector effects remain. ALPACA handles that with the <b>PSF-error term</b>: after the fit it
+        adds to the noise of every pixel an amount proportional to the point-source model there,
+        σ<sub>eff</sub>² = σ² + b²·PS², with one fitted number b (<code>likelihood.noise_model.use_psf_error_map:
+        true</code>). That keeps the cores from dominating the posterior.</p>
 
-      <h2 id="perturbers"><span class="step">Step 6</span>Perturbers</h2>
-      <p>Galaxies near the line of sight bend the light too. HE0435's catalogue has five, all with spectroscopic
-        redshifts: G22 (4.2″ away, z = 0.782), G24 (8.0″), G12 (8.9″, z = 0.418, in front of the lens), G21 (9.7″,
-        z = 0.457, at the lens redshift) and G23 (9.8″). Galaxies at other redshifts switch on multi-plane lensing
-        automatically.</p>
-      <figure><img src="img/qso_alp_perturbers.png" alt="Perturber overlay" />
-        <figcaption>ALPACA's <code>01_input/plots/perturbers_overlay.png</code>: check that every perturber sits on its
-          galaxy. A wrong anchor once shifted all perturbers by 0.36″.</figcaption></figure>
-      <p>The most important lesson: give perturbers <b>informative</b> θ<sub>E</sub> priors (from spectroscopic velocity
-        dispersions if available, otherwise about ±40 % around a luminosity estimate). Flat priors let the perturber
-        masses slosh against the main lens and create discrete solutions several percent apart in H<sub>0</sub>.</p>
+      <!-- ============================================================== 8 -->
+      <h2 id="perturbers"><span class="step">Step 8</span>Nearby galaxies (perturbers)</h2>
+      <p>Galaxies close to the line of sight bend the light too. ALPACA calls them <b>perturbers</b>: each gets its own
+        mass profile (by default a singular isothermal sphere, SIS, whose only parameter is its Einstein radius) in
+        addition to the main lens. They are listed in a <b>catalogue</b>, a small JSON file, and switched on with one
+        line of the configuration. This step explains the file from zero, because it is the input that most often goes
+        wrong silently.</p>
 
-      <h2 id="delays"><span class="step">Step 7</span>Images and time delays</h2>
-      <p>At the top of <code>run_alpaca.py</code>:</p>
-      <pre><code>IMAGE_POSITIONS = {"A": (-0.906, -0.937),   # arcsec from the lens, x right, y up
-                   "B": (-0.999,  0.656),   # labels only: ALPACA re-detects the exact positions
-                   "C": ( 0.406,  1.249),
-                   "D": ( 0.906, -0.531)}
-REFERENCE_IMAGE = "A"
-TIME_DELAYS = {"B": (9.0, 0.8),             # t_B - t_A in days
-               "C": (0.8, 0.7),
-               "D": (13.8, 0.8)}</code></pre>
-      <div class="callout warn"><span class="k">Sign convention</span><p>COSMOGRAIL publishes Δt<sub>AB</sub> = t<sub>A</sub> −
-        t<sub>B</sub> = −9.0 ± 0.8 d. ALPACA wants t<sub>B</sub> − t<sub>A</sub> = +9.0. Flip the sign of published
-        delays.</p></div>
+      <h3>8a · Which galaxies need a mass</h3>
+      <p>A galaxy matters if it changes the light paths by more than the data can tell. The usual measure is the
+        <b>flexion shift</b>, the change of the image positions that a perturber's tidal field causes beyond what the
+        external shear already absorbs:</p>
+      <p style="text-align:center">Δ<sub>3</sub>x = θ<sub>E,main</sub>² · θ<sub>E,pert</sub>² / d³</p>
+      <p>with d the distance between the two galaxies. Include every galaxy with Δ<sub>3</sub>x &gt; 10⁻⁴″, and every
+        galaxy inside or touching the ring. For HE0435 that gives five galaxies within 10″. Galaxies further out act
+        like a smooth shear and convergence, which the external shear and the mass-sheet degeneracy already cover.</p>
 
-      <h2 id="config"><span class="step">Step 8</span>The configuration</h2>
-      <p>The shipped <code>config.json</code> is this lens's production configuration. Its key choices:</p>
+      <h3>8b · The catalogue file</h3>
+      <p>HE0435's catalogue, <code>data/perturbers.json</code>, has a <b>target</b> block (the lens) and a list of
+        <b>perturbers</b>. One entry, shortened:</p>
       <pre><code>{
-  "data":  {"pix_scale": 0.0312, "cutout_size": 219, "likelihood_mask_path": "data/mask_likelihood.fits"},
-  "mass":  {"main": {"profile": "EPL+Shear"}, "perturbers": {"path": "data/perturbers.json"}},
-  "light": {"lens": {"initial": "double-sersic",
-                     "refit": {"enabled": true, "profile": "triple-sersic", "mask_path": "data/mask_lens_only.fits"}},
-            "sky_background": true, "point_sources": {"enabled": true}},
-  "stages": {"gd": {"source": {"type": "shapelets", "n_max": 16},
-                    "optimizer": {"anneal": {"levels": [16, 8, 4, 2, 1]}, "halving": {"keep": [32, 16, 8, 4, 2]}}},
-             "cf_joint": {"enabled": true, "source": {"type": "corr_field", "num_pixels": 128,
-                                                      "loglogavgslope": [-3.5, 0.1]}}},
-  "psf":   {"mode": "joint", "input": {"oversample": 3, "error_map_path": "data/psf_error_map.fits"},
-            "joint": {"seed_path": "data/psf_starred_seed.npz"}},
-  "likelihood": {"use_time_delays": true,
-                 "noise_model": {"use_psf_error_map": true, "psf_error_b_mode": "post_gd_free", "psf_error_b_max": 0.3}},
-  "sampling": {"sampler": "nifty", "nifty": {"mode": "nuts_only"}},
-  "blinding": {"enabled": true}
+  "target": {
+    "ra_deg": 69.56225625, "dec_deg": -12.28742056,     // the LENS position (its light centroid)
+    "z_lens": 0.4546, "z_source": 1.689,                // redshifts of lens and source
+    "theta_E_main_arcsec": 1.182,                       // main lens, for the flexion shift
+    "pix_scale_arcsec": 0.031229                        // pixel scale of the frame pixel_xy refers to
+  },
+  "perturbers": [
+    {
+      "id": 7,                                          // a number; the sampled parameters are called pert7_...
+      "ra_deg": 69.56154431, "dec_deg": -12.28837431,   // its position on the sky
+      "pixel_xy": [7095.80, 3612.92],                   // the same position in pixels of the MOSAIC
+      "redshift": {"z": 0.782133, "source": "spec:SIMBAD"},   // required; decides its lens plane
+      "SIS_profile": {"sigma_kms": 209.5, "theta_E_arcsec": 0.525},   // its mass (see 8e)
+      "flexion_shift_arcsec": 0.00089,
+      "notes": "[MKP2005] G22"
+    },
+    ...
+  ]
 }</code></pre>
-      <p>Every option is explained in the <a href="documentation.html#config">configuration reference</a>.</p>
+      <p>(The <code>//</code> comments are for this page only; JSON files cannot contain comments.) Every field a
+        perturber can have:</p>
+      <table>
+        <tr><th>field</th><th>required</th><th>meaning</th></tr>
+        <tr><td><code>id</code></td><td>yes</td><td>an integer; the parameters are named <code>pert&lt;id&gt;_theta_E</code>,
+          <code>pert&lt;id&gt;_center_x</code>, …</td></tr>
+        <tr><td><code>ra_deg</code>, <code>dec_deg</code></td><td rowspan="2">one of the two</td><td>sky position (degrees)</td></tr>
+        <tr><td><code>pixel_xy</code></td><td>pixel position [x, y]; its meaning depends on whether RA/Dec are given (8c)</td></tr>
+        <tr><td><code>redshift.z</code></td><td>yes</td><td>the redshift; a missing redshift is an error. Unknown? Use the lens
+          redshift and say so in <code>notes</code></td></tr>
+        <tr><td><code>profile.theta_E_arcsec</code></td><td>yes</td><td>the catalogue Einstein radius: the centre of its prior
+          (the older spelling <code>SIS_profile.theta_E_arcsec</code>, as in this file, also works)</td></tr>
+        <tr><td><code>profile.mass_model</code></td><td>no</td><td><code>"SIS"</code> (default), <code>"SIE"</code>,
+          <code>"EPL"</code> or <code>"EPL+Shear"</code>: more freedom for a massive neighbour</td></tr>
+        <tr><td><code>profile.sigma_kms</code></td><td>no</td><td>the velocity dispersion θ<sub>E</sub> came from (for your records)</td></tr>
+        <tr><td><code>theta_E_prior_sigma</code></td><td>no</td><td>with it, the θ<sub>E</sub> prior is a truncated Gaussian
+          (catalogue value ± this); without it, a flat prior from 0 to <code>theta_E_max_factor</code> × the catalogue value</td></tr>
+        <tr><td><code>theta_E_max_factor</code></td><td>no</td><td>the upper bound of the θ<sub>E</sub> prior, in units of the
+          catalogue value (default 3)</td></tr>
+        <tr><td><code>fix_positions</code>, <code>position_sigma_arcsec</code></td><td>no</td><td>per-galaxy override of
+          the position prior (8f)</td></tr>
+        <tr><td><code>lens_light</code></td><td>no</td><td><code>{"model": "Sersic", "lensed": false}</code> also models the
+          galaxy's light (<code>"Sersic"</code>, <code>"double-sersic"</code>, <code>"MGE"</code>, …). Without it, mask the
+          galaxy's light</td></tr>
+        <tr><td><code>flexion_shift_arcsec</code>, <code>notes</code></td><td>no</td><td>for selection
+          (<code>min_flexion_shift_arcsec</code>) and for you</td></tr>
+      </table>
 
-      <h2 id="run"><span class="step">Step 9</span>Run it</h2>
-      <pre><code>python run_alpaca.py config.json --fit-only --output runs/he0435_map/                       # MAP only
-python run_alpaca.py config.json --fit-only --backend mps --precision float32 --output runs/he0435_mps/   # Apple GPU
-python run_alpaca.py config.json --output runs/he0435_full/                                # MAP + sampling</code></pre>
-      <p>With the production budget, the three GD stages took 25 min (stage 1), 4 min (the refit) and 16 min
-        (stage 3) on a GPU. Sampling (2 chains of NUTS) took about 15 h. For a first look on a laptop, shrink the
-        multistart (see <a href="documentation.html#running">budgets</a>).</p>
+      <h3>8c · Positions: two ways to give them</h3>
+      <p><b>(1) RA/Dec and mosaic pixels</b>, as in HE0435's file. The target block holds the lens's RA/Dec, each
+        perturber its RA/Dec and its pixel position in the <i>original mosaic</i>. From three or more perturbers
+        ALPACA fits the map from the sky to mosaic pixels (it catches the rotation and orientation of the mosaic),
+        and places every perturber relative to the lens centre it detects in your image. The log reports the fit:</p>
+      <pre><code>[perturbers] sky->pixel affine fit over 5 perturbers: target at i2d pixel (6967.0, 3569.0), fit RMS = 0.000 pix</code></pre>
+      <p>With fewer than three perturbers, ALPACA assumes north up and east left, which is wrong for most JWST
+        mosaics (they are rotated). Then use way (2).</p>
+      <p><b>(2) Pixels of your own frame</b> (simplest; no coordinates needed). Set <code>ra_deg</code> and
+        <code>dec_deg</code> to <code>null</code>, give <code>pixel_xy</code> in the pixels of <code>image.fits</code> (x =
+        column, y = row, counted from 0), and give the frame size as <code>target.npix</code>. ALPACA converts
+        with position = (pixel − (npix − 1)/2) × pix_scale, i.e. relative to the frame centre. The
+        <a href="tutorial-galaxy.html#perturbers">galaxy–galaxy tutorial</a> builds such a catalogue step by step.</p>
 
-      <h2 id="stages"><span class="step">Step 10</span>Read the stages</h2>
-      <h3>Stage 1: shapelet multistart</h3>
-      <p>Many random starts, annealed from 16× inflated noise down to the real noise and culled by successive halving.
-        The smooth shapelet source makes this robust; it decides the mass basin.</p>
-      <p>After stage 1, χ²<sub>red</sub> = 3.87: the ring is in the right place, but the smooth shapelet source
-        cannot reproduce its fine structure. Check <code>stage1_shapelets/model_summary.png</code> for the
-        position of the critical curve relative to the images.</p>
-      <h3>Stage 2: lens-light refit on the full frame</h3>
-      <figure class="figrow" style="display:grid"><img src="img/qso_alp_refit_subtraction.png" alt="Lens-light refit subtraction" />
-        <img src="img/qso_alp_refit_profile.png" alt="Radial profile of the lens light" />
-        <figcaption>Left: the full frame after subtracting the stage-1 source and point sources, which is what the triple
-          Sérsic is refitted to. Right: radial profile, data against model, out to the frame edge. The wings and the sky
-          are constrained here, not in the small cutout.</figcaption></figure>
-      <h3>Stage 3: correlated-field source, joint fit</h3>
-      <figure><img src="img/qso_stage3.png" alt="Stage 3 data, model, residual and source" />
-        <figcaption>Stage 3: (a) data, (b) model, (c) normalised residual, χ²<sub>red</sub> = 2.33, (d) the pixelated
-          source, which now reproduces the host galaxy's spiral structure. This is the model you judge and sample. The
-          remaining residuals sit at the quasar cores. The thin red streak at the east edge marks pixels that this run
-          did not fit.</figcaption></figure>
-      <figure><img src="img/qso_alp_raytracing.png" alt="Ray tracing check" />
-        <figcaption>Lens-equation check: the four images trace back to one source position within 3.6 mas.</figcaption></figure>
+      <h3>8d · Redshifts and lens planes</h3>
+      <p>A perturber within <code>mass.perturbers.z_tolerance</code> (0.01) of the lens redshift is placed on the lens's
+        own plane. All others get their own plane, and ALPACA switches to <b>multi-plane</b> ray tracing automatically,
+        with distance ratios from a fiducial cosmology (<code>mass.perturbers.cosmology</code>; the ratios do not depend
+        on H<sub>0</sub>). HE0435 has one galaxy in front of the lens (G12, z = 0.418), one at the lens redshift (G21)
+        and three behind it (G22, G23, G24, z ≈ 0.78):</p>
+      <pre><code>[perturbers] 5 perturber(s) from data/perturbers.json:
+    id=9   z=0.4184 (foreground) SIS       theta_E=0.282" at (-1.855", +8.719")  [MKP2005] G12
+    id=3   z=0.4565 (main      ) SIS       theta_E=0.235" at (-5.054", +8.300")  [MKP2005] G21
+    id=8   z=0.7792 (background) SIS       theta_E=0.203" at (+9.622", +1.401")  [MKP2005] G23
+    id=2   z=0.7806 (background) SIS       theta_E=0.273" at (+6.684", -4.372")  [MKP2005] G24
+    id=7   z=0.7821 (background) SIS       theta_E=0.525" at (+3.991", +1.372")  [MKP2005] G22</code></pre>
+      <p><code>mass.perturbers.mode: "single_plane"</code> instead puts every perturber on the lens plane (the classic
+        approximation). Use it for galaxies of unknown redshift, and for a very massive deflector in front of the lens
+        such as a galaxy cluster: its nearly constant deflection of many arcseconds would otherwise move the lens's
+        mass away from where its light is seen.</p>
 
-      <h2 id="judge"><span class="step">Step 11</span>Judge the model</h2>
-      <p>χ²<sub>red</sub> = 2.33 alone tells you little. Split it by region, and look at where the residual lives:</p>
-      <figure><img src="img/qso_diag_chi2_binned.png" alt="Binned chi-square map" />
-        <figcaption>(a) χ²<sub>red</sub> in blocks, coloured relative to the empty-sky level (0.66). Blue blocks would mean
-          a component fits the noise; red means something is not fitted. (b) χ²<sub>red</sub> by region: quasar cores
-          30–87, their wings 4–12, the arc annulus 3.2, the outer envelope 1.4, sky 0.66.</figcaption></figure>
-      <p>Reading it:</p>
+      <h3>8e · How heavy: the Einstein radius</h3>
       <ul>
-        <li>The <b>cores dominate</b>. During GD ALPACA deliberately leaves the PSF-error term off (<i>b</i> = 0). After GD
-          it fits <i>b</i> (here 0.15), which down-weights the cores for sampling and the warm start. Core residuals at
-          GD level are expected; ring or dipole <i>patterns</i> at the cores point at the PSF.</li>
-        <li>The <b>ring and the centre</b> (χ² 3.2 and 4.3) carry real information on the mass and the lens light. Look
-          for arc-shaped residuals (source or mass) and a quadrupole at the centre (lens light).</li>
-        <li>Nothing is <b>over-fitted</b> (no blue blocks): no component is absorbing noise.</li>
+        <li><b>From a measured velocity dispersion</b> σ (best): θ<sub>E</sub> = 4π (σ/c)² D<sub>ps</sub>/D<sub>s</sub>,
+          with D<sub>ps</sub> and D<sub>s</sub> the angular-diameter distances from the perturber to the source and from
+          us to the source. The prior width follows from the error of σ (Δθ/θ = 2 Δσ/σ).</li>
+        <li><b>From the light</b> (photometry), relative to the main lens: θ<sub>E</sub> ∝ √L (Faber–Jackson), with about
+          ±40 % prior width. The luminosity depends on the redshift: the same flux at a lower redshift is a fainter,
+          lighter galaxy.</li>
       </ul>
-      <p>Then go through the checklist: no parameter at a prior bound (<code>boundary_flags.txt</code>), physical values
-        (γ, shear, mass–light alignment), a seed repeat that lands in the same solution, and a lens-equation check
-        (the ray tracing above).</p>
+      <p>Catalogue values can be badly wrong. G22's 0.53″ comes from photometry; its measured MUSE dispersion gives
+        0.23″. If you have a spectroscopic σ, use it. This tutorial keeps the shipped catalogue, which has no
+        <code>theta_E_prior_sigma</code>, so each θ<sub>E</sub> is free between 0 and 3 × the catalogue value.</p>
 
-      <h2 id="next"><span class="step">Step 12</span>Sampling and next steps</h2>
+      <h3>8f · Switching them on: the configuration</h3>
+      <pre><code>"mass": {
+  "perturbers": {
+    "path": "data/perturbers.json",       // the catalogue; null = no perturbers
+    "mode": "auto",                       // "auto": planes from the redshifts; "single_plane": all on the lens plane
+    "z_tolerance": 0.01,                  // |z - z_lens| below this = the lens plane
+    "min_flexion_shift_arcsec": null,     // drop catalogue entries below this flexion shift
+    "include_ids": null, "exclude_ids": null,   // or pick entries by id, e.g. "exclude_ids": [8]
+    "priors": {
+      "theta_E_max_factor": 3.0,          // flat prior upper bound (when no theta_E_prior_sigma)
+      "position_sigma_arcsec": 0.3,       // Gaussian prior on each position ...
+      "fix_positions": true               // ... or fix them at the catalogue positions
+    },
+    "cosmology": {"H0_fid": 70.0, "Om0": 0.3}   // for the multi-plane distance ratios only
+  }
+}</code></pre>
+      <p>Fix the positions when they come from the galaxies' light centroids: free positions add two parameters per
+        galaxy that the data hardly constrain. You can also set the catalogue at the top of <code>run_alpaca.py</code>
+        (<code>PERTURBERS_PATH = "data/perturbers.json"</code>), which overrides the configuration. Per-galaxy entries in
+        the catalogue (<code>theta_E_prior_sigma</code>, <code>fix_positions</code>, …) override the <code>priors</code>
+        block.</p>
+
+      <h3>8g · Check them</h3>
+      <figure><img src="img/qso_he_04_perturbers.png" alt="HE0435 perturbers on the frame" />
+        <figcaption>The five perturbers of the catalogue, at the positions ALPACA computed, on the full frame (dotted)
+          and beyond it. Colours: in front of the lens (blue), on the lens plane (orange), behind it (red). The circles of
+          G22 and G24 sit on their galaxies; the other three lie outside <code>image.fits</code>.</figcaption></figure>
+      <ol>
+        <li>The log: the affine-fit line (RMS well below a pixel), and the list of perturbers with their planes and
+          positions.</li>
+        <li>The overlay figure <code>run/01_input/plots/perturbers_overlay.png</code> (it shows the model cutout, so
+          galaxies further out appear as markers on its edge): every marker must sit on its galaxy. A wrong anchor shifts
+          all perturbers together, and nothing else in the run shows it.</li>
+        <li>The likelihood mask: the perturbers' light is masked unless you model it (<code>lens_light</code>).</li>
+        <li>After the fit: <code>pert&lt;id&gt;_theta_E</code> in the log and in <code>parameter_summary.txt</code>. A
+          value at 0 or at the upper bound means the prior or the catalogue value is wrong.</li>
+      </ol>
+
+      <!-- ============================================================== 9 -->
+      <h2 id="images"><span class="step">Step 9</span>Image positions</h2>
+      <p>At the top of <code>run_alpaca.py</code>, the approximate positions of the four images, in arcsec from the
+        frame centre (x to the right, y up, as the image is shown with <code>origin="lower"</code>):</p>
+      <pre><code>IMAGE_POSITIONS = {   # HE0435-1223: A bottom-left, clockwise B, C, D
+    "A": (-0.906, -0.937),
+    "B": (-0.999,  0.656),
+    "C": ( 0.406,  1.249),
+    "D": ( 0.906, -0.531),
+}
+REFERENCE_IMAGE = "A"          # the delays are measured relative to this image
+LENS_POSITION = (0.0, 0.0)     # the lens's sub-pixel offset from the frame centre (arcsec)</code></pre>
+      <p>These positions are <b>labels</b>, not measurements: ALPACA detects the four images itself and matches each to
+        the nearest label, so that the delays are assigned to the right images. The log shows the match:</p>
+      <pre><code>Matched auto-detected positions to reference labels:
+  A: detected (-0.9056, -0.9369)  ref (-0.9060, -0.9370)  offset 0.0004"
+  B: detected (-0.9993, +0.6558)  ref (-0.9990, +0.6560)  offset 0.0004"
+  C: detected (+0.4060, +1.2491)  ref (+0.4060, +1.2490)  offset 0.0002"
+  D: detected (+0.9056, -0.5309)  ref (+0.9060, -0.5310)  offset 0.0004"</code></pre>
+      <p>Use the labels of the paper that published the delays, or the labels will not match the delays.</p>
+      <div class="quiz"><details><summary>Quiz: you swap the labels of B and D. Does ALPACA notice?</summary>
+        <p>No. The images are still found, the fit of the image is the same, but the delay "A–B" is now compared with the
+          model's A–D delay. The model cannot match the delays, and if it tries, it pulls the mass in the wrong
+          direction. Always take the labels from the delay paper and check the matched table in the log.</p></details></div>
+
+      <!-- ============================================================== 10 -->
+      <h2 id="delays"><span class="step">Step 10</span>Time delays</h2>
+      <p>The delays go into <code>config.json</code>, exactly as published:</p>
+      <pre><code>"likelihood": {
+  "use_time_delays": true,
+  "time_delays": {
+    "convention": "t_X - t_Y",                      // COSMOGRAIL / TDCOSMO: dt_AB = t_A - t_B
+    "delays": { "AB": [-9.0, 0.8], "AC": [-0.8, 0.7], "AD": [-13.8, 0.8] },   // days, [value, 1 sigma]
+    "covariance": "independent"
+  }
+}</code></pre>
+      <p>Give the n − 1 delays relative to one image (A here); a published asymmetric error goes in as
+        <code>[value, +σ, −σ]</code>. Δt<sub>AB</sub> = t<sub>A</sub> − t<sub>B</sub> = −9.0 days means B varies 9 days
+        after A. The log repeats the table in both conventions, so you can check it:</p>
+      <pre><code>Time delays:
+  Reference image: A  (positive dt -> image arrives AFTER A)
+  time-delay table (3 pair(s), covariance model: independent)
+    t_A - t_B =   -9.00 +/- 0.80 d   (B arrives later; minus combined: +0.00 d)
+    t_A - t_C =   -0.80 +/- 0.70 d   (C arrives later; minus combined: +0.00 d)
+    t_A - t_D =  -13.80 +/- 0.80 d   (D arrives later; minus combined: +0.00 d)
+  delays used by the likelihood (relative to A; positive = arrives after A):
+    t_B - t_A =   +9.00 +/- 0.80 d
+    t_C - t_A =   +0.80 +/- 0.70 d
+    t_D - t_A =  +13.80 +/- 0.80 d</code></pre>
+      <p>Leave <code>TIME_DELAYS = None</code> in <code>run_alpaca.py</code>: the <code>time_delays</code> block is the
+        one place for delays, and its <code>convention</code> key makes the sign explicit. The
+        <a href="../configurator.html">configurator</a> has a delay editor that writes this block for you.</p>
+      <div class="quiz"><details><summary>Quiz: a paper gives Δt<sub>BA</sub> = +9.0 days. What do you write?</summary>
+        <p>Either <code>"BA": [9.0, 0.8]</code> with <code>"convention": "t_X - t_Y"</code> (t<sub>B</sub> − t<sub>A</sub>
+          = +9.0), or <code>"AB": [-9.0, 0.8]</code>: both say that B arrives 9 days after A. Check the
+          "delays used by the likelihood" lines: they must read <code>t_B - t_A = +9.00</code>.</p></details></div>
+
+      <!-- ============================================================== 11 -->
+      <h2 id="config"><span class="step">Step 11</span>Build the configuration</h2>
+      <p>The shipped <code>config.json</code> is this lens's configuration: every section is explained in the
+        <a href="tutorial-galaxy.html#config">galaxy–galaxy tutorial</a>, and the
+        <a href="../configurator.html">configurator</a>'s <i>lensed quasar</i> preset starts from it. Explore the
+        configuration of this tutorial; keys marked <span style="color:#D6336C">■</span> differ from the shipped
+        file:</p>
+      <div class="applet" data-applet="config" data-config="files/he0435_config.json" data-shipped="files/shipped_config.json"><span class="k">Applet · configuration explorer</span></div>
+      <p>The keys that make it a quasar model:</p>
+      <table>
+        <tr><th>key</th><th>value</th><th>meaning</th></tr>
+        <tr><td><code>light.point_sources.enabled</code></td><td>true</td><td>the four images are modelled as point sources</td></tr>
+        <tr><td><code>likelihood.astrometry_mode</code>; <code>sigma_ast</code></td><td>"image_plane"; 0.005</td><td>the
+          model images must land within 5 mas of the observed ones, all from one source position (the default)</td></tr>
+        <tr><td><code>likelihood.use_time_delays</code>; <code>time_delays</code></td><td>true; step 10</td><td>the delays enter the likelihood</td></tr>
+        <tr><td><code>likelihood.noise_model.use_psf_error_map</code>; <code>psf_error_b_mode</code></td><td>true;
+          "post_gd_free"</td><td>the PSF-error term b of step 7: fitted after the best fit, free during sampling</td></tr>
+        <tr><td><code>likelihood.D_dt_prior</code></td><td>uniform 500–10000 Mpc</td><td>a broad prior on the time-delay distance</td></tr>
+        <tr><td><code>likelihood.use_kinematics</code></td><td>false</td><td>no stellar velocity dispersion in this tutorial</td></tr>
+        <tr><td><code>mass.perturbers</code></td><td>step 8</td><td>the five galaxies, positions fixed</td></tr>
+        <tr><td><code>light.lens.couple_sersic_centers</code>, <code>couple_sersic_ellipticities</code></td><td>true</td><td>one
+          centre and one shape for all lens-light components</td></tr>
+        <tr><td><code>blinding.enabled</code></td><td>true</td><td>step 12</td></tr>
+      </table>
+      <p>What this tutorial changes in the shipped file:</p>
+      <table>
+        <tr><th>key</th><th>shipped</th><th>here</th><th>why</th></tr>
+        <tr><td><code>stages.cf_joint.source.loglogavgslope</code>, <code>fluctuations</code></td><td>[−3.5, 0.1], [1, 0.5]
+          (free)</td><td>[−2.0, 0.001], [10, 0.01] (fixed)</td><td>the smoothness of the host galaxy, chosen by
+          cross-validation (below)</td></tr>
+        <tr><td><code>stages.cf_joint.source.mean_intensity</code></td><td>null</td><td>0.002</td><td>a dark source
+          background, about a tenth of the noise (see the <a href="tutorial-galaxy.html#cv">galaxy–galaxy tutorial</a>)</td></tr>
+        <tr><td><code>stages.cf_joint.adam_steps</code>; <code>convergence</code></td><td>12000; off</td><td>80000; on</td>
+          <td>run the last stage until it stops improving (here 67 400 steps)</td></tr>
+        <tr><td><code>sampling.nifty.nuts.n_samples</code></td><td>1000</td><td>700</td><td>a shorter sampling run for the
+          tutorial (600 warm-up + 700 samples per chain)</td></tr>
+      </table>
+      <h3>The host galaxy's smoothness</h3>
+      <p>With the shipped, free smoothness prior the log of a first fit warns that the host galaxy's smoothness has
+        <i>railed</i>, i.e. been pushed far outside its prior to fit noise:</p>
+      <pre><code>[staged:cf_joint] CF hyper source:fluctuations   z = +9.62 sigma -> 84.18 (prior 1 +- 0.5)  WARNING: RAILED
+[staged:cf_joint] CF hyper source:loglogavgslope z = +11.48 sigma -> -2.352 (prior -3.5 +- 0.1)  WARNING: RAILED</code></pre>
+      <p>As in the galaxy–galaxy tutorial, ALPACA's cross-validation picks the values that predict hidden pixels of the
+        ring best:</p>
+      <pre><code>python -m alpaca.diagnostics.cf_cv run --field source --slopes -2 -2.5 -3 --fluctuations 2.5 5 10 20</code></pre>
+      <table>
+        <tr><th>slope</th><th>fluctuations</th><th>held-out χ²</th></tr>
+        <tr><td>−1.75</td><td>5</td><td>0.522</td></tr>
+        <tr><td><b>−2.0</b></td><td><b>10</b></td><td><b>0.526</b></td></tr>
+        <tr><td>−2.0</td><td>5</td><td>0.552</td></tr>
+        <tr><td>−2.5</td><td>20</td><td>0.579</td></tr>
+        <tr><td>−1.5</td><td>5</td><td>0.613</td></tr>
+        <tr><td>free (shipped prior)</td><td></td><td>0.738</td></tr>
+        <tr><td>−3.0</td><td>2.5</td><td>0.963</td></tr>
+      </table>
+      <p>The best values form a flat ridge (−1.75 / 5 and −2.0 / 10 are equally good within the scatter of the folds);
+        any of them predicts much better than the free prior. We fix −2.0 / 10. With the fix the log reports the
+        values at their prior centre:</p>
+      <pre><code>[staged:cf_joint] CF hyper source:fluctuations    z = +1.55 sigma -> 10.02 (prior 10 +- 0.01; at the prior centre 10)
+[staged:cf_joint] CF hyper source:loglogavgslope  z = +5.55 sigma -> -1.994 (prior -2 +- 0.001; ...)  RAILED but the prior is effectively fixed: physical shift +0.00555</code></pre>
+      <p>The second line looks alarming but is harmless: with a prior width of 0.001, a shift of 0.006 is "5.6σ"
+        while it changes nothing physically, and ALPACA says so.</p>
+
+      <!-- ============================================================== 12 -->
+      <h2 id="blinding"><span class="step">Step 12</span>Blinding</h2>
+      <p>HE0435 measures H<sub>0</sub>, so its analysis is <b>blinded</b>: the numbers that carry cosmology (D<sub>Δt</sub>,
+        H<sub>0</sub> and the mass slope γ) are stored and shown only as offsets from their posterior mean until the
+        analysis is frozen. You can still see their uncertainties and correlations, and compare models through
+        differences. Set a key once per campaign, outside every file:</p>
+      <pre><code>export ALPACA_BLINDING_KEY="$(openssl rand -hex 32)"     # keep this key private and the same for all runs of a lens
+python -m alpaca.unblind run/                           # only when the collaboration decides to unblind</code></pre>
+      <p>This tutorial never shows γ, D<sub>Δt</sub> or H<sub>0</sub>; the log says so itself
+        (<i>blinded run: slope, D_dt, H0, delays and Fermat potentials are never shown here</i>). The best-fit files
+        (<code>03_multistart/*/best_fit_params_full.npz</code>) contain true values, so treat run folders as internal.</p>
+
+      <!-- ============================================================== 13 -->
+      <h2 id="run"><span class="step">Step 13</span>Run the fit</h2>
+      <pre><code>python run_alpaca.py config.json --fit-only            # the best fit only (40 min on a GPU)
+python run_alpaca.py config.json                       # best fit (resumed) + sampling
+python run_alpaca.py config.json --fit-only --backend mps --precision float32   # Apple GPU, a quick look</code></pre>
+      <p>On a cluster, put the command into a job script. With two GPUs, set
+        <code>export JAX_PLATFORMS=cuda,cpu</code> (not <code>--backend gpu</code>) so that the two sampling chains can run
+        in parallel, and request two GPUs of the same type.</p>
+      <p>The start of the log tells you whether ALPACA read everything right: the device, the cutout, the number of
+        active pixels, the detected lens centre, the five perturbers with their planes, the matched images and the
+        delay table (steps 8–10). Then the fit (abridged from the real log):</p>
+      <pre><code>ALPACA: gpu / float64 / cuda:0
+[cutout] modelling on central 219x219; lens-light refit uses the full 499x499 frame.
+  Active pixels: 24856/47961 (51.8%)
+[setup_lens] Detected lens center: (-0.0312, +0.0000) arcsec
+[perturbers] sky->pixel affine fit over 5 perturbers: target at i2d pixel (6967.0, 3569.0), fit RMS = 0.000 pix
+PHASE 1: MAP ESTIMATION  (stages: gd -> cf_warmstart -> lens_light_refit -> cf_joint)
+Phase 1: 32 initial starts (parallel)                                     &lt;- stage 1
+[Iteration 1] Best χ²_red: 3.8699
+  [lens-light refit] triple-sersic (3 profiles): chi2 4.137e+07 -> 1.36e+05 over 3000 steps; PS MASKED (r&lt;0.5", 3188 px); ARC MASKED (5428 px)
+[staged:cf_joint] stage 3 stopped: converged after 67400/80000 steps (best at step 66085)
+[staged:cf_joint] post-GD psf_error_b fit: b = 0.0625 (loss gain 7240.8)
+    final chi2_red over the likelihood mask: 1.484 with the effective noise (incl. b), 1.484 with the raw noise map
+    point-image cores (&lt; 0.12"), chi2_red effective / raw noise: A 28.5 / 28.5 | B 87.9 / 87.9 | C 44.2 / 44.2 | D 41.1 / 41.1
+    chi2_red by region: lens centre (&lt;0.3") 2.31 | inner (0.3"-0.7 theta_E) 0.85 | arc annulus (0.7-1.3 theta_E) 4.68 | envelope (1.3-2 theta_E) 0.70 | sky (&gt;2 theta_E) 0.67
+    main-lens theta_E: 1.1101"
+    at a prior bound (within 2 % of the range): light_n_L3 at lower bound (0.504 in [0.5, 5])
+    perturber theta_E [prior range]: pert9 0.233" [0, 0.845] | pert3 0.263" [0, 0.706] | pert8 0.0455" [0, 0.61] | pert2 0.385" [0, 0.82] | pert7 0.612" [0, 1.58]
+    image-plane astrometric residuals, model images vs one common source (mas): A (-4.4, -7.2) | B (-5.0, -8.1) | C (-5.5, -6.9) | D (+5.4, +6.8)   rms 6.3
+    blinded run: slope, D_dt, H0, delays and Fermat potentials are never shown here.
+Total runtime: 2354.55s (39.24 min)</code></pre>
+      <p>Timing: 39 min on one NVIDIA RTX A5500 (24 GB). Most of it is stage 3, which runs until it converges.</p>
+
+      <!-- ============================================================== 14 -->
+      <h2 id="stages"><span class="step">Step 14</span>Read the stages</h2>
+      <p>The best fit is found in three stages (details in the
+        <a href="tutorial-galaxy.html#stages">galaxy–galaxy tutorial</a>):</p>
+      <ol>
+        <li><b>Stage 1</b>: 32 random starts with a smooth shapelet source for the host, the four point images and a
+          double-Sérsic lens light. It decides the mass solution (χ²<sub>red</sub> 3.87: the smooth source cannot follow
+          the ring's detail).</li>
+        <li><b>Stage 2</b>: the lens light (triple Sérsic) alone on the full frame, with the quasar images (magenta) and
+          the ring (emerald) masked.</li>
+        <li><b>Stage 3</b>: the host becomes a pixelated source; everything is fitted together with the live PSF
+          (χ²<sub>red</sub> 1.48).</li>
+      </ol>
+      <div class="applet" data-applet="stages" data-images="img/qso_he_05_stage1.png|img/qso_he_06_refit.png|img/qso_he_07_stage3.png" data-captions="Stage 1 (stage1_shapelets/plots/model_summary.png): data, model and residuals with a smooth shapelet host; ring-shaped residuals remain.|Stage 2 (stage2_lens_light_refit/plots/01_lens_light_fit.png): top, the full model on the full frame; bottom, the lens light alone. Magenta: quasar apertures, emerald: the ring, both left out of this fit.|Stage 3 (stage3_cf_joint/plots/planes.png): data, model and residuals, then the model split into its planes: the lens light, the lensed host, and the host galaxy in its own plane."><span class="k">Applet · step through the stages</span></div>
+      <p>After stage 3 ALPACA fits the PSF-error amplitude b and checks the lens equation: the four model images must
+        come from one source position.</p>
+      <figure><img src="img/qso_he_09_raytrace.png" alt="Ray-tracing check" />
+        <figcaption><code>best_model/ray_tracing_check.png</code>: the four observed image positions traced back to the
+          source plane land within 3.3 mas of each other.</figcaption></figure>
+      <p>Stage 2 also prints a warning that one Sérsic index hit its lower bound (<code>S2.n_sersic=0.2</code>); stage 3
+        frees it again. At the end one lens-light index sits near its bound (<code>light_n_L3</code> 0.504): a flat,
+        extended light component, harmless for the mass.</p>
+
+      <!-- ============================================================== 15 -->
+      <h2 id="judge"><span class="step">Step 15</span>Judge the model</h2>
+      <p>Look at the residuals first: use the viewer of step 5 (residual tab). For a quasar lens the global
+        χ²<sub>red</sub> (1.48 here) is dominated by the four image cores, so split it by region:</p>
       <ul>
-        <li><b>Sampling:</b> <code>sampling.nifty.mode: "nuts_only"</code> starts NUTS from the stage-3 MAP. Use
-          <code>target_accept</code> 0.8 (0.95 saturates the tree depth), at least 2 chains, and check R-hat, ESS and
-          divergences.</li>
-        <li><b>Seeds and basins:</b> run 2–3 random seeds. Lens models of JWST data often have several discrete
-          solutions; never trust a single run.</li>
-        <li><b>Systematics:</b> vary one thing at a time (lens light, source prior, multipoles, perturber priors, PSF)
-          and report the spread.</li>
-        <li><b>Inspect:</b> open the run folder in the <a href="../app.html">ALPACA analysis app</a>.</li>
+        <li><b>Image cores</b> (within 0.12″): χ²<sub>red</sub> 28–88 here. That is normal at this stage: the PSF is never
+          perfect there, and the term b (0.0625) takes care of it in sampling. Look for patterns instead: a ring or a
+          dipole around a core means the PSF or the image position is off.</li>
+        <li><b>The ring and the lens centre</b> carry the information on the mass profile and the lens light. Here the
+          "arc annulus" (4.68) also contains the four images and their spikes, which dominate it; judge the ring between
+          them by eye in the residual map. The lens centre (2.31) shows a small residual of the lens light.</li>
+        <li><b>Envelope and sky</b> must sit at the noise level: 0.70 and 0.67 (step 5).</li>
+        <li><b>Astrometry:</b> the model images match the observed ones to 6.3 mas rms (σ<sub>ast</sub> = 5 mas).</li>
+        <li><b>Perturbers:</b> no θ<sub>E</sub> at 0 or at its upper bound. G22 (pert7) comes out at 0.61″, near its
+          photometric catalogue value (0.53″) and well inside its range, but far above the 0.23″ of its measured
+          dispersion (step 8e): in a real analysis, give it a spectroscopic prior. G23 (pert8) is nearly massless
+          (0.05″).</li>
+        <li><b>Prior bounds</b> and the source-smoothness report, as for any lens.</li>
+      </ul>
+      <figure><img src="img/qso_he_08_chi2.png" alt="Binned chi-square" />
+        <figcaption><code>best_model/chi2_binned.png</code>: (a) χ²<sub>red</sub> in blocks relative to the empty sky; the
+          red blocks are the image cores. (b) χ²<sub>red</sub> by region; the dashed line is the empty sky.</figcaption></figure>
+      <div class="quiz"><details><summary>Quiz: why not mask the four image cores and be done with it?</summary>
+        <p>Because the cores carry the image positions and fluxes, and the PSF refinement learns from them. Masking them
+          throws away the most precise constraint of a quasar lens. ALPACA keeps them and down-weights only what the PSF
+          cannot model, through the term b.</p></details></div>
+
+      <!-- ============================================================== 16 -->
+      <h2 id="sample"><span class="step">Step 16</span>Sample the posterior</h2>
+      <p>Sampling starts NUTS from the best fit, with the PSF frozen and the term b free. Check divergences (0 is ideal),
+        R̂ below 1.01 for the lens parameters, and an effective sample size (ESS) of a few hundred for the quantities you
+        report. All of them are printed at the end of the log and stored in
+        <code>04_sampling/nifty_nuts/nifty_nuts_diagnostics.json</code>.</p>
+      <!-- FILL: diagnostics + blinded results of the final run (13987001) -->
+      <p>Blinded results: <code>05_posterior/samples/parameter_summary.txt</code> lists every non-cosmological parameter
+        with its uncertainty, and the blinded quantities as offsets. Open <code>run/</code> in the
+        <a href="../app.html">analysis app</a>: it stays blinded.</p>
+
+      <!-- ============================================================== 17 -->
+      <h2 id="next"><span class="step">Step 17</span>Where to go next</h2>
+      <ul>
+        <li><b>Seeds and solutions:</b> rerun with other random seeds; JWST lens models can have several discrete
+          solutions, so never trust a single run.</li>
+        <li><b>Systematics:</b> change one thing at a time (multipoles <code>mass.main.multipoles.orders</code>, the
+          lens-light model, the source prior, perturber priors, the PSF) and compare the blinded D<sub>Δt</sub> offsets.</li>
+        <li><b>Stellar kinematics</b> break the mass-sheet degeneracy: <code>likelihood.use_kinematics</code> (see the
+          documentation).</li>
+        <li><b>Several bands</b> with one mass model: ALPACA's multiband mode (<code>run_multiband.py</code>).</li>
+        <li><b>Inspect</b> the run in the <a href="../app.html">analysis app</a>: it stays blinded and needs the key only
+          for its computations.</li>
       </ul>
 
+      <!-- ============================================================== AI -->
       <h2 id="ai"><span class="step">★</span>The same with an AI assistant</h2>
       <div class="callout ai"><span class="k">Claude Code, Codex, Gemini CLI</span>
-        <p>Instruction files in the repository's <code>llm/</code> folder let a terminal assistant do steps 1–9 with you.
-          It looks at the data, asks what it cannot decide, shows every figure, and prints the command to run.</p></div>
+        <p>Instruction files in the repository's <code>llm/</code> folder let a terminal assistant prepare the data,
+          write the configuration and judge the fit with you. It keeps the analysis blinded.</p></div>
       <pre><code>cd alpaca && claude
 &gt; Read llm/2_ALPACA_PREPARE_DATA.md and prepare data/image.fits. It is HE0435-1223 (blinded cosmography lens);
-  the delays relative to A are B 9.0±0.8, C 0.8±0.7, D 13.8±0.8 days (t_X - t_A).
-&gt; Read llm/3_ALPACA_MODELLING.md and try ~10 variants in 3 hours to find the best starting model.</code></pre>
+  the published delays are dt_AB = -9.0±0.8, dt_AC = -0.8±0.7, dt_AD = -13.8±0.8 days (dt_XY = t_X - t_Y).
+&gt; Read llm/3_ALPACA_MODELLING.md and judge the first fit.</code></pre>
 
       <div class="next"><a class="btn" href="tutorial.html">← All tutorials</a><a class="btn primary" href="tutorial-galaxy.html">Galaxy–galaxy tutorial →</a></div>
     </main>
   </div>
   <script src="doc.js"></script>
+  <script type="module" src="tutorial-applets.js"></script>
 </body>
 </html>

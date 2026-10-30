@@ -1,7 +1,8 @@
 """Build documentation.html from the hand-written chapters below + data/knobs.json (all config knobs).
 
     python tools/build_docs.py            (run from alpaca/doc/)
-Re-run extract_knobs.py first when ALPACA's configuration changes.
+Re-run extract_knobs.py first when ALPACA's configuration changes, e.g.
+    ALPACA_BACKEND=cpu python tools/extract_knobs.py ~/alpaca data/knobs.json data/knobs.json
 """
 import html
 import json
@@ -40,15 +41,16 @@ def fmt_default(v):
 
 SECTION_INFO = {
     "run": ("Run", "Where the outputs go and which phases run. One output directory per model variant: re-running into a finished directory resumes it."),
-    "data": ("Data", "Pixel scale, the model cutout and the likelihood mask. The image, noise map and PSF files themselves are set at the top of <code>run_alpaca.py</code>."),
-    "mass": ("Mass model", "The main deflector (EPL+shear, multipoles, broken power law), the θ<sub>E</sub> prior for galaxy–galaxy lenses, and line-of-sight perturbers."),
-    "light": ("Light model", "Lens light (Sérsic / MGE components, the full-frame lens-light refit), sky and point sources."),
-    "stages": ("Stages", "The staged gradient descent: stage 1 shapelet multistart, the CorrField source warm-up, and the joint CorrField stage with the live PSF."),
+    "data": ("Data", "Pixel scale, the model cutout, the likelihood mask and the point-image detection. The image, noise map and PSF files themselves are set at the top of <code>run_alpaca.py</code> (or per band in <code>multiband</code>)."),
+    "mass": ("Mass model", "The main deflector (EPL+shear, multipoles, external flexion, broken power law), its centre and θ<sub>E</sub> priors, and line-of-sight perturbers on their own planes."),
+    "light": ("Light model", "Lens light (Sérsic / MGE components and the full-frame lens-light refit), the sky, and the point images."),
+    "stages": ("Stages", "The staged gradient descent: the stage-1 shapelet multistart, the correlated-field source warm-up, the joint correlated-field stage with the live PSF, its plateau test, and correlated fields for perturber light. <code>pertN</code> stands for a perturber's model name, e.g. <code>pert1</code>."),
     "psf": ("PSF", "How the PSF enters: <code>joint</code> (default: STARRED seed refined during the fit), <code>iterative</code> (rebuilt from the quasar images) or <code>fixed</code>."),
-    "likelihood": ("Likelihood", "Time delays, astrometry, ray-shooting consistency and the noise model (including the PSF-error term <i>b</i>)."),
-    "sampling": ("Sampling", "Posterior sampling after the MAP: NIFTy (geoVI and/or NUTS in latent space), NumPyro NUTS or Nautilus."),
+    "likelihood": ("Likelihood", "Time delays and their covariance, image-plane astrometry, the D<sub>Δt</sub> and κ<sub>ext</sub> priors, the noise model (including the PSF-error term <i>b</i>) and stellar kinematics."),
+    "sampling": ("Sampling", "Posterior sampling after the best fit: NIFTy (NUTS and/or geoVI in latent space, with the warm start), NumPyro NUTS or Nautilus."),
     "plotting": ("Plotting", "Which diagnostic figures are written."),
-    "blinding": ("Blinding", "TDCOSMO-style blinding of cosmological quantities."),
+    "blinding": ("Blinding", "TDCOSMO-style blinding of cosmological quantities and the handling of the blinding key."),
+    "multiband": ("Multiband", "The <code>multiband</code> block read by <code>run_multiband.py</code>: bands, what is shared between them, frame offsets, kinematics and the joint fit. Everything outside it is the ordinary single-band config, the template of every band. <code>BAND</code> stands for a band name, <code>GROUP</code> for a sharing group."),
     "config_version": ("Version", "Layout version of the configuration file."),
 }
 
@@ -81,7 +83,8 @@ for e in KNOBS:
     sec = e["section"]
     sub = ".".join(e["key"].split(".")[:2]) if e["key"].count(".") >= 2 else sec
     groups.setdefault(sec, {}).setdefault(sub, []).append(e)
-ORDER = ["run", "data", "mass", "light", "stages", "psf", "likelihood", "sampling", "plotting", "blinding", "config_version"]
+ORDER = ["run", "data", "mass", "light", "stages", "psf", "likelihood", "sampling", "plotting", "blinding", "multiband",
+         "config_version"]
 ref_html, ref_nav = [], []
 for sec in ORDER:
     if sec not in groups:
@@ -103,7 +106,7 @@ page = f"""<!doctype html>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ALPACA documentation</title>
-  <meta name="description" content="ALPACA {VERSION} documentation: installation, input files, the staged pipeline, outputs and every configuration option." />
+  <meta name="description" content="ALPACA {VERSION} documentation: installation, input files, time delays, perturbers, the staged pipeline, sampling, kinematics, multiband, outputs and every configuration option." />
   <link rel="stylesheet" href="../css/app.css" />
   <link rel="stylesheet" href="doc.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="../assets/favicon-64.png" />
@@ -114,6 +117,7 @@ page = f"""<!doctype html>
     <nav class="navlinks">
       <a class="btn" href="tutorial.html">Tutorial</a>
       <a class="btn primary" href="documentation.html">Documentation</a>
+      <a class="btn" href="../configurator.html">Configurator</a>
       <a class="btn" href="../app.html">Analysis</a>
       <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
     </nav>
@@ -126,12 +130,22 @@ page = f"""<!doctype html>
       <a href="#ai">AI-assisted workflow</a>
       <a href="#inputs">Input files</a>
       <a href="#run-script">run_alpaca.py</a>
+      <a href="#delays">Time delays</a>
+      <a href="#astrometry">Image positions &amp; astrometry</a>
+      <a href="#perturbers">Perturbers</a>
+      <a href="#galaxy-galaxy">Galaxy–galaxy lenses</a>
       <a href="#pipeline">The staged pipeline</a>
+      <a href="#cv">Source smoothness (CV)</a>
       <a href="#running">Running &amp; budgets</a>
       <a href="#outputs">Outputs</a>
       <a href="#judging">Judging a model</a>
+      <a href="#sampling">Sampling</a>
+      <a href="#kinematics">Stellar kinematics</a>
+      <a href="#multiband">Multiband</a>
+      <a href="#postprocess">Post-processing</a>
       <a href="#blinding">Blinding</a>
       <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#versions">What's new</a>
       <h4>Configuration</h4>
       <a href="#config">How the config works</a>
       {''.join(ref_nav)}
@@ -141,19 +155,31 @@ page = f"""<!doctype html>
       <p class="sub">ALPACA {VERSION}. New to ALPACA? Start with the <a href="tutorial.html">tutorial</a>.</p>
       {CHAPTERS}
       <h2 id="config"><span class="step">Configuration reference</span>How the config works</h2>
-      <p>A run is configured by one JSON file (<code>config.json</code>). Every run copies the configuration it used
-        into <code>&lt;run&gt;/config/config.json</code>, so any run can be reproduced or modified. Data paths, image
-        positions and time delays live in <code>run_alpaca.py</code> (see <a href="#run-script">above</a>); everything
-        else is here. Options you leave out take the default shown below. The shipped <code>config.json</code> is a
-        complete production configuration (HE0435−1223); where its value differs from the code default, both are
-        shown.</p>
+      <p>A run is configured by one JSON file (<code>config.json</code>) with the blocks below. Every run writes the
+        configuration it was given to <code>&lt;run&gt;/config/config.json</code>, the fully resolved configuration to
+        <code>config_effective.json</code> and the ALPACA version, commit and dependency revisions to
+        <code>alpaca_provenance.json</code>, so any run can be reproduced. Data paths, image labels and the lens
+        position live in <code>run_alpaca.py</code> (see <a href="#run-script">above</a>); everything else, including
+        the time delays, is here.</p>
+      <ul>
+        <li><b>Defaults.</b> Options you leave out take the default shown below. The shipped <code>config.json</code> is a
+          complete production configuration (HE0435−1223); where its value differs from the default, both are
+          shown.</li>
+        <li><b>Unknown keys are errors</b>, with a did-you-mean hint: a typo would otherwise select a default. Keys starting
+          with <code>_</code> are comments (<code>"_note": "…"</code>). To reload a run written by another version, use
+          <code>load_config(path, strict=False)</code> (unknown keys then only warn).</li>
+        <li><b>Older runs.</b> A run without <code>alpaca_provenance.json</code> (written before 0.6.0) is reloaded with
+          the defaults of its time for keys it omits (<code>likelihood.astrometry_mode</code>,
+          <code>likelihood.sigma_ast</code>).</li>
+        <li><b>Layout.</b> The layout is detected from the keys; legacy flat configs are upgraded with a notice.</li>
+      </ul>
       <p>All {len(KNOBS)} options of ALPACA {VERSION}, generated from the code. Tags:
         <span class="lvl essential" style="font-size:9.5px;letter-spacing:.1em;padding:0 6px;background:#000;color:#fff">essential</span>
         ({counts['essential']}): you set or check these for every lens;
         <b>common</b> ({counts['common']}): budgets and the usual model variants;
         <b>advanced</b> ({counts['advanced']}): expert knobs, safe at their defaults.</p>
       <div class="knob-tools">
-        <input id="knob-q" type="text" placeholder="Search options (e.g. theta_E, mask, psf_error_b, halving)" />
+        <input id="knob-q" type="text" placeholder="Search options (e.g. theta_E, time_delays, astrometry, halving, sharing)" />
         <button class="chip on" data-level-btn="all">all</button>
         <button class="chip" data-level-btn="essential">essential</button>
         <button class="chip" data-level-btn="common">essential + common</button>

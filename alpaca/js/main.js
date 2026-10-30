@@ -2,6 +2,7 @@
 import { WorkerClient } from "./core/workerclient.js";
 import { FileIndex, findRunRoots } from "./core/files.js";
 import { Run } from "./core/run.js";
+import { Multiband, findMultibandRoots } from "./core/multiband.js";
 import { APPLETS, APPLET_MAP, PRESETS } from "./applets/registry.js";
 import { createPanel } from "./ui/panel.js";
 import { el, button, badge, select } from "./ui/widgets.js";
@@ -113,8 +114,20 @@ class App {
   }
 
   async loadIndex(index, label) {
+    // a multiband output folder (bands/<band>/ + <joint>/joint_summary.json) opens as one run with a band switch
+    const mbRoots = findMultibandRoots(index);
+    if (mbRoots.length) {
+      const choices = mbRoots.flatMap((m) => (m.joints.length ? m.joints : [null]).map((j) => ({ root: m.root, joint: j, title: `${m.root || "(folder root)"} · multiband${j ? ` · ${j}/` : " (no joint fit yet)"}` })));
+      let pick = choices[0];
+      if (choices.length > 1) {
+        const t = await this.chooseRoot(choices.map((c) => c.title));
+        if (t === null) { this.setStatus(""); return; }
+        pick = choices.find((c) => c.title === t);
+      }
+      return this.loadMultiband(index, pick.root, pick.joint, label);
+    }
     const roots = findRunRoots(index);
-    if (!roots.length) { this.toast("No ALPACA run found in that folder (looked for config/config.json, 03_multistart/…, 05_posterior/…).", "error"); this.setStatus(""); return; }
+    if (!roots.length) { this.toast("No ALPACA run found in that folder (looked for config/config.json, 03_multistart/…, 05_posterior/…, or a multiband folder with bands/ and joint/).", "error"); this.setStatus(""); return; }
     let root = roots[0];
     if (roots.length > 1) {
       root = await this.chooseRoot(roots);
@@ -124,17 +137,60 @@ class App {
     const run = new Run(index, root, this.worker, label);
     try { await run.init(); }
     catch (e) { console.error(e); this.toast("Failed to read run: " + e.message, "error"); this.setStatus(""); return; }
+    this.installRun(run, label, `Loaded run ${label}: ${run.name} (${index.paths.length} files)`);
+  }
+
+  // Multiband run: the joint products + one run per band (the reference band first; switch in the sidebar).
+  async loadMultiband(index, root, jointName, label, band = null) {
+    this.setStatus(`reading multiband run ${root || "/"} …`);
+    try {
+      const mb = new Multiband(index, root, jointName || "joint", this.worker);
+      await mb.init();
+      this.setStatus(`reading band ${band || mb.reference} (projecting the joint posterior) …`);
+      const run = await mb.bandRun(band || mb.reference, label);
+      this.installRun(run, label, `Loaded multiband run ${label}: ${mb.name} (${mb.bands.join(" + ")}, reference ${mb.reference}); showing ${run.band}`);
+    } catch (e) { console.error(e); this.toast("Failed to read multiband run: " + e.message, "error"); this.setStatus(""); }
+  }
+
+  installRun(run, label, message) {
     const existing = this.runs.findIndex((r) => r.label === label);
-    if (existing >= 0) { this.runs[existing].index.dispose(); this.runs[existing] = run; } else this.runs.push(run);
+    if (existing >= 0) { const old = this.runs[existing]; this.runs[existing] = run; this.disposeIndexIfUnused(old.index); } else this.runs.push(run);
     this.runs.sort((a, b) => a.label.localeCompare(b.label));
     this.setStatus("");
-    this.toast(`Loaded run ${label}: ${run.name} (${index.paths.length} files)`);
+    if (message) this.toast(message);
     this.renderSidebar();
     document.getElementById("welcome")?.remove();
     if (this.panels.length === 0) {
+      // a multiband run opens on the multiband panels unless the saved layout already has some
       const saved = this.loadLayout();
-      if (saved && saved.length) this.restoreLayout(saved); else this.applyPreset("default");
+      const savedFits = saved && saved.length && (!run.mb || saved.some((p) => /^mb/.test(p.appletId)));
+      if (savedFits) this.restoreLayout(saved); else this.applyPreset(run.mb ? "multiband" : "default");
     } else this.refreshAll();
+  }
+
+  // Two bands of one multiband run share the folder index: free it only when no loaded run uses it any more.
+  disposeIndexIfUnused(index) { if (index && !this.runs.some((r) => r.index === index)) index.dispose(); }
+
+  // Show another band of the multiband run in slot `label` (every panel follows).
+  async setBand(label, band) {
+    const cur = this.runs.find((r) => r.label === label);
+    if (!cur?.mb || cur.band === band) return;
+    this.setStatus(`reading band ${band} (projecting the joint posterior) …`);
+    try {
+      const run = await cur.mb.bandRun(band, label, cur._passphrase || null);
+      this.installRun(run, label, `Run ${label} now shows band ${band}.`);
+    } catch (e) { console.error(e); this.toast(`Could not open band ${band}: ${e.message}`, "error"); this.setStatus(""); }
+  }
+
+  // Open another band of run A's multiband run as run B, so every two-run panel compares the bands.
+  async otherBandAsB(runA) {
+    const band = runA.mb.bands.find((b) => b !== runA.band);
+    if (!band) return;
+    this.setStatus(`reading band ${band} as run B …`);
+    try {
+      const run = await runA.mb.bandRun(band, "B", runA._passphrase || null);
+      this.installRun(run, "B", `Run B: band ${band} of the same multiband run.`);
+    } catch (e) { console.error(e); this.toast(`Could not open band ${band}: ${e.message}`, "error"); this.setStatus(""); }
   }
 
   chooseRoot(roots) {
@@ -149,8 +205,9 @@ class App {
   removeRun(label) {
     const i = this.runs.findIndex((r) => r.label === label);
     if (i < 0) return;
-    this.runs[i].index.dispose();
+    const old = this.runs[i];
     this.runs.splice(i, 1);
+    this.disposeIndexIfUnused(old.index);
     if (!this.runs.length) { this.clearPanels(); this.showWelcome(); }
     else { if (this.runs.length === 1) this.runs[0].label = "A"; this.refreshAll(); }
     this.renderSidebar();
@@ -161,7 +218,7 @@ class App {
     const w = el("div", { id: "welcome", class: "welcome" },
       el("img", { src: "assets/logo.png", alt: "ALPACA" }),
       el("h2", {}, "Drop a run folder here"),
-      el("p", {}, "Everything runs in your browser — nothing is uploaded. Drop the run folder (the one containing ", el("code", {}, "config/"), ", ", el("code", {}, "03_multistart/"), ", ", el("code", {}, "05_posterior/"), "…) or the whole experiment folder including ", el("code", {}, "data/"), " so the perturber catalog is found."),
+      el("p", {}, "Everything runs in your browser — nothing is uploaded. Drop the run folder (the one containing ", el("code", {}, "config/"), ", ", el("code", {}, "03_multistart/"), ", ", el("code", {}, "05_posterior/"), "…) or the whole experiment folder including ", el("code", {}, "data/"), " so the perturber catalog is found. Multiband runs (", el("code", {}, "run_multiband.py"), "): drop the output folder with ", el("code", {}, "bands/"), " and ", el("code", {}, "joint/"), "; switch bands in the sidebar."),
       el("div", { class: "ctl-row" }, button("Open run folder…", () => this.openFolder("A"), { kind: "primary" }), button("Load from URL…", () => document.getElementById("btn-url").click())),
       el("p", { class: "muted small" }, "Chrome / Edge: folder picker and drag & drop. Firefox / Safari: drag & drop or the folder picker fallback. Blinded runs stay blinded on screen: the blinding key (file in the run folder, or typed in) is used only inside the forward model and to derive posterior widths."),
     );
@@ -178,7 +235,11 @@ class App {
       const card = el("div", { class: "run-card" },
         el("div", { class: "run-title" }, badge(r.label, "label"), el("span", { class: "run-name", title: r.name }, r.name), el("span", { class: "spacer" }), el("button", { class: "icon-btn danger", title: "Remove run", onClick: () => this.removeRun(r.label) }, "✕")),
         el("div", { class: "muted small" }, `${r.sampler} · ${r.sourceType} · ${r.stages.length} GD stage${r.stages.length === 1 ? "" : "s"}` + (r.posteriorSummary ? ` · ${r.posteriorSummary.nSamples} samples` : "")),
+        r.mb ? el("div", { class: "ctl-row mb-band-row" }, el("span", { class: "muted small" }, "Band"),
+          select(r.mb.bandsByWavelength.map((b) => ({ value: b, label: b + (b === r.mb.reference ? " (reference)" : "") })), r.band, (v) => this.setBand(r.label, v)),
+          r.label === "A" && r.mb.bands.length > 1 ? button("other band as B", () => this.otherBandAsB(r), { small: true, title: "Open another band of this multiband run as run B, so the two-run panels compare bands" }) : null) : null,
         el("div", { class: "run-badges" },
+          r.mb ? badge(`multiband · ${r.mb.bands.length} bands · ${r.mb.postDir ? "joint posterior" : r.mb.mapPath ? "joint MAP" : "bands only"}`, "ok") : null,
           r.features.posterior ? badge("posterior", "ok") : badge("no posterior", "warn"),
           r.unblinded ? badge("UNBLINDED · " + (r.unblindWritten ? "written to folder" : "this session"), "warn") : r.features.blinded ? badge(r.offsets ? "blinded · key loaded" : "blinded · no key", "warn") : null,
           r.catalog ? badge(r.catalogRestored ? "catalog · remembered" : "catalog", "ok") : badge("no perturber catalog", "warn"),

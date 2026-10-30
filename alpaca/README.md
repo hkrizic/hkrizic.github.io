@@ -71,6 +71,31 @@ need the IFU data file, which is not in the run folder; with an importance updat
 ALPACA is shown instead. Blinded runs show λ_int and H₀ only as
 deviations from their mean; the convergence-profile plot then uses an isothermal reference with the posterior spread.
 
+**Multiband runs** (ALPACA ≥ 0.6.0, `run_multiband.py`). Drop the multiband output folder (the one holding `bands/`,
+`joint/` and `multiband_config_used.json`). It opens as one run with a **band switch** in the sidebar. Every band is
+shown through the joint fit: its own data, PSF, noise and stages from `bands/<band>/`, and the band's *view* of the
+joint posterior (`joint/posterior/`) or of the joint MAP (`joint_map_params_full.npz`). A view is the band's own
+`<band>/…` parameters plus every shared one, with shared image-plane positions shifted by the band's frame offset,
+exactly as `alpaca.multiband.model.JointModel.view` (checked by `test/verify_multiband.mjs`). So every applet above works
+on any band; *other band as B* opens a second band as run B for the two-run panels. The joint MAP is a parameter
+source of its own (*MAP · joint fit*); with blinding, its sealed entries (`__sealed_blinded__`) open only with the key.
+Three applets are made for multiband runs (preset *Multiband*):
+* *Multiband: bands & sharing* — the bands (wavelength, pixel scale, fit pixels, frame offset, sampled b), what is
+  shared and what is per band, χ²ᵥ per band alone / at the joint start / joint, χ² per image region and band, the joint
+  polish and sampling, how far each band alone would put the lens from the joint solution in joint-posterior σ
+  (ALPACA's `mass_shift_vs_alone`), and ALPACA's joint figures and REPORT.md.
+* *Multiband: band comparison* — every band rendered from one joint parameter set (the same joint draw, or the joint
+  MAP): data, model, normalised residual and source per band (zoom linked in arcsec), χ² per region and band, and Lupton
+  asinh colour composites of the data, the model and the source reconstructions, resampled onto one grid at the fitted
+  frame offsets.
+* *Multiband: chromatic flux ratios & registration* — point-source flux ratios per band (as Δm, joint draws) against
+  the achromatic macro model (shared lens), band-to-band changes draw by draw with their significance (chromatic
+  microlensing, differential extinction, PSF leakage), the frame-offset posterior of every band with its prior, and the
+  PSF-error term b per band.
+Blinding is kept as for single-band runs: blinded columns are shown as deviations from their mean. A joint posterior
+written by the original ALPACA 0.6.0 joint NUTS (blinded twice: stored mean = minus the true mean) is recognised by
+its far-from-zero blinded means and re-centred in memory to the once-blinded form, so nothing absolute is displayed.
+
 ## Launch
 
 The site is static HTML/CSS/JS with no build step.
@@ -104,10 +129,12 @@ on the bundled example run all components agree to ~1e-8 relative.
 app.html              page shell (index.html is the landing page)
 css/app.css           theme
 js/main.js            app: run loading, workspace, panels
-js/core/              file ingestion, parsers, worker, run model, blinding, stats, contours, colormaps
+js/core/              file ingestion, parsers, worker, run model, blinding, stats, contours, colormaps,
+                      multiband runs (multiband.js) and band views (mbview.js)
 js/physics/           cosmology, profiles, multi-plane, FFT, renderer, lensing maps
 js/ui/                image canvas, plots, panel chrome, widgets
 js/applets/           one module per applet + registry/presets
 tools/                dev server, Python reference dump
-test/                 Node verification of the physics port
+test/                 Node verification of the physics port and of the multiband views
+                      (multiband_reference.py + verify_multiband.mjs; tools/smoke_multiband.mjs headless)
 ```

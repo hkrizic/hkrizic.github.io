@@ -1,130 +1,326 @@
 <h2 id="overview"><span class="step">Guide</span>Overview</h2>
-<p>ALPACA fits a strong-lens model to an image: a mass model for the deflector (EPL + external shear, optionally
-  multipoles, a broken power law and line-of-sight perturbers), parametric lens light, a source (shapelets, then a
+<p>ALPACA fits a strong-lens model to an image. The model has a mass model for the deflector (EPL + external shear,
+  optionally multipoles, an external flexion, a broken power law and line-of-sight perturbers on their own redshift
+  planes), parametric lens light (Sérsic profiles or a multi-Gaussian expansion), a source (shapelets, then a
   pixelated <i>correlated field</i>), a PSF that is refined together with the lens, and, for lensed quasars, the
-  point images and their time delays. It runs in JAX, so every stage is differentiable and runs on a CPU, an NVIDIA
-  GPU or an Apple GPU.</p>
+  point images with their positions and time delays. Optional: stellar kinematics, several bands fitted with one lens
+  model, correlated-field light for a perturber on its own plane. Everything runs in JAX, so every stage is
+  differentiable and runs on a CPU, an NVIDIA GPU or an Apple GPU.</p>
 <p>A run has two phases:</p>
 <ol>
-  <li><b>MAP</b>: a staged gradient descent finds the best-fit model (§ <a href="#pipeline">The staged pipeline</a>).</li>
-  <li><b>Posterior</b>: sampling around it (NIFTy NUTS / geoVI, NumPyro NUTS or Nautilus). For cosmography the time
-    delays turn the model into a time-delay distance and H<sub>0</sub>, blinded by default.</li>
+  <li><b>Best fit (MAP)</b>: a staged gradient descent (§ <a href="#pipeline">The staged pipeline</a>).</li>
+  <li><b>Posterior</b>: sampling from the best fit (NIFTy NUTS / geoVI, NumPyro NUTS or Nautilus; § <a
+    href="#sampling">Sampling</a>). With time delays the model gives a time-delay distance and H<sub>0</sub>, blinded
+    by default (§ <a href="#blinding">Blinding</a>).</li>
 </ol>
-<p>The methods and their validation are in the paper:
-  <a href="https://arxiv.org/abs/2609.04312">Krizic et al. 2026, arXiv:2609.04312</a>.</p>
+<p>Two kinds of lens are supported with the same pipeline: lensed quasars (point images, delays, cosmography) and
+  galaxy–galaxy lenses (arcs or rings only, § <a href="#galaxy-galaxy">Galaxy–galaxy lenses</a>). The methods and
+  their validation are in the paper: <a href="https://arxiv.org/abs/2609.04312">Krizic et al. 2026,
+  arXiv:2609.04312</a>. This page documents ALPACA 0.6.0; § <a href="#versions">What's new</a> lists what changed
+  since 0.4.</p>
 
 <h2 id="install"><span class="step">Guide</span>Installation</h2>
-<p>Install from the source repository into a <b>fresh</b> environment and pick the extra for your hardware.</p>
+<p>Install from the source repository into a <b>fresh</b> environment (Python 3.11 or newer). First install the
+  exact herculens and jax-cosmo commits ALPACA was tested with, then ALPACA with the extra for your hardware.</p>
 <pre><code>git clone https://github.com/hkrizic/alpaca.git && cd alpaca
 python3.12 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip
+python -m pip install -r requirements-tested.txt   # herculens + jax-cosmo at the tested commits
 python -m pip install -e ".[apple]"     # Apple Silicon GPU (MPS, float32)
 # python -m pip install -e ".[cpu]"     # CPU, float64
 # python -m pip install -e ".[gpu]"     # NVIDIA, Linux, CUDA 12   ([cuda13] for CUDA 13)
 alpaca-device                           # shows which device JAX will use</code></pre>
 <table>
   <tr><th>target</th><th>extra</th><th>precision</th><th>notes</th></tr>
-  <tr><td>Apple M-series GPU</td><td><code>apple</code></td><td>float32</td><td>fastest on a Mac (1.5–3× the CPU in our tests). Float32 is not a substitute for float64: verify final models on the CPU.</td></tr>
+  <tr><td>Apple M-series GPU</td><td><code>apple</code></td><td>float32</td><td>fastest on a Mac. Float32 is not a substitute for float64: verify final models on the CPU.</td></tr>
   <tr><td>CPU</td><td><code>cpu</code></td><td>float64</td><td>the validated precision; also available in an <code>[apple]</code> environment with <code>--backend cpu</code>.</td></tr>
-  <tr><td>NVIDIA GPU (Linux)</td><td><code>gpu</code> / <code>cuda13</code></td><td>float64</td><td>CUDA 12 needs driver ≥ 525, CUDA 13 ≥ 580.</td></tr>
+  <tr><td>NVIDIA GPU (Linux)</td><td><code>gpu</code> / <code>cuda13</code></td><td>float64</td><td>CUDA 12 needs driver ≥ 525, CUDA 13 ≥ 580. GPUs below compute capability 7.0 (Pascal and older) are not supported by cuDNN 9; ALPACA warns.</td></tr>
 </table>
-<p>Choose the device per run with <code>--backend cpu|gpu|cuda|mps</code> and <code>--precision float32|float64</code>,
-  or the environment variables <code>ALPACA_BACKEND</code> / <code>ALPACA_PRECISION</code> (set them <i>before</i>
-  importing ALPACA). For two or more NVIDIA GPUs, do not pass <code>--backend gpu</code>; set
-  <code>JAX_PLATFORMS=cuda,cpu</code> instead. Never install two packages that provide <code>alpaca</code> into the
-  same environment.</p>
+<ul>
+  <li><b>Device per run:</b> <code>--backend auto|cpu|gpu|cuda|mps</code> and <code>--precision auto|float32|float64</code>,
+    or the environment variables <code>ALPACA_BACKEND</code> / <code>ALPACA_PRECISION</code> (set them <i>before</i>
+    importing ALPACA).</li>
+  <li><b>Two or more NVIDIA GPUs:</b> do not pass <code>--backend gpu</code>; set <code>JAX_PLATFORMS=cuda,cpu</code>.
+    All GPUs of a job must be the same model, otherwise the parallel map fails with "executable is built for device
+    CUDA:0 of type …".</li>
+  <li><b>Dependencies:</b> each run records the herculens / jax-cosmo revisions it used
+    (<code>config/alpaca_provenance.json</code>) and warns when they differ from the tested ones.</li>
+  <li>Never install two packages that provide <code>alpaca</code> into the same environment.</li>
+  <li>Tests (with the <code>dev</code> extra): <code>pytest tests/ -m "not slow and not gpu"</code>.</li>
+</ul>
 
 <h2 id="ai"><span class="step">Guide</span>AI-assisted workflow</h2>
-<p>The <code>llm/</code> folder of the repository contains three instruction files for a terminal AI assistant
-  (Claude Code, Codex, Gemini CLI). The assistant works on your machine, shows you every figure it makes, and asks
-  before installing or running anything heavy.</p>
+<p>The <code>llm/</code> folder of the repository holds instructions and knowledge for a terminal AI assistant (Claude
+  Code, Codex, Gemini CLI). The assistant works on your machine, shows you every figure it makes, and asks before it
+  installs or runs anything heavy. One assistant session owns the problem: it launches the runs as jobs, watches them
+  and decides the next step.</p>
 <table>
   <tr><th>file</th><th>what the assistant does</th></tr>
+  <tr><td><code>llm/0_AGENT_PROTOCOL.md</code></td><td>read first: how it works (one agent, folder structure, ledger, when to ask you)</td></tr>
   <tr><td><code>llm/1_ALPACA_SETUP.md</code></td><td>asks MPS / CPU / CUDA and conda / venv, shows the commands, installs after your OK, verifies</td></tr>
   <tr><td><code>llm/2_ALPACA_PREPARE_DATA.md</code></td><td>looks at your science image, finds the lens, makes cutout, masks, PSF (STARRED) and perturbers, writes <code>config.json</code> + <code>run_alpaca.py</code>, prints the command</td></tr>
-  <tr><td><code>llm/3_ALPACA_MODELLING.md</code></td><td>tries about ten one-change variants, inspects every residual map, picks the best starting model</td></tr>
+  <tr><td><code>llm/3_ALPACA_MODELLING.md</code></td><td>runs about ten one-change variants, inspects every residual map, picks the best starting model</td></tr>
+  <tr><td><code>llm/4_EXPERIMENTS.md</code></td><td>runs many tests as jobs, one folder per test, with health cards from <code>llm/tools/check_run.py</code></td></tr>
+  <tr><td><code>llm/reference/</code>, <code>llm/versions/</code></td><td>the knowledge behind the rules (physics, symptoms, model ladder, degeneracies, multiband) and the defaults and gotchas of each version</td></tr>
 </table>
 <pre><code>cd alpaca && claude
 &gt; Read llm/1_ALPACA_SETUP.md and set up ALPACA for me.
 &gt; Read llm/2_ALPACA_PREPARE_DATA.md and prepare /path/to/science.fits.
-&gt; Read llm/3_ALPACA_MODELLING.md. Try ~10 variants in 2 hours on ~/AlpacaRuns/MYLENS and pick the best start.</code></pre>
+&gt; Read llm/0_AGENT_PROTOCOL.md and llm/3_ALPACA_MODELLING.md, then model ~/AlpacaRuns/MYLENS for 2 hours.</code></pre>
 <p>Use files 1 and 2 for a first model; file 3 is optional, to start from a better one. Sampling, systematics and the
   science decisions stay with you.</p>
 
 <h2 id="inputs"><span class="step">Guide</span>Input files</h2>
-<p>One folder per lens and band, all FITS 2-D, float64, absolute paths in the configuration.</p>
+<p>One folder per lens and band; FITS images 2-D, float64. Use absolute paths, and keep your data outside the
+  ALPACA repository (the shipped example data is replaced on upgrades).</p>
 <table>
   <tr><th>file</th><th>content</th><th>set in</th></tr>
-  <tr><td><code>image.fits</code></td><td>The <b>full frame</b>, lens centred to a pixel, sky pedestal subtracted. Never pre-cut to the model size: ALPACA centre-crops to <code>data.cutout_size</code> and the lens-light refit uses the full frame.</td><td><code>IMAGE_PATH</code></td></tr>
-  <tr><td><code>noise_map.fits</code></td><td>1σ per pixel, same units and size. Bad pixels: a huge σ, never NaN. Check it: std(empty sky) / mean(noise) ≈ 1 (drizzled data: below 1).</td><td><code>NOISE_MAP_PATH</code></td></tr>
-  <tr><td><code>psf_supersampled.fits</code></td><td>PSF kernel, odd size, sum 1, supersampled by <code>psf.input.oversample</code> (usually 3).</td><td><code>PSF_PATH</code></td></tr>
-  <tr><td><code>psf_starred_seed.npz</code></td><td>STARRED parameters (Moffat + background grid). <b>Joint mode builds the PSF from this seed, not from the kernel file</b>, so the two must agree (the seed's full PSF = the kernel to &lt; 1 % of the peak).</td><td><a href="#k-psf-joint-seed-path"><code>psf.joint.seed_path</code></a></td></tr>
-  <tr><td><code>psf_error_map.fits</code></td><td>Per-pixel uncertainty of the PSF, on the seed grid. The prior width of the live PSF: about 1–10 % of the kernel. Too loose and the PSF fits noise; too tight and it cannot correct the seed.</td><td><a href="#k-psf-input-error-map-path"><code>psf.input.error_map_path</code></a></td></tr>
-  <tr><td><code>mask_likelihood.fits</code></td><td>Cutout-sized (or full-frame, cropped automatically), 1 = use. Keep the lens, arcs and images; exclude everything you don't model.</td><td><a href="#k-data-likelihood-mask-path"><code>data.likelihood_mask_path</code></a></td></tr>
+  <tr><td><code>image.fits</code></td><td>The <b>full frame</b>, lens centred to a pixel, sky pedestal subtracted. Never pre-cut to the model size: ALPACA centre-crops to <a href="#k-data-cutout-size"><code>data.cutout_size</code></a> and the lens-light refit uses the full frame.</td><td><code>IMAGE_PATH</code></td></tr>
+  <tr><td><code>noise_map.fits</code></td><td>1σ per pixel, same units and size. Bad pixels: a huge σ, never NaN. Check it: std(empty sky) / mean(noise) ≈ 1; drizzled data are correlated and give about 0.7.</td><td><code>NOISE_MAP_PATH</code></td></tr>
+  <tr><td><code>psf_supersampled.fits</code></td><td>PSF kernel, odd size, sum 1, supersampled by <a href="#k-psf-input-oversample"><code>psf.input.oversample</code></a> (usually 3).</td><td><code>PSF_PATH</code></td></tr>
+  <tr><td><code>psf_starred_seed.npz</code></td><td>STARRED parameters (Moffat + background grid) from field stars. <b>Joint mode builds the PSF from this seed, not from the kernel file</b>, so the two must agree (the seed's full PSF = the kernel to &lt; 1 % of the peak).</td><td><a href="#k-psf-joint-seed-path"><code>psf.joint.seed_path</code></a></td></tr>
+  <tr><td><code>psf_error_map.fits</code></td><td>Per-pixel uncertainty of the PSF, on the seed grid: the prior width of the live PSF, about 1–10 % of the kernel. Too loose and the PSF fits noise; too tight and it cannot correct the seed.</td><td><a href="#k-psf-input-error-map-path"><code>psf.input.error_map_path</code></a></td></tr>
+  <tr><td><code>mask_likelihood.fits</code></td><td>Cutout-sized (or full-frame, cropped automatically), 1 = use. Keep the lens, the arcs and the images; exclude everything you do not model (other galaxies without a light model, stars, artefacts).</td><td><a href="#k-data-likelihood-mask-path"><code>data.likelihood_mask_path</code></a></td></tr>
   <tr><td><code>mask_lens_only.fits</code></td><td>Full frame, 1 = use: the lens and sky, every other source masked. For the lens-light refit.</td><td><a href="#k-light-lens-refit-mask-path"><code>light.lens.refit.mask_path</code></a></td></tr>
-  <tr><td><code>perturbers.json</code></td><td>Optional: nearby galaxies with positions, redshifts and θ<sub>E</sub> priors. Multi-plane lensing is switched on automatically for other redshifts.</td><td><a href="#k-mass-perturbers-path"><code>mass.perturbers.path</code></a></td></tr>
+  <tr><td><code>perturbers.json</code></td><td>Optional: nearby galaxies with positions, redshifts and θ<sub>E</sub>, optionally a light model (§ <a href="#perturbers">Perturbers</a>).</td><td><a href="#k-mass-perturbers-path"><code>mass.perturbers.path</code></a></td></tr>
+  <tr><td>time delays</td><td>Quasars: the measured delays go into the configuration, not a file (§ <a href="#delays">Time delays</a>).</td><td><a href="#k-likelihood-time-delays"><code>likelihood.time_delays</code></a></td></tr>
 </table>
-<p>Perturber catalogue entry (the minimum; positions as RA/Dec or <code>pixel_xy</code> in the full frame):</p>
-<pre><code>{"target": {"z_lens": 0.4546, "z_source": 1.689, "pix_scale_arcsec": 0.0312, "npix": 499},
- "perturbers": [{"id": 7, "pixel_xy": [377.8, 293.1], "redshift": {"z": 0.7821},
-                 "profile": {"mass_model": "SIS", "theta_E_arcsec": 0.30},
-                 "theta_E_prior_sigma": 0.12, "fix_positions": true}]}</code></pre>
+<p>Everything else is in <code>config.json</code>: start from the one that ships with ALPACA and change what is
+  specific to your lens. Unknown keys are refused with a did-you-mean hint (a typo would otherwise select a default);
+  keys starting with <code>_</code> are comments (§ <a href="#config">How the config works</a>).</p>
 
 <h2 id="run-script"><span class="step">Guide</span>run_alpaca.py</h2>
-<p>The data paths, the approximate image positions (quasars) and the time delays sit at the top of
-  <code>run_alpaca.py</code>; the science settings sit in the JSON configuration.</p>
-<pre><code>IMAGE_PATH     = "/data/HE0435/image.fits"
-PSF_PATH       = "/data/HE0435/psf_supersampled.fits"
-NOISE_MAP_PATH = "/data/HE0435/noise_map.fits"
+<p>The data paths, the approximate image positions (quasars) and the lens position sit at the top of
+  <code>run_alpaca.py</code>; the science settings and the time delays sit in <code>config.json</code>.</p>
+<pre><code>IMAGE_PATH     = "/data/MYLENS/image.fits"
+PSF_PATH       = "/data/MYLENS/psf_supersampled.fits"
+NOISE_MAP_PATH = "/data/MYLENS/noise_map.fits"
 
-IMAGE_POSITIONS = {"A": (-0.906, -0.937), "B": (-0.999, 0.656),   # arcsec from the lens; labels only,
+# None = keep the config value; a value overrides the config for this dataset
+PSF_OVERSAMPLE = None              # psf.input.oversample
+PSF_STARRED_KWARGS_PATH = None     # psf.joint.seed_path
+PSF_ERROR_MAP_PATH = None          # psf.input.error_map_path
+LIKELIHOOD_MASK_PATH = None        # data.likelihood_mask_path
+PERTURBERS_PATH = None             # mass.perturbers.path
+
+IMAGE_POSITIONS = {"A": (-0.906, -0.937), "B": (-0.999, 0.656),   # arcsec from the lens; labels only:
                    "C": ( 0.406,  1.249), "D": ( 0.906, -0.531)}  # ALPACA re-detects the positions
-REFERENCE_IMAGE = "A"
-LENS_POSITION   = (0.0, 0.0)              # sub-pixel lens offset from the frame centre (arcsec)
-TIME_DELAYS = {"B": (9.0, 0.8),           # (t_X - t_ref, 1 sigma) in DAYS
-               "C": (0.8, 0.7),
-               "D": (13.8, 0.8)}
-# galaxy-galaxy lens: IMAGE_POSITIONS = None; TIME_DELAYS = None</code></pre>
-<div class="callout warn"><span class="k">Sign convention</span><p>ALPACA wants <b>t<sub>X</sub> − t<sub>ref</sub></b> (positive: X arrives after the reference), the opposite of
-  the COSMOGRAIL/TDCOSMO Δt<sub>AB</sub> = t<sub>A</sub> − t<sub>B</sub>. Flip published delays.</p></div>
-<pre><code>python run_alpaca.py config.json                                     # everything (MAP + sampling)
-python run_alpaca.py config.json --fit-only                          # MAP only: a quick look
+REFERENCE_IMAGE = "A"              # likelihood.time_delays.reference_image wins when set
+LENS_POSITION   = (0.0, 0.0)       # sub-pixel lens offset from the frame centre (arcsec)
+TIME_DELAYS     = None             # None = use likelihood.time_delays from the config
+
+# galaxy-galaxy lens: IMAGE_POSITIONS = None, TIME_DELAYS = None, light.point_sources.enabled = false</code></pre>
+<ul>
+  <li><b>Image labels.</b> <code>IMAGE_POSITIONS</code> only names the detected images, so that each delay goes to the
+    right pair. <code>None</code> labels them clockwise from north. Detection finds 4 images unless
+    <a href="#k-data-n-ps-detect"><code>data.n_ps_detect</code></a> says otherwise.</li>
+  <li><b>Delays.</b> Since 0.5.2 they live in the config. With point sources on and
+    <code>likelihood.use_time_delays: true</code>, the script stops when no delays are given.</li>
+  <li><b>No JSON given</b>: the script falls back to <code>default_config.py</code>, the Python twin of the shipped
+    <code>config.json</code>.</li>
+</ul>
+<pre><code>python run_alpaca.py config.json --fit-only                          # best fit only: a quick look
+python run_alpaca.py config.json                                     # same folder: best fit reloaded, then sampling
 python run_alpaca.py config.json --backend mps --precision float32   # Apple GPU
 python run_alpaca.py config.json --output runs/variant_m4/           # another output directory</code></pre>
 
+<h2 id="delays"><span class="step">Guide</span>Time delays</h2>
+<p>Paste the published delays into <code>likelihood.time_delays</code>, in days, with their 1σ errors: the n−1 delays
+  of the images relative to one reference image.</p>
+<pre><code>"likelihood": {
+  "use_time_delays": true,
+  "time_delays": {
+    "convention": "t_X - t_Y",
+    "delays": {"AB": [-9.0, 0.8], "AC": [-0.8, 0.7], "AD": [-13.8, 0.8]},
+    "covariance": "independent"
+  }
+}</code></pre>
+<div class="callout warn"><span class="k">Sign convention</span><p>The default <code>"t_X - t_Y"</code> is the convention of
+  the COSMOGRAIL, H0LiCOW and TDCOSMO tables: <code>"AB": [-9.0, 0.8]</code> means t<sub>A</sub> − t<sub>B</sub> = −9.0 d, i.e. B
+  arrives 9.0 d after A. <b>Paste published numbers unchanged.</b> Only the legacy single-label form
+  <code>{"B": [t_B − t_ref, σ]}</code> (ALPACA ≤ 0.5.1, still accepted) has the opposite sign. The run log prints a
+  table of the delays with the image that arrives later: check it once for every lens.</p></div>
+<ul>
+  <li><b>Keys</b>: pairs <code>"XY"</code> or <code>"X-Y"</code>; values <code>[value, σ]</code> or <code>[value, +σ, −σ]</code>
+    (symmetrised). Labels are the run's image labels.</li>
+  <li><b>Covariance</b> (<a href="#k-likelihood-time-delays-covariance">details</a>): <code>"independent"</code> for at most n−1
+    non-redundant delays; <code>"shared_curves"</code> for a redundant table such as all six pairs of a quad (pairs that
+    share a light curve are correlated); or a full matrix / <code>{"correlation": R}</code> from the measurement.
+    Listing all pairs as <code>"independent"</code> is refused: it would count the data twice.</li>
+  <li><b>Closure.</b> With <code>"shared_curves"</code> the listed delays must close (t<sub>XY</sub> + t<sub>YZ</sub> = t<sub>XZ</sub>) to
+    within 1.5 × the largest pair error; a larger violation is a sign or label error and stops the run.</li>
+  <li><b>Diagnostic.</b> <code>03_multistart/best_model/time_delay_ratios.png</code> (best fit) and
+    <code>05_posterior/plots/time_delay_ratios.png</code> (posterior) compare the model's delay <i>ratios</i> with the
+    measured ones, plus a delay-shape χ² with n − 2 degrees of freedom. D<sub>Δt</sub> cancels in the ratios, so both
+    are safe in blinded runs.</li>
+  <li><b>Priors</b>: <a href="#k-likelihood-d-dt-prior-type"><code>likelihood.D_dt_prior</code></a> (uniform 500–10000 Mpc by
+    default; lower <code>low</code> for low-redshift lenses) and <a href="#k-likelihood-kappa-ext-prior-mean"><code>likelihood.kappa_ext_prior</code></a>
+    (external convergence, none by default).</li>
+</ul>
+
+<h2 id="astrometry"><span class="step">Guide</span>Image positions and astrometry</h2>
+<p>The measured positions of the quasar images constrain the mass model. Since 0.6.0 the default is the
+  <b>image-plane</b> astrometry; write it explicitly in every config, as the shipped <code>config.json</code> does:</p>
+<pre><code>"likelihood": {
+  "astrometry_mode": "image_plane",
+  "sigma_ast": 0.005,
+  "use_rayshoot_sys_error": false,
+  "use_image_pos_offsets": false,
+  "rayshoot_against_source_pos": true,
+  "td_common_source": true
+}</code></pre>
+<ul>
+  <li><b>Image plane</b> (<a href="#k-likelihood-astrometry-mode">astrometry_mode</a>): one common source; the measured positions
+    may differ from the model images by a Gaussian of width <a href="#k-likelihood-sigma-ast"><code>sigma_ast</code></a> (5 mas) in
+    the image plane, and every delay is evaluated for that one source. The likelihood is invariant under a mass-sheet
+    transformation. In stage 1 the common source is the centre of the analytic host, so the quasar sits on its host's
+    nucleus.</li>
+  <li><b>Source plane</b> (the default up to 0.5.x): back-traced positions scatter with <code>rayshoot_sigma</code> plus a free
+    floor. A fixed source-plane width carries artificial mass-sheet information; keep it for comparisons only.</li>
+  <li><b>Galaxy–galaxy lenses</b> keep <code>"image_plane"</code>: without at least two point images no astrometry term is
+    built, neither in GD nor in sampling.</li>
+  <li><b>Old runs</b>: a run folder without <code>config/alpaca_provenance.json</code> (written before 0.6.0) is reloaded
+    with the old defaults (<code>"source_plane"</code>, 0.003″) for the keys it omits, so it keeps its meaning.</li>
+  <li><b>Faint images</b> next to bright light: bound the fitted positions with
+    <a href="#k-light-point-sources-position-bound-px"><code>light.point_sources.position_bound_px</code></a>.</li>
+</ul>
+
+<h2 id="perturbers"><span class="step">Guide</span>Perturbers</h2>
+<p>Nearby galaxies that deflect the light are listed in a catalogue JSON and switched on with
+  <a href="#k-mass-perturbers-path"><code>mass.perturbers.path</code></a> (or <code>PERTURBERS_PATH</code> in
+  <code>run_alpaca.py</code>). Each perturber gets a mass profile, and optionally its own light model. Perturbers at
+  another redshift get their own planes, and the model becomes multi-plane automatically.</p>
+<pre><code>{"target": {"z_lens": 0.4546, "z_source": 1.689, "pix_scale_arcsec": 0.0312, "npix": 499},
+ "perturbers": [
+   {"id": 1, "pixel_xy": [301.4, 288.0], "redshift": {"z": 0.4546},
+    "profile": {"mass_model": "SIS", "theta_E_arcsec": 0.20},
+    "lens_light": {"model": "Sersic", "lensed": false},
+    "theta_E_prior_sigma": 0.08},
+   {"id": 7, "pixel_xy": [377.8, 293.1], "redshift": {"z": 0.7821},
+    "profile": {"mass_model": "SIS", "theta_E_arcsec": 0.30},
+    "fix_positions": true}
+ ]}</code></pre>
+<p class="muted small">Illustrative values. Here the positions are pixels of the 499-pixel frame the image was cut from
+  (no RA/Dec); a catalogue from a source finder gives RA/Dec as well (see the table).</p>
+<table>
+  <tr><th>field</th><th>meaning</th></tr>
+  <tr><td><code>target</code></td><td>the lens: <code>z_lens</code>, <code>z_source</code>, <code>pix_scale_arcsec</code>, <code>npix</code> (size of the frame the pixel positions refer to); <code>ra_deg</code>/<code>dec_deg</code> of the lens centroid for RA/Dec catalogues; optional <code>theta_E_main_arcsec</code></td></tr>
+  <tr><td><code>id</code></td><td>integer; the perturber's parameters are named <code>pert&lt;id&gt;_…</code> (e.g. <code>pert7_theta_E</code>)</td></tr>
+  <tr><td>position</td><td><code>ra_deg</code>/<code>dec_deg</code> and/or <code>pixel_xy</code>. With RA/Dec and parent-frame pixels for ≥ 3 perturbers, ALPACA fits the sky-to-pixel map (rotation and parity included; it warns if the fit RMS exceeds 1 px); otherwise it assumes north up, east left. <code>pixel_xy</code> alone (RA/Dec <code>null</code>) is read in the field-centred frame: centre = (pixel − (npix − 1)/2) × pix_scale, with <code>npix</code> from the target block (else the image size).</td></tr>
+  <tr><td><code>redshift.z</code></td><td>required. Within <a href="#k-mass-perturbers-z-tolerance"><code>z_tolerance</code></a> (0.01) of the lens: main plane; otherwise its own foreground or background plane (distances at a fiducial cosmology, <a href="#k-mass-perturbers-cosmology-h0-fid"><code>H0_fid</code></a> 70, Ω<sub>m</sub> 0.3; delays scale with the sampled D<sub>Δt</sub>)</td></tr>
+  <tr><td><code>profile</code></td><td><code>theta_E_arcsec</code> (required; the older <code>SIS_profile</code> block is accepted), <code>mass_model</code> <code>"SIS"</code> (default) | <code>"SIE"</code> | <code>"EPL"</code> | <code>"EPL+Shear"</code>, optional <code>sigma_kms</code></td></tr>
+  <tr><td><code>lens_light</code></td><td>optional light model: <code>"Sersic"</code> | <code>"double-sersic"</code> | <code>"triple-sersic"</code> | <code>"MGE"</code> | <code>"MGE+double-sersic"</code> | <code>"MGE+triple-sersic"</code>; <code>lensed</code> (default true) ray-traces it through the planes in front of it. Without a light model, mask the galaxy.</td></tr>
+  <tr><td>priors</td><td>config-wide defaults in <a href="#k-mass-perturbers-priors-fix-positions"><code>mass.perturbers.priors</code></a>; per perturber (top level or inside <code>profile</code> / <code>lens_light</code>): <code>theta_E_prior_sigma</code> (TruncatedNormal around the catalogue θ<sub>E</sub>; otherwise uniform up to <code>theta_E_max_factor</code> × θ<sub>E</sub>), <code>theta_E_max_factor</code>, <code>fix_positions</code>, <code>position_sigma_arcsec</code>, EPL / ellipticity / shear bounds (<code>gamma_loc</code> …, <code>ellipticity_sigma</code>, <code>shear_max</code> …) and light bounds (<code>light_Re_min</code> …, <code>light_amp_min_frac</code> …)</td></tr>
+  <tr><td>other</td><td><code>flexion_shift_arcsec</code> (used by <a href="#k-mass-perturbers-min-flexion-shift-arcsec"><code>min_flexion_shift_arcsec</code></a> to select perturbers), <code>notes</code></td></tr>
+</table>
+<ul>
+  <li><b>Check the overlay</b> <code>01_input/plots/perturbers_overlay.png</code> before anything else: a flipped axis or a
+    perturber on the wrong galaxy is obvious there. The model frame can be rotated relative to the sky.</li>
+  <li><b>Selection</b>: <a href="#k-mass-perturbers-include-ids"><code>include_ids</code></a> / <code>exclude_ids</code>;
+    <a href="#k-mass-perturbers-mode"><code>mode: "single_plane"</code></a> forces every perturber into the main plane.</li>
+  <li><b>A lensed perturber's light as a pixel field</b>: for a perturber on its own plane with a catalogue light model,
+    <a href="#k-stages-cf-joint-perturber-fields-pertn-num-pixels"><code>stages.cf_joint.perturber_fields</code></a> replaces that
+    light in stage 3 and sampling by a correlated field on its own plane (a field alone, never field + analytic
+    light):</li>
+</ul>
+<pre><code>"stages": {"cf_joint": {"enabled": true, "source": {...},
+  "perturber_fields": {"pert1": {"num_pixels": 64,
+     "loglogavgslope": [-2.5, 0.001], "fluctuations": [2.5, 0.001], "offset_std": [2.0, 0.001],
+     "offset_mean": "auto", "offset_mean_shift": -6.0,
+     "grid": {"mode": "model", "frac": 0.005, "dilate_pix": 3, "scale": 1.0}}}}}</code></pre>
+
+<h2 id="galaxy-galaxy"><span class="step">Guide</span>Galaxy–galaxy lenses</h2>
+<p>A galaxy–galaxy lens has arcs or a ring and no point images. The pipeline is the same; these settings differ:</p>
+<table>
+  <tr><th>setting</th><th>value</th><th>why</th></tr>
+  <tr><td><a href="#k-light-point-sources-enabled"><code>light.point_sources.enabled</code></a></td><td><code>false</code></td><td>no point images: no detection, delays, astrometry or PSF-error term (switched off with one message in the log)</td></tr>
+  <tr><td><a href="#k-mass-main-theta-e-prior"><code>mass.main.theta_E_prior</code></a></td><td><code>{"center": ring radius, "sigma": 0.1–0.2}</code></td><td>without images the θ<sub>E</sub> scale, the arc annulus and the R<sub>eff</sub> bounds come from it; without it θ<sub>E</sub> can run to twice the true value</td></tr>
+  <tr><td><a href="#k-mass-main-center-sigma"><code>mass.main.center_sigma</code></a></td><td><code>null</code> (= 0.05″)</td><td>keeps the mass on the lens galaxy instead of on an arc</td></tr>
+  <tr><td><code>IMAGE_POSITIONS</code>, <code>TIME_DELAYS</code>; <code>likelihood.time_delays</code></td><td><code>None</code>; <code>null</code></td><td>quasar-only inputs</td></tr>
+  <tr><td><code>psf.mode</code></td><td><code>"joint"</code> works</td><td>the PSF is then constrained by the STARRED seed, its priors and the extended light; <code>"iterative"</code> needs point images</td></tr>
+  <tr><td><code>likelihood.astrometry_mode</code></td><td>keep <code>"image_plane"</code></td><td>no term is built without point images</td></tr>
+  <tr><td><a href="#k-stages-gd-optimizer-halving-keep"><code>halving.keep</code></a></td><td>e.g. <code>[64, 32, 16, 8, 4]</code></td><td>a larger pool: the multistart must find the lensed (not the "painted") solution</td></tr>
+  <tr><td><a href="#k-sampling-nifty-nuts-target-accept"><code>nuts.target_accept</code></a></td><td>0.8</td><td>correlated-field models sample better than at the shipped 0.95</td></tr>
+  <tr><td>source smoothness</td><td>fixed by cross-validation</td><td>§ <a href="#cv">Source smoothness</a></td></tr>
+</table>
+<p>Judge that the model is <b>lensing, not painting</b>: θ<sub>E</sub> is not at a bound, the mass is centred on the light,
+  the critical curve runs through the arcs, and the source is smaller than the arcs and dark away from its
+  emission.</p>
+
 <h2 id="pipeline"><span class="step">Guide</span>The staged pipeline</h2>
-<p>With the default joint PSF (<code>psf.mode: "joint"</code>) the MAP is found in stages, each starting from the
+<p>With the default joint PSF (<code>psf.mode: "joint"</code>) the best fit is found in stages, each starting from the
   previous one. This is the recommended path for every lens.</p>
 <table>
   <tr><th>stage</th><th>what is fitted</th><th>why</th><th>main knobs</th></tr>
   <tr><td><b>1 · shapelets</b><br><span class="muted small">03_multistart/stage1_shapelets</span></td>
-      <td>Mass, lens light (e.g. double Sérsic), a shapelet source, the live PSF; many random starts, annealed
-        (noise inflated ×16 → ×1) and culled by successive halving, then the best are refined.</td>
-      <td>A smooth source makes the multistart robust: it finds the right mass basin (and, for galaxy–galaxy lenses,
-        the lensed instead of the unlensed solution).</td>
+      <td>Mass, lens light (e.g. double Sérsic), a shapelet source and the live PSF; many random starts, annealed (noise
+        inflated ×16 → ×1) and culled by successive halving, then the best are refined.</td>
+      <td>A smooth source makes the multistart robust: it finds the right mass basin (for galaxy–galaxy lenses, the
+        lensed instead of the unlensed solution).</td>
       <td><a href="#k-stages-gd-optimizer-anneal-levels">anneal</a>, <a href="#k-stages-gd-optimizer-halving-keep">halving</a>, <a href="#k-stages-gd-optimizer-refine-top">refine</a>, <a href="#k-stages-gd-source-n-max">n_max</a></td></tr>
   <tr><td><b>2 · lens-light refit</b><br><span class="muted small">stage2_lens_light_refit</span></td>
       <td>The lens light alone (e.g. triple Sérsic) on the <b>full frame</b>, after subtracting the stage-1 source and
-        point sources.</td>
-      <td>The full frame constrains the light profile's wings and the sky, which the small cutout cannot.</td>
-      <td><a href="#k-light-lens-refit-profile">refit.profile</a>, <a href="#k-light-lens-refit-mask-path">refit.mask_path</a>, <a href="#k-light-lens-refit-simple-source">simple_source</a></td></tr>
+        point images; the arc annulus and the quasar cores are masked. The result starts stage 3.</td>
+      <td>The full frame constrains the wings of the light profile and the sky, which the small cutout cannot.</td>
+      <td><a href="#k-light-lens-refit-profile">refit.profile</a>, <a href="#k-light-lens-refit-mask-path">mask_path</a>, <a href="#k-light-lens-refit-mask-arc">mask_arc</a>, <a href="#k-light-lens-refit-init-cf-joint">init_cf_joint</a>, <a href="#k-light-sky-background-fixed-amp">sky "refit"</a></td></tr>
   <tr><td><b>3 · CorrField joint</b><br><span class="muted small">stage3_cf_joint</span></td>
-      <td>Phase A grows a pixelated correlated-field source with everything else pinned; phase B fits source, mass,
-        light and PSF together.</td>
-      <td>The pixelated source captures the real source structure the shapelets miss; this is the model you judge
-        and sample.</td>
-      <td><a href="#k-stages-cf-joint-source-loglogavgslope">loglogavgslope</a>, <a href="#k-stages-cf-joint-source-num-pixels">num_pixels</a>, <a href="#k-stages-cf-joint-source-arc-mask-outer-radius">arc mask</a>, <a href="#k-stages-cf-joint-adam-steps">adam_steps</a></td></tr>
+      <td>Phase A grows a pixelated correlated-field source (and any perturber field) with everything else pinned;
+        phase B fits source, mass, lens light and PSF together, until the plateau test or the step budget.</td>
+      <td>The pixelated source captures the real source structure the shapelets miss; this is the model you judge and
+        sample.</td>
+      <td><a href="#k-stages-cf-joint-source-loglogavgslope">loglogavgslope</a>, <a href="#k-stages-cf-joint-source-num-pixels">num_pixels</a>, <a href="#k-stages-cf-joint-source-arc-mask-outer-radius">arc mask</a>, <a href="#k-stages-cf-joint-adam-steps">adam_steps</a>, <a href="#k-stages-cf-joint-convergence-enabled">convergence</a></td></tr>
   <tr><td><b>PSF-error b</b> (quasars)</td>
-      <td>After GD, the amplitude <i>b</i> of σ²<sub>eff</sub> = σ² + b²·PS² is fitted; it stays free in sampling
-        (<code>post_gd_free</code>).</td>
+      <td>After GD, the amplitude <i>b</i> of σ²<sub>eff</sub> = σ² + b²·PS² is fitted at the stage-3 optimum; it stays free
+        in sampling (<code>post_gd_free</code>).</td>
       <td>Down-weights the quasar cores, where any PSF error dominates χ².</td>
       <td><a href="#k-likelihood-noise-model-use-psf-error-map">use_psf_error_map</a>, <a href="#k-likelihood-noise-model-psf-error-b-max">psf_error_b_max</a></td></tr>
-  <tr><td><b>warm start → sampling</b><br><span class="muted small">04_sampling, 05_posterior</span></td>
-      <td>The MAP is mapped exactly into the sampler's latent space, then NUTS (and optionally geoVI) samples.</td>
+  <tr><td><b>warm start</b><br><span class="muted small">04_sampling/warmstart</span></td>
+      <td>The best fit is transferred exactly into the sampler's latent space and polished with L-BFGS on the posterior
+        energy U = −log L + ½|ξ|².</td>
+      <td>U compares models on the same data, mask and noise model; <code>stop_after</code> ends the run here.</td>
+      <td><a href="#k-sampling-nifty-warmstart-polish">polish</a>, <a href="#k-sampling-nifty-warmstart-stop-after">stop_after</a></td></tr>
+  <tr><td><b>sampling</b><br><span class="muted small">04_sampling, 05_posterior</span></td>
+      <td>NUTS (and optionally geoVI) from the warm start.</td>
       <td>Uncertainties, the time-delay distance, H<sub>0</sub>.</td>
-      <td><a href="#k-sampling-nifty-mode">nifty.mode</a>, <a href="#k-sampling-nifty-nuts-target-accept">target_accept</a></td></tr>
+      <td><a href="#k-sampling-nifty-mode">nifty.mode</a>, <a href="#k-sampling-nifty-nuts-target-accept">target_accept</a> (§ <a href="#sampling">Sampling</a>)</td></tr>
 </table>
-<p>Use a shapelet-only model (<code>psf.mode: "fixed"</code>) only when you specifically want one, for example as a
-  quick systematic check.</p>
+<ul>
+  <li><b>Stage 2 figures</b> (<code>stage2_lens_light_refit/plots/</code>): <code>01_lens_light_fit.png</code> (the full model and
+    the light fit itself), <code>02_radial_profile.png</code> (smoothness: excess over a smooth profile outside the arc band),
+    <code>03_model_summary.png</code>.</li>
+  <li><b>Stage 3 records</b>: <code>planes.png</code> (every light plane, lensed and in its own plane), <code>loss_curve.png</code>,
+    <code>chi2_binned.png</code>, <code>cf_hyperparameters.json</code> (the field hyperparameters in σ units; |z| &gt; 3 =
+    "railed"), and <code>stage_summary.json</code> with the stop reason and the improvement over the last window. A
+    WARNING is printed when stage 3 ended on its budget while still improving.</li>
+  <li>The source grid and arc mask that stage 3 used are saved in <code>03_multistart/cf_prebuild/</code>, so rebuilds and
+    sampling use exactly the same model.</li>
+  <li>Use a shapelet-only model (<code>psf.mode: "fixed"</code>, <code>stages.cf_joint.enabled: false</code>) only when you
+    want one, for example as a quick systematic check; it can be sampled with NIFTy too.</li>
+</ul>
+
+<h2 id="cv"><span class="step">Guide</span>Source smoothness (cross-validation)</h2>
+<p>In a joint best fit, free hyperparameters of a correlated field run to rough fields: the source then fits noise
+  and stops being interpretable. The railing report (<code>cf_hyperparameters.json</code>, printed at stage 3 and at the
+  warm start) flags this. Fix the smoothness instead, chosen by how well the field <b>predicts pixels it has not
+  seen</b>:</p>
+<pre><code>python -m alpaca.diagnostics.cf_cv run/ --field source --slopes -2 -2.5 -3 -3.5 --fluctuations 2.5
+python -m alpaca.diagnostics.cf_cv run/ --field pert1  --slopes -2 -2.5 -3       # a perturber field</code></pre>
+<ul>
+  <li>Random 4×4-pixel blocks of the field's region are held out (2 folds of 10 % by default). For every candidate
+    (slope, fluctuations) the field restarts from its prior centre and is refitted on the training pixels to
+    convergence (plateau test: <code>--conv-tol 20</code> nats per <code>--conv-window 2000</code> steps, at most
+    <code>--steps 20000</code>); everything else stays at the run's best fit. The candidate <code>map</code> keeps the run's
+    own priors (skip it with <code>--no-map</code>).</li>
+  <li>Results: <code>run/06_cf_cv/&lt;field&gt;/results.json</code>, <code>table.txt</code>, <code>cv.png</code>, ranked by the held-out
+    χ² averaged over folds. Fits that were still improving at the budget are marked: a ranking of unconverged fits
+    measures convergence speed, not prediction.</li>
+  <li>Pick the converged candidate with the lowest held-out χ², and fix it in the config with a tiny std, e.g.
+    <code>"loglogavgslope": [-2.5, 0.001]</code>, <code>"fluctuations": [2.5, 0.001]</code>. Then rerun the same
+    config folder: finished stages whose settings did not change are reloaded.</li>
+  <li>With fixed hyperparameters, also set <a href="#k-stages-cf-joint-source-mean-intensity"><code>mean_intensity</code></a> to about
+    0.1 × the noise; the default (70th percentile of the image) with a tight <code>offset_std</code> can leave a faint
+    pedestal over the whole source grid.</li>
+  <li>Only χ² values are reported, so the tool is safe in blinded runs.</li>
+</ul>
 
 <h2 id="running"><span class="step">Guide</span>Running &amp; budgets</h2>
 <p>The GD cost is set by the multistart (number of starts, anneal levels, Adam / L-BFGS steps), the refit steps and
@@ -133,59 +329,257 @@ python run_alpaca.py config.json --output runs/variant_m4/           # another o
   <tr><th>budget</th><th>anneal levels · adam / lbfgs</th><th>halving keep</th><th>refine top</th><th>refit · cf_warmstart · cf_joint</th><th>laptop (M-series)</th></tr>
   <tr><td>quick</td><td>[8,4,2,1] · 200 / 150</td><td>[8,4,2,2]</td><td>1</td><td>1200 · 1500 · 2500</td><td>~5–15 min</td></tr>
   <tr><td>standard</td><td>[16,8,4,2,1] · 300 / 300</td><td>[16,8,4,4,2]</td><td>2</td><td>2500 · 4000 · 6000</td><td>~30–60 min</td></tr>
-  <tr><td>production</td><td>[16,8,4,2,1] · 400 / 400</td><td>[32,16,8,4,2] (GG: [64,32,16,8,4])</td><td>1–4</td><td>3000 · 8000 · 12000</td><td>hours (GPU node)</td></tr>
+  <tr><td>production (shipped)</td><td>[16,8,4,2,1] · 400 / 400</td><td>[32,16,8,4,2] (GG: [64,32,16,8,4])</td><td>1–4</td><td>3000 · 8000 · 12000</td><td>hours (GPU node)</td></tr>
 </table>
-<p>One output directory per variant: re-running a configuration into a finished directory <b>resumes</b> it (finished
-  stages are reloaded when their fingerprint matches; a stage that must be redone is archived as
-  <code>stage…stale-&lt;time&gt;</code>). Any change to ALPACA's own code invalidates the fingerprints.</p>
+<p><code>halving.keep</code> needs one non-increasing entry per anneal level; its first entry is the number of starts.
+  Instead of a fixed stage-3 budget you can stop on a plateau with <a href="#k-stages-cf-joint-convergence-enabled"><code>stages.cf_joint.convergence</code></a>.</p>
+<ul>
+  <li><b>Resume.</b> One output directory per variant. Re-running a configuration into a finished directory resumes it:
+    a finished stage is reloaded when its fingerprint (the settings it depends on plus a hash of ALPACA's code)
+    matches; a stage that must be redone is archived as <code>stage…stale-&lt;time&gt;</code>. Figures
+    (<code>alpaca/plotting/</code>) and the multiband layer are not part of the code hash; any other code change, such as
+    an upgrade, recomputes the stages once.</li>
+  <li><b>Provenance.</b> Every run writes <code>config/config.json</code> (your input as typed),
+    <code>config/config_effective.json</code> (every setting resolved) and <code>config/alpaca_provenance.json</code> (version,
+    git commit, source hash, dependency revisions).</li>
+  <li><b>Clusters.</b> Do not move, rename or reuse a run directory while a job writes to it. Slurm's
+    <code>--export</code> splits values at commas. Keep the blinding key out of job logs (§ <a href="#blinding">Blinding</a>).</li>
+</ul>
 
 <h2 id="outputs"><span class="step">Guide</span>Outputs</h2>
 <pre><code>run/
-├── config/            config.json (exactly what ran), timing.json
-├── 01_input/          inputs and priors as figures: image, noise, masks, PSF, perturbers_overlay.png  ← check these
-├── 03_multistart/     stage1_shapelets/  stage2_lens_light_refit/  stage3_cf_joint/
-│                      each: model_summary.png, stage_summary.json (chi2_red), recovered PSF
-│                      model_image.fits, noise_map_effective.fits, best_fit_params_full.npz (TRUE values)
-├── 04_sampling/       warmstart/ (arc_mask.png, warm-start summary), nifty_nuts/ (chains, diagnostics)
-└── 05_posterior/      samples/ posterior_samples.npz (blinded), parameter_summary.txt, boundary_flags.txt, bic.json</code></pre>
-<p>The browser-based <a href="../app.html">ALPACA analysis app</a> opens a run folder directly: parameter tables, corner
-  plots, model and residual viewers, ray tracing, H<sub>0</sub> (blinded).</p>
+├── config/            config.json (as typed), config_effective.json (resolved), alpaca_provenance.json
+├── 01_input/          fits/, plots/ (image, noise, masks, PSF, arc mask, perturbers_overlay.png), priors/  ← check these
+├── 02_psf_reconstruction/   (filled by the iterative PSF mode)
+├── 03_multistart/     README.txt indexes the folder
+│   ├── best_model/    START HERE: diagnostics.txt (χ² per stage and region, b, shear, parameters at a bound,
+│   │                  astrometry, delay shape), model_summary, residuals, chi2_binned, time_delay_ratios,
+│   │                  ray_tracing_check
+│   ├── stage1_shapelets/  stage2_lens_light_refit/  stage3_cf_joint/   each: stage_summary.json, plots/,
+│   │                  recovered PSF (+ psf_support_check.json), parameters
+│   ├── cf_prebuild/   arc mask, source grid and plane-field masks the stage-3 model used
+│   └── best_fit_params.json (blinded keys stripped), best_fit_params_full.npz (blinded entries sealed),
+│                      model_image.fits, noise_map_effective.fits, best_source_pixels.fits
+├── 04_sampling/       warmstart/ (warmstart_summary.json with U, figures), nifty_nuts/ (samples, diagnostics,
+│                      per-chain plots), geovi/ (geovi_run.json)
+├── 05_posterior/      samples/ (posterior_samples.npz and samples.h5, blinded; parameter_summary.txt,
+│                      posterior_summary.json with R-hat / ESS / divergences, boundary_flags.txt, bic.json,
+│                      blinding_key.json, blinding_manifest.json), plots/ (corner, time_delay_ratios), draws/
+├── 06_cf_cv/          cross-validation results (§ Source smoothness)
+├── model_summary.pdf  one-page report
+└── timing.json</code></pre>
+<p>Kinematics runs add <code>05_posterior/samples/kinematics_metadata.json</code> and, for axisymmetric dynamics,
+  <code>03_multistart/kinematics_axis_check.json</code>. The browser-based <a href="../app.html">analysis app</a> opens a run
+  folder directly: parameter tables, corner plots, model and residual viewers, ray tracing, H<sub>0</sub> (blinded).</p>
 
 <h2 id="judging"><span class="step">Guide</span>Judging a model</h2>
-<p>Look at pictures before numbers. A model is acceptable when:</p>
+<p>Look at pictures before numbers. Start with <code>03_multistart/best_model/</code>. A model is acceptable when:</p>
 <ul>
-  <li>the <b>normalised residuals</b> have no coherent structure: no arcs (source or mass), no rings or dipoles at
-    quasar cores (PSF or astrometry), no quadrupole at the centre (lens light), no gradient (sky);</li>
-  <li>χ² is <b>balanced by region</b>: quasar cores, arcs, centre and outskirts. A global χ²<sub>red</sub> hides
-    compensation, for example a component that fits the noise in one place (χ² well below the empty-sky level) while
-    another region is not fitted at all. A block-binned χ² map shows this at a glance;</li>
-  <li>nothing sits at a <b>prior bound</b> (<code>boundary_flags.txt</code>; check the GD endpoint too);</li>
-  <li>the model is physical: γ about 1.8–2.3, mass and light aligned within about 10–20°, perturber masses
-    consistent with their light, a galaxy-like source that does not touch the source-grid edge;</li>
+  <li>the <b>normalised residuals</b> have no coherent structure: no arcs (source or mass), no rings or dipoles at quasar
+    cores (PSF or astrometry), no quadrupole at the centre (lens light), no gradient (sky);</li>
+  <li>χ² is <b>balanced by region</b> (<code>chi2_binned.png</code>, <code>diagnostics.txt</code>): quasar cores, arcs, centre and
+    outskirts. A global χ²<sub>red</sub> hides compensation, for example a component that fits the noise in one place
+    (χ² well below the empty-sky level) while another region is not fitted;</li>
+  <li>nothing sits at a <b>prior bound</b> (<code>diagnostics.txt</code> for the best fit, <code>boundary_flags.txt</code> for the
+    posterior), and no correlated-field hyperparameter is railed unless it is fixed on purpose;</li>
+  <li>stage 3 <b>converged</b> (no budget warning) and the warm-start polish reached its gradient tolerance;</li>
+  <li>the model is physical: γ about 1.8–2.3, mass and light aligned within about 10–20°, perturber masses consistent
+    with their light, a galaxy-like source that does not touch the source-grid edge;</li>
   <li>a different <b>random seed</b> lands in the same solution, and an extended model fits at least as well as the
     baseline it contains;</li>
-  <li>for galaxy–galaxy lenses: it is <b>lensing, not painting</b>. θ<sub>E</sub> is not at its lower bound, the mass
-    is centred on the light, the critical curve runs through the arcs, and the source is smaller than the
-    arcs.</li>
+  <li>for quasars: the delay ratios agree with the measured ones (<code>time_delay_ratios.png</code>);</li>
+  <li>for the posterior: R̂ close to 1 and enough effective samples for every reported parameter
+    (<code>posterior_summary.json</code>), no divergences, trees not saturating the depth limit.</li>
 </ul>
-<p>Drizzled data have correlated noise: a good fit can sit at χ²<sub>red</sub> ≈ 0.5. Judge structure and
-  differences between models, not the distance from 1.</p>
+<p>Drizzled data have correlated noise: a good fit sits at χ²<sub>red</sub> ≈ 0.5–0.7. Judge structure and differences
+  between models, not the distance from 1. <code>python llm/tools/check_run.py run/ [--ref other_run/]</code> writes a
+  health card (χ² against a reference, railed b, large shear, perturbers at their caps, boundary flags, stage-3 and
+  warm-start convergence, railed field hyperparameters).</p>
+
+<h2 id="sampling"><span class="step">Guide</span>Sampling</h2>
+<p>The default sampler is NIFTy in the whitened latent space ξ (required for correlated-field sources), started from the
+  warm start.</p>
+<table>
+  <tr><th>setting</th><th>use</th></tr>
+  <tr><td><a href="#k-sampling-nifty-mode"><code>sampling.nifty.mode</code></a></td><td><code>"nuts_only"</code> (default) · <code>"vi+nuts"</code> (geoVI, then NUTS) · <code>"vi_only"</code> (geoVI)</td></tr>
+  <tr><td><a href="#k-sampling-nifty-nuts-n-chains"><code>nuts.n_chains</code></a> · <code>n_warmup</code> · <code>n_samples</code></td><td>shipped: 2 chains, 600 warm-up + 1000 samples each; at least two chains, to compute R̂</td></tr>
+  <tr><td><a href="#k-sampling-nifty-nuts-target-accept"><code>nuts.target_accept</code></a> · <code>max_tree_depth</code></td><td>shipped 0.95 · 11 (code defaults 0.8 · 10). If trajectories saturate the depth limit, lower <code>target_accept</code> to 0.8 and lengthen the warm-up before raising the depth</td></tr>
+  <tr><td><code>sampling.sampler: "nuts"</code></td><td>NumPyro NUTS on the physical parameters, for shapelet / Sérsic sources</td></tr>
+  <tr><td><code>sampling.sampler: "nautilus"</code></td><td>nested sampling with its own legacy likelihood; refuses image-plane astrometry, common-source delays, kinematics, perturbers and a sky background, and its evidence is not comparable across engines</td></tr>
+</table>
+<ul>
+  <li><b>Records</b>: <code>04_sampling/nifty_nuts/</code> (samples, diagnostics, per-chain plots) and
+    <code>05_posterior/samples/posterior_summary.json</code> (R̂ and ESS per parameter, the minimum ESS, the maximum R̂,
+    divergences, the mean tree depth). The raw draws are dumped to <code>nifty_nuts_raw.npz</code> right after sampling and
+    removed once the samples are saved, so a job that dies in post-processing can be recovered.</li>
+  <li><b>Several GPUs</b>: NUTS chains can run in parallel on the devices (<code>JAX_PLATFORMS=cuda,cpu</code>,
+    <a href="#k-sampling-nifty-nuts-chain-method"><code>chain_method</code></a>); geoVI records in
+    <code>geovi_run.json</code> how many samples it actually used and whether it fell back from multi-GPU.</li>
+  <li><b>geoVI on a CPU</b> can abort right after VI with <code>LLVM ERROR: Unable to allocate section memory</code> (the JIT
+    exceeds Linux's <code>vm.max_map_count</code>, not the RAM). Run geoVI on a GPU.</li>
+  <li><b>Model comparison</b>: <code>bic.json</code> counts the exported parameters and assumes independent pixel noise;
+    compare it only between runs with identical source, PSF and export settings, and treat it as informational.</li>
+</ul>
+
+<h2 id="kinematics"><span class="step">Guide</span>Stellar kinematics</h2>
+<p>A measured velocity dispersion constrains the mass profile and breaks the mass-sheet degeneracy together with the
+  lensing. Switch it on with <a href="#k-likelihood-use-kinematics"><code>likelihood.use_kinematics</code></a>:</p>
+<pre><code>"likelihood": {
+  "use_kinematics": true,
+  "kinematics": {"mode": "aperture", "observed_sigma": 222.0, "sigma_error": 15.0,
+                 "aperture_kind": "square", "aperture_width": 0.55, "psf_sigma": [0.05],
+                 "ds_over_dds": 1.72},
+  "kappa_ext_prior": {"mean": 0.0, "sigma": 0.03}
+}</code></pre>
+<p class="muted small">(Illustrative numbers: use your measurement and your redshifts.)</p>
+<ul>
+  <li><b>Modes</b>: <code>"aperture"</code> (one dispersion, spherical Jeans) or <code>"resolved"</code> (binned IFU
+    V<sub>rms</sub> from <a href="#k-likelihood-kinematics-ifu-file"><code>ifu_file</code></a>) with <code>dynamics</code>
+    <code>"spherical"</code> (constant, Osipkov–Merritt or generalised OM anisotropy) or <code>"axisymmetric"</code> (JAM;
+    needs <code>frame_pa_x_deg</code> and <code>frame_parity</code>).</li>
+  <li><b>Required</b>: <a href="#k-likelihood-kinematics-ds-over-dds"><code>ds_over_dds</code></a>, and Sérsic lens-light components
+    (the tracer).</li>
+  <li><b>λ<sub>int</sub></b>, the internal mass sheet, is sampled by default and blinded whenever blinding is on;
+    κ<sub>ext</sub> comes from <code>likelihood.kappa_ext_prior</code>.</li>
+  <li><b>Joint or importance sampling</b>: by default the kinematics enter the sampled likelihood;
+    <code>importance_sample: true</code> samples the lensing-only posterior and reweights it, marginalising the nuisances on
+    grids.</li>
+  <li><b>Axisymmetric check</b>: the JAM aligns the mass and every light component with light component 0;
+    <code>kinematics_axis_check.json</code> records the offsets of the best fit and a warning is printed above 10°.</li>
+</ul>
+
+<h2 id="multiband"><span class="step">Guide</span>Multiband</h2>
+<p>The mass, the perturbers, the time-delay distance and the image positions do not depend on wavelength; the lens
+  light, the lensed source, the quasar fluxes, the PSF and the noise do. Multiband ALPACA fits several bands with
+  <b>one</b> model for what is common and a free copy per band for the rest. The config is an ordinary config (the
+  template every band starts from) plus a <a href="#cfg-multiband"><code>multiband</code></a> block:</p>
+<pre><code>"multiband": {
+  "reference_band": "F150W",
+  "bands": {"F150W": {"data_dir": "data/F150W"},
+            "F356W": {"data_dir": "data/F356W",
+                      "overrides": {"stages.cf_joint.source.num_pixels": 64}}},
+  "image_positions": {"A": [-0.906, -0.937], "B": [-0.999, 0.656], "C": [0.406, 1.249], "D": [0.906, -0.531]},
+  "sharing": {"preset": "lensing"},
+  "frame_offsets": {"enabled": true, "sigma_arcsec": 0.05},
+  "joint": {"name": "joint", "polish": {"maxiter": 3000, "gtol": 1.0}, "sampling": false}
+}</code></pre>
+<pre><code>python run_multiband.py lens_mb.json --check                       # validate config, data and band geometry
+python run_multiband.py lens_mb.json                               # every band, then the joint model
+python run_multiband.py lens_mb.json --stage bands --bands F150W   # one band (bands can run as parallel jobs)
+python run_multiband.py lens_mb.json --stage joint                 # joint model from the saved band fits
+python run_multiband.py lens_mb.json --compare                     # compare sharing variants side by side</code></pre>
+<ul>
+  <li><b>Bands</b> run the ordinary pipeline in <code>&lt;output_dir&gt;/bands/&lt;band&gt;/</code>; the joint stage rebuilds them
+    from disk, polishes the joint posterior energy with L-BFGS and optionally samples it with NIFTy-NUTS.</li>
+  <li><b>Sharing</b>: presets <code>lensing</code> (default), <code>achromatic_lens_light</code>, <code>independent</code> (a
+    consistency check); single groups can be overridden (<a href="#k-multiband-sharing-group">groups</a>).</li>
+  <li><b>Counted once</b>: the delays (with the reference band), the astrometry and the kinematics (one tracer band,
+    <a href="#k-multiband-kinematics-tracer-band"><code>kinematics.tracer_band</code></a>).</li>
+  <li><b>One sky frame</b>: bands whose WCS is rotated (&gt; 0.1°), mirrored or anisotropic relative to the reference are
+    refused (resample them first); bands without a WCS are reported as unchecked. Small registration errors are
+    absorbed by the frame offsets. All bands must use the same <code>light.point_sources.fft_rendering</code> and
+    <code>light.sky_psf</code>. <code>--check</code> exits with an error after a <code>CHECK!</code> line.</li>
+  <li><b>Outputs</b> in <code>&lt;output_dir&gt;/&lt;joint.name&gt;/</code>: <code>REPORT.md</code>, <code>sharing.txt</code>,
+    <code>joint_summary.json</code> (blinding-safe numbers), the joint MAP (<code>joint_map_params_full.npz</code> with sealed
+    blinded entries, <code>joint_map_latent.npz</code>), story figures <code>01_sharing</code> … <code>07_frame_offsets</code>, and
+    <code>posterior/</code> with sampling.</li>
+  <li><b>Limits</b>: NIFTy NUTS only (no geoVI); the source is always per band; <code>importance_sample</code> kinematics is
+    not supported; never run two joint jobs on the same run folder at once.</li>
+</ul>
+
+<h2 id="postprocess"><span class="step">Guide</span>Post-processing</h2>
+<p><code>alpaca.utils.postprocess</code> reloads a finished run; the notebook
+  <code>analysis/alpaca_postprocessing_tutorial.ipynb</code> walks through it. Every figure uses the ALPACA house style
+  (<code>alpaca.plotting.style.apply()</code>).</p>
+<pre><code>from alpaca.utils.postprocess import (describe_run, load_posterior, load_best_fit,
+                                      rebuild_prob_model, plot_model_summary, plot_corner_alpaca)
+RUN = "/path/to/run"
+describe_run(RUN)                          # stages, sampler, blinding at a glance
+post = load_posterior(RUN)                 # blinded columns are deltas
+plot_corner_alpaca(post)
+built = rebuild_prob_model(RUN)            # the exact sampling model (pass lens_center=LENS_POSITION for
+plot_model_summary(built, posterior=post, draw="best")   #  the run's own anchor; default: the MAP centre)
+best = load_best_fit(RUN)                  # final GD parameters</code></pre>
+<ul>
+  <li><code>plot_light_planes(prob_model, params, save_path=…)</code>: every light plane, lensed and in its own plane.</li>
+  <li>Delivery chain for collaborations: <code>python -m alpaca.postprocessing RUN [--n 500000] [--params D_dt lens_theta_E …]
+    [--out chain.h5]</code> writes a KDE-resampled HDF5 chain; its information content is that of the raw draws, and it
+    is blinded like the source posterior.</li>
+  <li>Health card: <code>python llm/tools/check_run.py RUN [--ref OTHER_RUN] [--write]</code>.</li>
+  <li>The <a href="../app.html">analysis app</a> opens run folders in the browser.</li>
+</ul>
 
 <h2 id="blinding"><span class="step">Guide</span>Blinding</h2>
-<p>For cosmography, keep one campaign key in <code>ALPACA_BLINDING_KEY</code> (never in a config or a log). Blinded
-  quantities (D<sub>Δt</sub>, H<sub>0</sub>, γ …) are stored as offsets from the posterior mean, so runs are compared
-  through differences only. <code>python -m alpaca.unblind &lt;run&gt;</code> unblinds once the collaboration
-  decides. GD files (<code>best_fit_params_full.npz</code>) hold true values; treat run directories as internal.</p>
+<p>For cosmography, blinding is on by default in the shipped config. Blinded quantities are stored as offsets from
+  their posterior mean, so runs are compared through differences only. The scenario
+  <code>"previously_analyzed"</code> blinds D<sub>Δt</sub>, H<sub>0</sub>, D<sub>d</sub>, the radial mass slope(s), the
+  Fermat-potential differences and the predicted delays; λ<sub>int</sub> and a sampled κ<sub>ext</sub> are blinded as
+  well.</p>
+<ul>
+  <li><b>Key</b>: set one campaign key in <code>ALPACA_BLINDING_KEY</code> inside the job script, never in a config or a log.
+    Without it a key is generated at run start and written to <code>05_posterior/samples/blinding_secret.key</code>: move
+    that file to whoever decides on unblinding.</li>
+  <li><b>Sealed GD files</b>: the blinded entries of <code>best_fit_params_full.npz</code> (and the multiband
+    <code>joint_map_params_full.npz</code>) are encrypted with the same key; <code>best_fit_params.json</code> has them stripped.
+    Old plaintext files still load.</li>
+  <li><b>Safe diagnostics</b>: delay ratios, χ² values, the cross-validation and the multiband summaries contain no
+    blinded numbers.</li>
+  <li><b>Unblinding</b>, once the collaboration decides: <code>python -m alpaca.unblind &lt;run&gt; [--key-file FILE]</code>
+    (or <code>--key</code>, or <code>ALPACA_BLINDING_KEY</code>) writes an <code>unblinded/</code> folder.</li>
+</ul>
 
 <h2 id="troubleshooting"><span class="step">Guide</span>Troubleshooting</h2>
 <table>
   <tr><th>symptom</th><th>cause</th><th>fix</th></tr>
+  <tr><td><code>unknown config key(s) in …</code></td><td>A typo or a key from another version (0.6.0 refuses unknown keys)</td><td>Use the did-you-mean hint; prefix comments with <code>_</code>; reload old runs with <code>load_config(..., strict=False)</code></td></tr>
+  <tr><td><code>astrometry_mode='image_plane' replaces the free source-plane floor</code></td><td><code>use_rayshoot_sys_error: true</code> with image-plane astrometry</td><td>Set it to <code>false</code> or <code>null</code></td></tr>
+  <tr><td><code>likelihood.use_time_delays is true but no delays were given</code></td><td>A quasar config without <code>likelihood.time_delays</code></td><td>Add the block (§ <a href="#delays">Time delays</a>) or set <code>use_time_delays: false</code></td></tr>
+  <tr><td><code>the listed delays violate closure</code></td><td>A sign or label error in a redundant delay table</td><td>Check signs against the convention; <code>pair_noise</code> for pairs that genuinely do not close</td></tr>
+  <tr><td><code>sampler='nautilus' would sample a different target</code></td><td>Nautilus cannot reproduce the configured likelihood</td><td>Use <code>"nifty"</code> or <code>"nuts"</code></td></tr>
   <tr><td>Residuals far below the noise around bright images, normal elsewhere</td><td>The live PSF fits noise: the STARRED seed does not match the kernel and/or the error map is too loose</td><td>Make the seed reproduce the kernel; error map about 1–10 % of the kernel</td></tr>
-  <tr><td>Quasar cores with χ² in the hundreds</td><td>PSF mismatch</td><td>Better stars, a matching seed, a joint PSF; use the PSF-error b (quasars)</td></tr>
-  <tr><td><code>Cannot initialize a prior from nonfinite/out-of-support values</code> at the warm start (MPS)</td><td>A float32 parameter railed at a uniform bound sits one ULP outside it</td><td>Fixed in ALPACA 0.4.2 (<code>prior_transforms.py</code>); update</td></tr>
-  <tr><td><code>atleast_1d requires ndarray or scalar arguments</code></td><td>Python lists reaching JAX 0.10.2 (fixed-PSF runs)</td><td>Fixed in 0.4.2 (<code>ProbModel.params2kwargs</code>); update</td></tr>
+  <tr><td>Quasar cores with χ² in the hundreds</td><td>PSF mismatch</td><td>Better stars, a matching seed, the joint PSF, the PSF-error b</td></tr>
+  <tr><td>Stage 3 "ended on its budget while still improving"</td><td>Too few <code>adam_steps</code></td><td>More steps, or <code>stages.cf_joint.convergence.enabled: true</code> with a large budget</td></tr>
+  <tr><td>Source full of noise-like structure; railed hyperparameters</td><td>Free correlated-field hyperparameters</td><td>Fix them by cross-validation (§ <a href="#cv">Source smoothness</a>)</td></tr>
+  <tr><td>A faint uniform glow over the whole source grid</td><td>Fixed hyperparameters with the default <code>mean_intensity</code></td><td><code>mean_intensity</code> ≈ 0.1 × noise</td></tr>
   <tr><td>θ<sub>E</sub> about twice the expected value (galaxy–galaxy)</td><td>No θ<sub>E</sub> prior</td><td>Set <a href="#k-mass-main-theta-e-prior"><code>mass.main.theta_E_prior</code></a></td></tr>
-  <tr><td>θ<sub>E</sub> at its lower bound, source looks like the arcs</td><td>Unlensed "painting" solution</td><td>Lower <code>n_max</code> (16 → 8), a tighter aperture, more seeds</td></tr>
+  <tr><td>θ<sub>E</sub> at its lower bound, source looks like the arcs</td><td>Unlensed "painting" solution</td><td>Lower <code>n_max</code> (16 → 8), a tighter aperture, more starts and seeds</td></tr>
+  <tr><td>A faint quasar image moved onto nearby bright light</td><td>Unbounded image-position prior</td><td><a href="#k-light-point-sources-position-bound-px"><code>position_bound_px</code></a></td></tr>
+  <tr><td>Warm start refuses a value "on the bound"</td><td>A GD parameter saturated exactly at a truncated prior's edge</td><td>Widen that prior (e.g. <code>position_bound_px</code>) and rerun</td></tr>
+  <tr><td><code>executable is built for device CUDA:0 of type …</code></td><td>Different GPU models in one multi-GPU job</td><td>Request identical GPUs</td></tr>
+  <tr><td><code>LLVM ERROR: Unable to allocate section memory</code> after geoVI</td><td>CPU JIT exceeds <code>vm.max_map_count</code></td><td>Run geoVI on a GPU</td></tr>
+  <tr><td>Every stage recomputes after an upgrade</td><td>The code hash of the stage fingerprint changed</td><td>Expected once per version; reuse stage 1 explicitly if needed</td></tr>
+  <tr><td>Sampling saturates the tree depth</td><td><code>target_accept</code> 0.95 with a diagonal mass matrix</td><td><code>target_accept</code> 0.8, a longer warm-up</td></tr>
   <tr><td>A run took hours longer than expected on a laptop</td><td>The machine slept (closing the lid sleeps even under <code>caffeinate</code>)</td><td>Plug in, keep the lid open</td></tr>
-  <tr><td>Sampling saturates the tree depth</td><td><code>target_accept</code> 0.95 with a diagonal mass matrix</td><td><code>target_accept</code> 0.8, longer warm-up</td></tr>
 </table>
+
+<h2 id="versions"><span class="step">Guide</span>What's new since 0.4</h2>
+<table>
+  <tr><th>version</th><th>changes</th></tr>
+  <tr><td><b>0.6.0</b></td><td>
+    <a href="#multiband">multiband</a> modelling (<code>run_multiband.py</code>); new stage-2 figures; a house style for every figure;
+    <b>image-plane astrometry and <code>sigma_ast</code> 0.005 are the defaults</b> (<code>use_rayshoot_sys_error: null</code>);
+    unknown config keys are errors; run provenance (<code>config_effective.json</code>, <code>alpaca_provenance.json</code>);
+    sealed blinded GD files; Nautilus refuses targets it cannot reproduce; delay-table closure check; R̂ / ESS in
+    <code>posterior_summary.json</code>; PSF support and kinematics axis checks; tested dependency commits
+    (<code>requirements-tested.txt</code>); galaxy–galaxy runs sample with image-plane astrometry (no term without point
+    images); the shipped example is the newest HE0435−1223 baseline (coupled Sérsic centres and ellipticities, fixed
+    perturber positions, NUTS 600 + 1000 per chain at depth 11).</td></tr>
+  <tr><td><b>0.5.3</b></td><td>
+    correlated-field light for a perturber on its own plane (<a href="#k-stages-cf-joint-perturber-fields-pertn-num-pixels"><code>perturber_fields</code></a>);
+    <code>planes.png</code>; stage-3 plateau test (<a href="#k-stages-cf-joint-convergence-enabled"><code>convergence</code></a>); warm-start energy U recorded;
+    NIFTy sampling for models without a correlated field; <a href="#k-likelihood-d-dt-prior-type"><code>D_dt_prior</code></a>;
+    <a href="#k-likelihood-kappa-ext-prior-mean"><code>kappa_ext_prior</code></a>; field-hyperparameter railing report; <a href="#cv">cross-validation</a>;
+    <a href="#k-data-n-ps-detect"><code>data.n_ps_detect</code></a>; <a href="#k-light-sky-psf"><code>light.sky_psf</code></a> (sky unconvolved by default);
+    <a href="#k-light-point-sources-position-bound-px"><code>position_bound_px</code></a>; <a href="#k-sampling-nifty-warmstart-stop-after"><code>warmstart.stop_after</code></a>;
+    refit defaults <a href="#k-light-lens-refit-init-cf-joint"><code>init_cf_joint</code></a> and <a href="#k-light-lens-refit-mask-arc"><code>mask_arc</code></a> on.</td></tr>
+  <tr><td><b>0.5.2</b></td><td>
+    delays in the config (<a href="#k-likelihood-time-delays"><code>likelihood.time_delays</code></a>) in the published convention, with covariances;
+    delay-ratio diagnostic; <code>03_multistart/best_model/</code>.</td></tr>
+  <tr><td><b>0.5.1</b></td><td>
+    image-plane astrometry ties the quasar to its host in stage 1; one source position for all delays
+    (<a href="#k-likelihood-td-common-source"><code>td_common_source</code></a>); perturber θ<sub>E</sub> in the boundary report.</td></tr>
+  <tr><td><b>0.5.0</b></td><td>
+    stellar <a href="#kinematics">kinematics</a> (aperture, IFU, axisymmetric JAM) with the internal mass sheet λ<sub>int</sub>;
+    external <a href="#k-mass-main-flexion-enabled">flexion</a> of the main deflector.</td></tr>
+</table>
+<p>Each version's defaults and gotchas are in the repository under <code>llm/versions/</code>.</p>

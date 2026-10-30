@@ -71,7 +71,7 @@ export async function busy(panel, text, fn) {
 // ---------------------------------------------------------------- parameter sources
 export function paramSourceOptions(run) {
   const opts = [];
-  if (run.features.map) opts.push({ value: "map:final", label: "MAP · final GD stage" });
+  if (run.features.map) opts.push({ value: "map:final", label: run.mb ? `MAP · ${run.band} alone (final GD stage)` : "MAP · final GD stage" });
   for (const s of run.stages) if (s.hasParams && s.key !== "lens_light_refit") opts.push({ value: "map:" + s.key, label: "MAP · " + s.label });
   if (run.features.posterior) {
     opts.push({ value: "post:best", label: "Posterior · best log-L draw" });
@@ -82,7 +82,7 @@ export function paramSourceOptions(run) {
 }
 
 export function paramSourceControls(run, state, onChange) {
-  if (!state.paramSource) state.paramSource = run.features.posterior && !run.needsKey ? "post:best" : (paramSourceOptions(run)[0]?.value || "map:final");
+  if (!state.paramSource) state.paramSource = run.features.posterior && !run.needsKey ? "post:best" : run.features.jointMap ? "map:joint" : (paramSourceOptions(run)[0]?.value || "map:final");
   const wrap = el("div");
   const sel = select(paramSourceOptions(run), state.paramSource, (v) => { state.paramSource = v; rebuild(); onChange(); });
   const rebuild = () => {

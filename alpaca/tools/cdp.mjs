@@ -10,7 +10,9 @@ export async function launch({ port = 9333, width = 1600, height = 1100 } = {}) 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cdp-"));
   const proc = spawn(CHROME, [
     "--headless=new", `--remote-debugging-port=${port}`, `--user-data-dir=${dir}`, `--window-size=${width},${height}`,
-    "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", "about:blank",
+    "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1",
+    // e.g. CHROME_FLAGS="--no-sandbox --no-zygote" on Linux compute nodes without user namespaces
+    ...(process.env.CHROME_FLAGS ? process.env.CHROME_FLAGS.split(/\s+/).filter(Boolean) : []), "about:blank",
   ], { stdio: ["ignore", "ignore", "pipe"] });
   let err = "";
   proc.stderr.on("data", (d) => { err += d; });

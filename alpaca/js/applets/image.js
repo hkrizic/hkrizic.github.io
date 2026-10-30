@@ -125,7 +125,7 @@ export default {
       panel.settings.replaceChildren(
         runRow(ctx, state, load) || "",
         section("Layer", row("Show", select(layerOptions(run), state.layer, (v) => { state.layer = v; load(); })),
-          run.features.posterior ? row("Model", select([{ value: "best", label: "best log-L draw after sampling" }, { value: "map", label: "MAP (model_image.fits)" }], state.modelSource, (v) => { state.modelSource = v; load(); })) : "",
+          run.features.posterior ? row("Model", select([{ value: "best", label: "best log-L draw after sampling" }, { value: "map", label: run.mb ? "joint MAP (rendered)" : "MAP (model_image.fits)" }], state.modelSource, (v) => { state.modelSource = v; load(); })) : "",
           checkbox("PSF-error boost b in σ (residual, χ²)", state.psfBoost, (v) => { state.psfBoost = v; load(); })),
         section("Display",
           row("Colormap", cmapSelect(state.cmap, (v) => { state.cmap = v; state.autoStyle = false; view.setOptions({ cmap: v }); })),

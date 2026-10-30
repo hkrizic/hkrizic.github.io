@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALPACA configurator</title>
+  <meta name="description" content="Build an ALPACA config in the browser: presets, every default, switches and sliders with plain-language explanations, a FITS cutout and mask tool, and export of config.json, the run_alpaca.py lines and the input files." />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="doc/doc.css" />
+  <link rel="stylesheet" href="css/configurator.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><img src="assets/logo-mark.png" alt="ALPACA" /><span>Alpaca</span><span class="sub">configurator</span></a>
+    <nav class="navlinks">
+      <a class="btn" href="doc/tutorial.html">Tutorial</a>
+      <a class="btn" href="doc/documentation.html">Documentation</a>
+      <a class="btn primary" href="configurator.html">Configurator</a>
+      <a class="btn" href="app.html">Analysis</a>
+      <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="cf-subbar">
+    <span class="muted small" id="cf-version">ALPACA defaults</span>
+    <span class="spacer"></span>
+    <button class="btn small" type="button" id="cf-reset">Start over</button>
+  </div>
+
+  <main id="cf-app">
+    <noscript><div class="error">The configurator needs JavaScript.</div></noscript>
+    <p class="muted" style="padding: 24px;">Loading the ALPACA defaults…</p>
+  </main>
+
+  <script type="module" src="js/configurator/main.js"></script>
+</body>
+</html>

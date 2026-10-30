@@ -17,8 +17,11 @@ import compare from "./compare.js";
 import residuals from "./residuals.js";
 import fluxratios from "./fluxratios.js";
 import budget from "./budget.js";
+import mboverview from "./mb_overview.js";
+import mbbands from "./mb_bands.js";
+import mbchromatic from "./mb_chromatic.js";
 
-export const APPLETS = [overview, image, model, rayshoot, params, corner, marginals, sourcemaps, lensing, residuals, fluxratios, h0, budget, msd, stages, psf, diagnostics, gallery, compare];
+export const APPLETS = [overview, mboverview, mbbands, mbchromatic, image, model, rayshoot, params, corner, marginals, sourcemaps, lensing, residuals, fluxratios, h0, budget, msd, stages, psf, diagnostics, gallery, compare];
 export const APPLET_MAP = Object.fromEntries(APPLETS.map((a) => [a.id, a]));
 
 // Multi-panel presets
@@ -30,4 +33,5 @@ export const PRESETS = [
   { id: "rayshoot", title: "Ray-shooting lab", panels: [["rayshoot", {}, "xl"]] },
   { id: "checks", title: "Model checks: residuals · flux ratios · D_Δt budget", panels: [["residuals", {}, "xl"], ["fluxratios", {}, "l"], ["budget", {}, "l"]] },
   { id: "msd", title: "Mass sheet & kinematics", panels: [["msd", {}, "xl"], ["h0", {}, "m"], ["corner", { params: ["kin_lambda_int", "lens_gamma", "kin_anisotropy_ratio", "lens_theta_E", "D_dt"] }, "l"]] },
+  { id: "multiband", title: "Multiband: bands · colours · chromatic", panels: [["mboverview", {}, "xl"], ["mbbands", {}, "xl"], ["mbchromatic", {}, "l"], ["params", {}, "m"]] },
 ];

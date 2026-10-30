@@ -1,6 +1,6 @@
 // A loaded ALPACA run: feature detection + lazy, cached access to every product.
 import { findCatalog, findKeyFiles } from "./files.js";
-import { decryptOffsets, isEncryptedBlob, unblindValue } from "./blinding.js";
+import { decryptOffsets, decryptJson, isEncryptedBlob, unblindValue } from "./blinding.js";
 import { summarize } from "./stats.js";
 import { H0FromDdt } from "../physics/cosmology.js";
 import { keyStore, catalogStore } from "./prefs.js";
@@ -14,6 +14,8 @@ const kinCall = (...a) => (kinWorker ||= new WorkerClient()).call(...a);
 const KIN_COLUMNS = /^(lens_theta_E|lens_gamma|log_light_amp_L[23]?|light_(Re|n|e1|e2)_L[23]?|kin_(anisotropy_ratio|lambda_int|inner_dgamma))$/;
 
 const STAGE_LABELS = { shapelets: "Shapelets multistart", lens_light_refit: "Lens-light refit", cf_joint: "Joint CF + PSF", cf_warmstart: "CF warm-start" };
+// npz entry holding the blinded MAP values sealed with the run's key (alpaca.pipeline.staged._SEALED_NPZ_KEY)
+export const SEALED_NPZ_KEY = "__sealed_blinded__";
 
 function parseParamSummary(txt) {
   const rows = [];
@@ -62,7 +64,7 @@ export function paramGroup(name) {
   if (/^(log_)?light_.*_L\d?$/.test(name) || /^log_mge/.test(name)) return "Lens light";
   if (/_S$/.test(name) || /^source_|^shapelets/.test(name)) return "Source light";
   if (/^(x_image|y_image|log_ps_amp|ps_amp)/.test(name)) return "Point sources";
-  if (/^offset_[xy]_image/.test(name)) return "Astrometric offsets";
+  if (/^offset_[xy]_image/.test(name) || /^frame_d[xy]$/.test(name)) return "Astrometric offsets";
   if (/^pert\d+_/.test(name)) return "Perturbers";
   if (/^psf_/.test(name)) return "PSF";
   if (/^kin_|^lambda_int$/.test(name)) return "Kinematics & mass sheet";
@@ -324,9 +326,12 @@ export class Run {
       if (fullPath && this.has(fullPath)) {
         const z = await this.npz(fullPath);
         for (const [k, v] of Object.entries(z)) {
+          if (k === SEALED_NPZ_KEY) continue;
           if (v.shape.length === 0 || (v.shape.length === 1 && v.shape[0] === 1)) params[k] = Number(v.data[0]);
           else params[k] = v; // arrays kept as {shape,data}
         }
+        // ALPACA >= 0.6.0 seals the blinded entries with the run's key: open them in memory when the key is loaded
+        if (z[SEALED_NPZ_KEY]) Object.assign(params, await this.openSealed(z[SEALED_NPZ_KEY]));
         full = true;
       } else if (jsonName) {
         const j = await this.json(`${dir}/${jsonName}.json`, {});
@@ -340,6 +345,20 @@ export class Run {
       const blindedKeys = (this.blinding?.blinded_columns || []).filter((k) => k in params);
       return { params, source, full, blindedKeys, stage: stageKey, dir };
     });
+  }
+
+  // True values of the blinded entries sealed in a *_full.npz sidecar ("__sealed_blinded__", alpaca-blinding-v1, the
+  // run's key): { name: number | {shape, data} }, or {} without the key (callers then find them missing).
+  async openSealed(entry) {
+    let blob;
+    try { blob = JSON.parse(String(entry.data[0])); } catch (e) { return {}; }
+    if (!isEncryptedBlob(blob) || !this._passphrase) return {};
+    try {
+      const vals = await decryptJson(blob, this._passphrase);
+      const out = {};
+      for (const [k, v] of Object.entries(vals)) out[k] = Array.isArray(v) ? { shape: [v.length], data: v.flat(Infinity) } : Number(v);
+      return out;
+    } catch (e) { console.warn("sealed MAP entries: wrong key", e); return {}; }
   }
 
   // Full posterior (parsed in the worker). Columns are the stored (possibly blinded) values.
@@ -458,6 +477,7 @@ export class Run {
     this.offsets = r.offsets;
     this.offsetsMode = r.mode;
     this._passphrase = key.trim(); // memory only: unseals the run's other posterior sets
+    for (const k of [...this._cache.keys()]) if (k.startsWith("bestfit:")) this._cache.delete(k); // sealed MAP entries open now
     return r;
   }
 

@@ -27,6 +27,13 @@ export function isEncryptedBlob(data) {
 }
 
 export async function decryptOffsets(blob, passphrase) {
+  const payload = await decryptJson(blob, passphrase);
+  return { offsets: payload.offsets, mode: payload.mode, reference: payload.reference || "mean" };
+}
+
+// Any JSON sealed with alpaca.utils.blinding_crypto.encrypt_json (the offsets above, or the blinded entries of a
+// MAP sidecar under "__sealed_blinded__").
+export async function decryptJson(blob, passphrase) {
   if (!passphrase) throw new Error("No blinding key provided.");
   if (blob.scheme !== "alpaca-blinding-v1") throw new Error("Unrecognised blinding scheme " + blob.scheme);
   const salt = b64d(blob.salt);
@@ -53,8 +60,7 @@ export async function decryptOffsets(blob, passphrase) {
   }
   const pt = new Uint8Array(ct.length);
   for (let i = 0; i < ct.length; i++) pt[i] = ct[i] ^ stream[i];
-  const payload = JSON.parse(new TextDecoder().decode(pt));
-  return { offsets: payload.offsets, mode: payload.mode, reference: payload.reference || "mean" };
+  return JSON.parse(new TextDecoder().decode(pt));
 }
 
 export function unblindValue(v, offset, mode) {

@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png" />
-  <style>.choices { max-width: 1120px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } .strip { max-width: 1120px; }</style>
+  <style>.choices { max-width: 1120px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } .strip { max-width: 1120px; }</style>
 </head>
 <body>
   <header class="topbar">
@@ -23,6 +23,7 @@
     <nav class="navlinks">
       <a class="btn" href="doc/tutorial.html">Tutorial</a>
       <a class="btn" href="doc/documentation.html">Documentation</a>
+      <a class="btn" href="configurator.html">Configurator</a>
       <a class="btn" href="app.html">Analysis</a>
       <a class="btn ghost" href="https://github.com/hkrizic/alpaca">GitHub</a>
     </nav>
@@ -39,9 +40,9 @@
     <a class="choice-tile" href="doc/tutorial.html">
       <span class="k">Learn by doing</span>
       <div class="t">Tutorial</div>
-      <div class="d">Two complete walkthroughs on real telescope data: the lensed quasar <b>HE0435−1223</b>
-        (JWST) and the galaxy–galaxy lens <b>COSMOS 5921+0638</b> (HST). From the raw image to a model you can
-        judge, with every figure explained.</div>
+      <div class="d">Two complete walkthroughs on real JWST data, for people new to lens modelling: the Einstein
+        ring <b>SPT0418−47</b> and the lensed quasar <b>HE0435−1223</b>. From the archive image to a posterior, with
+        every input and every figure explained.</div>
       <span class="arrow">→</span>
     </a>
     <a class="choice-tile" href="doc/documentation.html">
@@ -51,11 +52,20 @@
         option</b>, each with its default, what it does and when to change it. Searchable and filterable.</div>
       <span class="arrow">→</span>
     </a>
+    <a class="choice-tile" href="configurator.html">
+      <span class="k">Set it up</span>
+      <div class="t">Configurator</div>
+      <div class="d">Build your <b>config.json</b> with switches and sliders, starting from a quasar or a galaxy–galaxy
+        preset. Open your FITS file, click the lens, size the cutout and draw the masks with circles, then take
+        the config, the run-script lines and the input files home.</div>
+      <span class="arrow">→</span>
+    </a>
     <a class="choice-tile" href="app.html">
       <span class="k">Explore a run</span>
       <div class="t">Analysis</div>
       <div class="d">Open or drop an ALPACA run folder in the browser: parameter tables, corner plots, image,
-        model and residual viewers, lensing maps and H<sub>0</sub>. Compare two runs side by side. Nothing
+        model and residual viewers, lensing maps and H<sub>0</sub>. Compare two runs side by side. Multiband
+        runs open as one run with a band switch, colour composites and chromatic flux ratios. Nothing
         is uploaded; everything stays on your machine.</div>
       <span class="arrow">→</span>
     </a>

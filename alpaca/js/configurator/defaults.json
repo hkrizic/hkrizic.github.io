@@ -1,0 +1,5673 @@
+{
+ "alpaca_version": "0.6.0",
+ "generated": "2026-10-30",
+ "shipped": {
+  "run": {
+   "output_dir": "run/",
+   "random_seed": 42,
+   "verbose": true,
+   "multistart": true,
+   "sampling": true,
+   "resume_from_previous": false,
+   "resume_multistart_path": null
+  },
+  "data": {
+   "pix_scale": 0.031228698402951588,
+   "source_oversample": 3,
+   "likelihood_mask_path": "data/mask_likelihood.fits",
+   "ps_min_sep": null,
+   "ps_lens_mask_radius": 0.35,
+   "ps_min_peak_frac": 0.15,
+   "lens_center_search_radius": 0.35,
+   "cutout_size": 219,
+   "n_ps_detect": null
+  },
+  "mass": {
+   "main": {
+    "profile": "EPL+Shear",
+    "multipoles": {
+     "orders": [],
+     "sigma": null,
+     "sigma_default": 0.02,
+     "r_ref_m1": 1.0,
+     "elliptical": false
+    },
+    "bpl": {
+     "gamma_in": {
+      "loc": 2.0,
+      "scale": 0.3,
+      "low": 1.3,
+      "high": 2.7
+     },
+     "gamma_out": {
+      "loc": 2.0,
+      "scale": 0.3,
+      "low": 1.3,
+      "high": 2.7
+     },
+     "r_break_frac": [
+      0.5,
+      2.0
+     ]
+    },
+    "theta_E_prior": null
+   },
+   "perturbers": {
+    "path": "data/perturbers.json",
+    "mode": "auto",
+    "z_tolerance": 0.01,
+    "min_flexion_shift_arcsec": null,
+    "include_ids": null,
+    "exclude_ids": null,
+    "priors": {
+     "theta_E_max_factor": 3.0,
+     "position_sigma_arcsec": 0.3,
+     "fix_positions": true
+    },
+    "cosmology": {
+     "H0_fid": 70.0,
+     "Om0": 0.3
+    }
+   }
+  },
+  "light": {
+   "lens": {
+    "initial": "double-sersic",
+    "refit": {
+     "enabled": true,
+     "ps_treatment": "mask",
+     "ps_downweight_radius": 0.5,
+     "sky_anchor": null,
+     "mask_path": "data/mask_lens_only.fits",
+     "profile": "triple-sersic",
+     "simple_source": "stage1",
+     "uncouple_ellipticities": false,
+     "ellipticity_twist_sigma": 10.0,
+     "uncouple_centers": false,
+     "mge_n_components": null,
+     "adam_steps": 3000,
+     "ps_sigma_clip": null,
+     "ps_sigma_clip_iters": 3,
+     "smooth_bounds": false,
+     "n_sersic_min": 0.2,
+     "n_sersic_max": 8.0,
+     "init_cf_joint": true,
+     "mask_arc": true
+    },
+    "couple_sersic_ellipticities": true,
+    "mge": {
+     "n_components": 20,
+     "sigma_min": 0.03,
+     "sigma_max": 2.5
+    },
+    "couple_sersic_centers": true
+   },
+   "sky_background": true,
+   "point_sources": {
+    "enabled": true,
+    "fft_rendering": false
+   },
+   "sky_psf": "unconvolved"
+  },
+  "stages": {
+   "gd": {
+    "source": {
+     "type": "shapelets",
+     "n_max": 16
+    },
+    "optimizer": {
+     "adam": {
+      "steps": 1000,
+      "lr": 0.003,
+      "warmup_fraction": 0.1,
+      "grad_clip": 10.0,
+      "cosine_decay": true
+     },
+     "lbfgs": {
+      "maxiter": 1200,
+      "tol": 1e-05,
+      "impl": "optax"
+     },
+     "anneal": {
+      "mode": "discrete",
+      "levels": [
+       16,
+       8,
+       4,
+       2,
+       1
+      ],
+      "adam_steps": 400,
+      "lbfgs_maxiter": 400,
+      "ramp": true
+     },
+     "halving": {
+      "keep": [
+       32,
+       16,
+       8,
+       4,
+       2
+      ]
+     },
+     "refine": {
+      "top": 1,
+      "perturbations_per_top": 1,
+      "perturbation_scale": 0.1,
+      "adam_steps": 2600,
+      "lbfgs_maxiter": 3000
+     },
+     "mean_init": {
+      "enabled": true,
+      "sigma": 0.1,
+      "fraction": 0.8
+     },
+     "retry": {
+      "max_iterations": 1,
+      "chi2_red_threshold": 2.0
+     },
+     "save_phase_results": true
+    }
+   },
+   "cf_warmstart": {
+    "enabled": true,
+    "adam_steps": 8000,
+    "adam_lr": 0.001,
+    "patience": 400
+   },
+   "cf_joint": {
+    "enabled": true,
+    "lens_light": "free",
+    "source": {
+     "type": "corr_field",
+     "num_pixels": 128,
+     "mean_intensity": null,
+     "offset_std": [
+      0.1,
+      0.001
+     ],
+     "loglogavgslope": [
+      -3.5,
+      0.1
+     ],
+     "fluctuations": [
+      1.0,
+      0.5
+     ],
+     "flexibility": null,
+     "asperity": null,
+     "cropped_border_size": 20,
+     "exponentiate": true,
+     "interpolation_type": "fast_bilinear",
+     "adaptive_grid": true,
+     "arc_mask": {
+      "mode": "auto",
+      "inner_radius": "auto",
+      "outer_radius": 2.8,
+      "custom_path": null,
+      "signal_threshold": 3.0,
+      "signal_dilate_pix": 3,
+      "signal_inner_factor": 0.0,
+      "signal_min_area": 50
+     },
+     "source_grid_scale": 0.5
+    },
+    "adam_steps": 12000,
+    "adam_lr": 0.001,
+    "lbfgs_maxiter": 0,
+    "prior": "seed",
+    "convergence": {
+     "enabled": false,
+     "window": 4000,
+     "abs_tol": 1.0,
+     "rel_tol": 0.0,
+     "min_steps": 0
+    }
+   }
+  },
+  "psf": {
+   "mode": "joint",
+   "input": {
+    "oversample": 3,
+    "error_map_path": "data/psf_error_map.fits"
+   },
+   "iterative": {
+    "n_iterations": 2,
+    "n_starts_per_iteration": 20,
+    "starred_oversample": null,
+    "cutout_size_pix": "auto",
+    "parallelized": true,
+    "rotation_mode": "none",
+    "negative_sigma_clip": 2.0,
+    "masking": {
+     "mask_other_peaks": true,
+     "radius_pix": 8,
+     "smoothing": "cosine",
+     "smoothing_width_pix": 4.0
+    },
+    "error_map_during_recon": {
+     "enabled": false,
+     "b_max": null
+    }
+   },
+   "joint": {
+    "seed_path": "data/psf_starred_seed.npz",
+    "free": [
+     "moffat",
+     "background"
+    ],
+    "oversample": null,
+    "supersampled": true,
+    "convolution_method": "fft",
+    "priors": {
+     "moffat_rel_sigma": 0.1,
+     "moffat_phi_sigma": 0.1,
+     "background": {
+      "type": "error_map",
+      "rel": 3.5,
+      "floor": 1e-08,
+      "sigma": null,
+      "error_map_alpha": 1.0,
+      "space": "kernel",
+      "noncentered": true
+     }
+    },
+    "regularization": {
+     "lambda_scales": 3.0,
+     "lambda_hf": 3.0,
+     "lambda_positivity": 1000000.0
+    }
+   }
+  },
+  "likelihood": {
+   "use_time_delays": true,
+   "use_rayshoot_consistency": true,
+   "rayshoot_sigma": 0.001,
+   "rayshoot_against_source_pos": true,
+   "use_rayshoot_sys_error": false,
+   "rayshoot_sys_error_range": [
+    5e-05,
+    0.005
+   ],
+   "use_image_pos_offsets": false,
+   "image_pos_offset_sigma": null,
+   "noise_model": {
+    "noise_boost": false,
+    "noise_boost_kwargs": {
+     "f_max": 1.0,
+     "radius": null,
+     "frac_min_sep": 0.4,
+     "min_npix": 2.5,
+     "max_npix": 6.0
+    },
+    "use_psf_error_map": true,
+    "psf_error_b_max": 0.3,
+    "psf_error_b_mode": "post_gd_free"
+   },
+   "astrometry_mode": "image_plane",
+   "sigma_ast": 0.005,
+   "td_common_source": true,
+   "use_kinematics": false,
+   "time_delays": {
+    "convention": "t_X - t_Y",
+    "delays": {
+     "AB": [
+      -9.0,
+      0.8
+     ],
+     "AC": [
+      -0.8,
+      0.7
+     ],
+     "AD": [
+      -13.8,
+      0.8
+     ]
+    },
+    "covariance": "independent"
+   },
+   "D_dt_prior": {
+    "type": "uniform",
+    "low": 500.0,
+    "high": 10000.0
+   },
+   "kappa_ext_prior": {
+    "mean": 0.0,
+    "sigma": 0.0
+   }
+  },
+  "sampling": {
+   "sampler": "nifty",
+   "nifty": {
+    "mode": "nuts_only",
+    "vi": {
+     "algorithm": "geoVI",
+     "n_iterations": 25,
+     "n_samples_per_iteration": 8,
+     "init_spread": 0.1,
+     "quick_run": false,
+     "cg_maxiter": 100,
+     "n_resample": 500,
+     "resample_batch_size": 16,
+     "use_multi_gpu": false
+    },
+    "nuts": {
+     "n_warmup": 600,
+     "n_samples": 1000,
+     "n_chains": 2,
+     "target_accept": 0.95,
+     "max_tree_depth": 11,
+     "mass_matrix": "adaptive_diag",
+     "dense_block_names": null,
+     "init_perturbation": 0.001,
+     "chain_method": "auto"
+    },
+    "warmstart": {
+     "polish": "lbfgs",
+     "maxiter": 3000,
+     "gtol": 1.0
+    }
+   },
+   "n_posterior_samples_final": 5000,
+   "marginalize_psf": false,
+   "marginalize_psf_background": false,
+   "marginalize_psf_background_fwhm_box": 80.0,
+   "nuts": {
+    "n_warmup": 3000,
+    "n_samples": 5000,
+    "n_chains": null,
+    "target_accept": 0.8
+   },
+   "nautilus": {
+    "n_live": 1000,
+    "use_jax": true,
+    "use_multi_device": true,
+    "batch_per_device": 64,
+    "uniform_priors": true
+   }
+  },
+  "plotting": {
+   "save_plots": true,
+   "plot_format": "png",
+   "dpi": 300,
+   "plot_psf": true,
+   "plot_model_summary": true,
+   "plot_model_summary_extended": true,
+   "plot_residuals": true,
+   "plot_corner": true,
+   "plot_chains": true,
+   "plot_posterior_draws": true,
+   "n_posterior_draws_to_plot": 3,
+   "corner_params": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "max_corner_params": 10,
+   "save_priors": true
+  },
+  "blinding": {
+   "enabled": true,
+   "mode": "absolute",
+   "reference": "mean",
+   "scenario": "previously_analyzed",
+   "parameters": null,
+   "blind_stored_samples": true
+  }
+ },
+ "dataclass": {
+  "run": {
+   "output_dir": "pipeline_output",
+   "random_seed": 42,
+   "verbose": true,
+   "multistart": true,
+   "sampling": true,
+   "resume_from_previous": false,
+   "resume_multistart_path": null
+  },
+  "data": {
+   "pix_scale": 0.031,
+   "source_oversample": 3,
+   "likelihood_mask_path": null,
+   "cutout_size": null,
+   "ps_min_sep": 0.062,
+   "ps_lens_mask_radius": 0.35,
+   "ps_min_peak_frac": 0.15,
+   "lens_center_search_radius": 0.35,
+   "n_ps_detect": null
+  },
+  "mass": {
+   "main": {
+    "profile": "epl",
+    "multipoles": {
+     "orders": [],
+     "sigma": null,
+     "sigma_default": 0.02,
+     "r_ref_m1": 1.0,
+     "elliptical": false
+    },
+    "bpl": {
+     "gamma_in": {
+      "loc": 2.0,
+      "scale": 0.3,
+      "low": 1.3,
+      "high": 2.7
+     },
+     "gamma_out": {
+      "loc": 2.0,
+      "scale": 0.3,
+      "low": 1.3,
+      "high": 2.7
+     },
+     "r_break_frac": [
+      0.5,
+      2.0
+     ],
+     "n_quad": 24,
+     "n_quad_potential": 28,
+     "deflection": "series",
+     "n_series": 40
+    },
+    "flexion": {
+     "enabled": false,
+     "sigma": 0.05,
+     "max": 0.5
+    },
+    "center_sigma": null
+   },
+   "perturbers": {
+    "path": null,
+    "mode": "auto",
+    "z_tolerance": 0.01,
+    "min_flexion_shift_arcsec": null,
+    "include_ids": null,
+    "exclude_ids": null,
+    "priors": {
+     "theta_E_max_factor": 3.0,
+     "position_sigma_arcsec": 0.3,
+     "fix_positions": true
+    },
+    "cosmology": {
+     "H0_fid": 70.0,
+     "Om0": 0.3
+    }
+   }
+  },
+  "light": {
+   "lens": {
+    "initial": "sersic",
+    "refit": {
+     "enabled": false,
+     "mge_n_components": null,
+     "adam_steps": 3000,
+     "ps_treatment": "downweight",
+     "ps_downweight_radius": 0.3,
+     "ps_mask": false,
+     "ps_sigma_clip": null,
+     "ps_sigma_clip_iters": 3,
+     "ps_sigma_clip_grow": 1,
+     "ps_sigma_clip_within": "all",
+     "smooth_bounds": false,
+     "n_sersic_min": 0.2,
+     "n_sersic_max": 8.0,
+     "distinct_n_init": null,
+     "mask_arc": true,
+     "arc_mask_inner_radius": null,
+     "arc_mask_outer_radius": null,
+     "sky_anchor": null,
+     "freeze_foreground_perts": true,
+     "init_cf_joint": true,
+     "mask_path": null,
+     "uncouple_ellipticities": false,
+     "ellipticity_max": null,
+     "ellipticity_twist_sigma": 0.05,
+     "uncouple_centers": false,
+     "center_shift_sigma": 0.05,
+     "simple_source": "cf",
+     "profile": "same"
+    },
+    "couple_sersic_ellipticities": false,
+    "mge": {
+     "n_components": 8,
+     "sigma_min": 0.03,
+     "sigma_max": 2.5
+    }
+   },
+   "sky_background": false,
+   "point_sources": {
+    "enabled": true,
+    "fft_rendering": false
+   }
+  },
+  "stages": {
+   "gd": {
+    "source": {
+     "type": "shapelets",
+     "n_max": 16
+    },
+    "optimizer": {
+     "starts": 32,
+     "adam": {
+      "steps": 1000,
+      "lr": 0.003,
+      "warmup_fraction": 0.1,
+      "grad_clip": 10.0,
+      "cosine_decay": true
+     },
+     "lbfgs": {
+      "maxiter": 1200,
+      "tol": 1e-05
+     },
+     "anneal": {
+      "levels": [
+       16.0,
+       8.0,
+       4.0,
+       2.0,
+       1.0
+      ],
+      "adam_steps": 400,
+      "lbfgs_maxiter": 400
+     },
+     "refine": {
+      "top": 5,
+      "perturbations_per_top": 1,
+      "perturbation_scale": 0.1,
+      "adam_steps": 1800,
+      "lbfgs_maxiter": 2200
+     },
+     "mean_init": {
+      "enabled": true,
+      "sigma": 0.1,
+      "fraction": 0.8
+     },
+     "retry": {
+      "max_iterations": 1,
+      "chi2_red_threshold": 2.0
+     },
+     "save_phase_results": true,
+     "vmap_chunk_sizes": [
+      5,
+      2,
+      1
+     ]
+    }
+   },
+   "cf_warmstart": {
+    "enabled": true,
+    "adam_steps": 5000,
+    "adam_lr": 0.001,
+    "patience": 200
+   },
+   "cf_joint": {
+    "enabled": true,
+    "lens_light": "free",
+    "source": {
+     "type": "corr_field",
+     "num_pixels": 80,
+     "mean_intensity": null,
+     "offset_std": [
+      0.5,
+      0.001
+     ],
+     "loglogavgslope": [
+      -3.0,
+      1.5
+     ],
+     "fluctuations": [
+      1.5,
+      1.0
+     ],
+     "flexibility": null,
+     "asperity": null,
+     "cropped_border_size": 20,
+     "exponentiate": true,
+     "interpolation_type": "fast_bilinear",
+     "adaptive_grid": true,
+     "source_grid_scale": 1.0,
+     "clip_source_to_arc_mask": false,
+     "arc_mask": {
+      "mode": "auto",
+      "inner_radius": 0.0,
+      "outer_radius": "auto",
+      "custom_path": null,
+      "signal_threshold": 3.0,
+      "signal_dilate_pix": 3,
+      "signal_inner_factor": 0.0,
+      "signal_min_area": 50
+     }
+    },
+    "adam_steps": 4000,
+    "adam_lr": 0.001,
+    "lbfgs_maxiter": 0,
+    "prior": "seed"
+   }
+  },
+  "psf": {
+   "mode": "joint",
+   "input": {
+    "oversample": 3,
+    "error_map_path": null,
+    "error_map_resampling": "none"
+   },
+   "iterative": {
+    "n_iterations": 2,
+    "n_starts_per_iteration": 20,
+    "starred_oversample": 3,
+    "cutout_size_pix": "auto",
+    "parallelized": true,
+    "rotation_mode": "none",
+    "negative_sigma_clip": 2.0,
+    "masking": {
+     "mask_other_peaks": true,
+     "radius_pix": 8,
+     "smoothing": "cosine",
+     "smoothing_width_pix": 4.0
+    },
+    "error_map_during_recon": {
+     "enabled": false,
+     "b_max": null
+    }
+   },
+   "joint": {
+    "seed_path": null,
+    "free": [
+     "moffat",
+     "background"
+    ],
+    "oversample": 3,
+    "supersampled": true,
+    "convolution_method": "fft",
+    "priors": {
+     "moffat_rel_sigma": 0.1,
+     "moffat_phi_sigma": 0.1,
+     "background": {
+      "type": "error_map",
+      "rel": 3.5,
+      "floor": 1e-08,
+      "sigma": null,
+      "error_map_alpha": 1.0,
+      "space": "kernel",
+      "noncentered": true
+     }
+    },
+    "regularization": {
+     "lambda_scales": 3.0,
+     "lambda_hf": 3.0,
+     "lambda_positivity": 1000000.0
+    }
+   }
+  },
+  "likelihood": {
+   "use_time_delays": true,
+   "time_delays": null,
+   "use_rayshoot_consistency": true,
+   "rayshoot_sigma": 0.001,
+   "rayshoot_against_source_pos": true,
+   "use_rayshoot_sys_error": false,
+   "rayshoot_sys_error_range": [
+    5e-05,
+    0.005
+   ],
+   "use_image_pos_offsets": false,
+   "image_pos_offset_sigma": 0.01,
+   "noise_model": {
+    "noise_boost": false,
+    "noise_boost_kwargs": {
+     "f_max": 1.0,
+     "radius": null,
+     "frac_min_sep": 0.4,
+     "min_npix": 2.5,
+     "max_npix": 6.0
+    },
+    "use_psf_error_map": false,
+    "psf_error_b_max": 0.1,
+    "psf_error_b_mode": "post_gd_free",
+    "psf_error_exponent": 1.0
+   },
+   "astrometry_mode": "image_plane",
+   "sigma_ast": 0.005,
+   "td_common_source": true,
+   "use_kinematics": false,
+   "kinematics": {
+    "observed_sigma": 220.1,
+    "sigma_error": 4.2,
+    "aperture_kind": "square",
+    "aperture_width": 0.55,
+    "aperture_height": null,
+    "aperture_radius": 0.275,
+    "psf_sigma": [
+     0.05
+    ],
+    "psf_weight": [
+     1.0
+    ],
+    "distance_mpc": 1200.0,
+    "ds_over_dds": null,
+    "anisotropy_ratio_range": [
+     0.93,
+     1.06
+    ],
+    "anisotropy_ratio_fixed": null,
+    "kappa_ext": 0.0,
+    "kappa_ext_sigma": 0.0,
+    "sample_lambda_int": true,
+    "lambda_int_range": [
+     0.5,
+     1.5
+    ],
+    "lambda_int": 1.0,
+    "light_radius_convention": "major_axis",
+    "multipole_mode": "reject",
+    "radial_min": 1e-09,
+    "radial_max": 1000.0,
+    "radial_intervals": 256,
+    "angular_nodes": 128,
+    "abel_nodes": 64,
+    "mode": "aperture",
+    "ifu_file": null,
+    "sample_center_offset": true,
+    "center_offset_sigma": 0.05,
+    "center_offset_max": 0.15,
+    "psf_crop_radius": 1.5,
+    "resolved_sub_sampling": 3,
+    "resolved_radial_nodes": 96,
+    "resolved_los_nodes": 128,
+    "importance_sample": false,
+    "importance_ratio_nodes": 16,
+    "importance_lambda_nodes": 128,
+    "importance_offset_nodes": 7,
+    "dynamics": "spherical",
+    "frame_pa_x_deg": null,
+    "frame_parity": 1,
+    "importance_inclination_nodes": 8,
+    "axi_outer_radius": 200.0,
+    "axi_radial_nodes": 64,
+    "axi_angular_nodes": 10,
+    "axi_char_nodes": 40,
+    "axi_los_nodes": 64,
+    "axi_table_nodes": 192,
+    "axi_force_table": 64,
+    "axi_force_seg": 16,
+    "axi_abel_nodes": 64,
+    "axi_derivative": "analytic",
+    "axi_interp": "auto",
+    "axi_subsample_radius": 0.5,
+    "axi_angular_map": true,
+    "axi_center_radius": 0.2,
+    "axi_center_subsampling": 12,
+    "axi_polar_rmin": 0.0005,
+    "axi_polar_radial": 48,
+    "axi_polar_angular": 11,
+    "axi_precision": "float64",
+    "anisotropy_model": "constant",
+    "a_ani_range": [
+     0.1,
+     5.0
+    ],
+    "beta_inf_range": [
+     0.0,
+     0.95
+    ],
+    "importance_a_ani_nodes": 24,
+    "importance_beta_inf_nodes": 8,
+    "covariance_scale": 1.0,
+    "exclude_bins": [],
+    "dynamics_gamma_offset": 0.0,
+    "dynamics_inner_break": [],
+    "inner_dgamma_range": [],
+    "tracer_exclude": [],
+    "inner_break_radius": 0.5,
+    "importance_inner_nodes": 9,
+    "importance_error_scales": []
+   },
+   "D_dt_prior": {
+    "type": "uniform",
+    "low": 500.0,
+    "high": 10000.0
+   },
+   "kappa_ext_prior": {
+    "mean": 0.0,
+    "sigma": 0.0
+   }
+  },
+  "sampling": {
+   "sampler": "nifty",
+   "n_posterior_samples_final": 5000,
+   "marginalize_psf": true,
+   "marginalize_psf_background": true,
+   "marginalize_psf_background_fwhm_box": 6.0,
+   "nuts": {
+    "n_warmup": 3000,
+    "n_samples": 5000,
+    "n_chains": null,
+    "target_accept": 0.8
+   },
+   "nautilus": {
+    "n_live": 1000,
+    "use_jax": true,
+    "use_multi_device": true,
+    "batch_per_device": 64,
+    "uniform_priors": true
+   },
+   "nifty": {
+    "mode": "nuts_only",
+    "vi": {
+     "algorithm": "geoVI",
+     "n_iterations": 25,
+     "n_samples_per_iteration": 8,
+     "init_spread": 0.1,
+     "quick_run": false,
+     "cg_maxiter": 100,
+     "n_resample": 500,
+     "resample_batch_size": 16,
+     "use_multi_gpu": true
+    },
+    "nuts": {
+     "n_warmup": 3000,
+     "n_samples": 6000,
+     "n_chains": null,
+     "target_accept": 0.8,
+     "max_tree_depth": 10,
+     "mass_matrix": "adaptive_diag",
+     "dense_block_names": null,
+     "init_perturbation": 0.001,
+     "chain_method": "auto"
+    },
+    "warmstart": {
+     "polish": "lbfgs",
+     "maxiter": 3000,
+     "gtol": 1.0,
+     "stop_after": false
+    }
+   }
+  },
+  "plotting": {
+   "save_plots": true,
+   "plot_format": "png",
+   "dpi": 300,
+   "plot_psf": true,
+   "plot_model_summary": true,
+   "plot_model_summary_extended": true,
+   "plot_residuals": true,
+   "plot_corner": true,
+   "plot_chains": true,
+   "plot_posterior_draws": true,
+   "n_posterior_draws_to_plot": 3,
+   "corner_params": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "max_corner_params": 10,
+   "save_priors": true
+  },
+  "blinding": {
+   "enabled": false,
+   "mode": "absolute",
+   "reference": "mean",
+   "scenario": "previously_analyzed",
+   "parameters": null,
+   "blind_stored_samples": true,
+   "encrypt": true,
+   "key": null,
+   "key_env_var": "ALPACA_BLINDING_KEY",
+   "write_key_file": true
+  }
+ },
+ "knobs": [
+  {
+   "key": "run.output_dir",
+   "section": "run",
+   "shipped": "run/",
+   "in_shipped": true,
+   "default": "pipeline_output",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false
+  },
+  {
+   "key": "run.random_seed",
+   "section": "run",
+   "shipped": 42,
+   "in_shipped": true,
+   "default": 42,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "run.verbose",
+   "section": "run",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "run.multistart",
+   "section": "run",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "run.sampling",
+   "section": "run",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "run.resume_from_previous",
+   "section": "run",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "run.resume_multistart_path",
+   "section": "run",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "data.pix_scale",
+   "section": "data",
+   "shipped": 0.031228698402951588,
+   "in_shipped": true,
+   "default": 0.031,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "data.source_oversample",
+   "section": "data",
+   "shipped": 3,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "data.likelihood_mask_path",
+   "section": "data",
+   "shipped": "data/mask_likelihood.fits",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "data.ps_min_sep",
+   "section": "data",
+   "shipped": null,
+   "in_shipped": true,
+   "default": 0.062,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "data.ps_lens_mask_radius",
+   "section": "data",
+   "shipped": 0.35,
+   "in_shipped": true,
+   "default": 0.35,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "data.ps_min_peak_frac",
+   "section": "data",
+   "shipped": 0.15,
+   "in_shipped": true,
+   "default": 0.15,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "data.lens_center_search_radius",
+   "section": "data",
+   "shipped": 0.35,
+   "in_shipped": true,
+   "default": 0.35,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "data.cutout_size",
+   "section": "data",
+   "shipped": 219,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "data.n_ps_detect",
+   "section": "data",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.profile",
+   "section": "mass",
+   "shipped": "EPL+Shear",
+   "in_shipped": true,
+   "default": "epl",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "EPL+Shear",
+    "BPL+Shear"
+   ]
+  },
+  {
+   "key": "mass.main.multipoles.orders",
+   "section": "mass",
+   "shipped": [],
+   "in_shipped": true,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.multipoles.sigma",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.multipoles.sigma_default",
+   "section": "mass",
+   "shipped": 0.02,
+   "in_shipped": true,
+   "default": 0.02,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.multipoles.r_ref_m1",
+   "section": "mass",
+   "shipped": 1.0,
+   "in_shipped": true,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.multipoles.elliptical",
+   "section": "mass",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.loc",
+   "section": "mass",
+   "shipped": 2.0,
+   "in_shipped": true,
+   "default": 2.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.scale",
+   "section": "mass",
+   "shipped": 0.3,
+   "in_shipped": true,
+   "default": 0.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.low",
+   "section": "mass",
+   "shipped": 1.3,
+   "in_shipped": true,
+   "default": 1.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_in.high",
+   "section": "mass",
+   "shipped": 2.7,
+   "in_shipped": true,
+   "default": 2.7,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.loc",
+   "section": "mass",
+   "shipped": 2.0,
+   "in_shipped": true,
+   "default": 2.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.scale",
+   "section": "mass",
+   "shipped": 0.3,
+   "in_shipped": true,
+   "default": 0.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.low",
+   "section": "mass",
+   "shipped": 1.3,
+   "in_shipped": true,
+   "default": 1.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.gamma_out.high",
+   "section": "mass",
+   "shipped": 2.7,
+   "in_shipped": true,
+   "default": 2.7,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.r_break_frac",
+   "section": "mass",
+   "shipped": [
+    0.5,
+    2.0
+   ],
+   "in_shipped": true,
+   "default": [
+    0.5,
+    2.0
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false,
+   "elem_type": "float"
+  },
+  {
+   "key": "mass.main.theta_E_prior",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "json",
+   "nullable": true
+  },
+  {
+   "key": "mass.perturbers.path",
+   "section": "mass",
+   "shipped": "data/perturbers.json",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "mass.perturbers.mode",
+   "section": "mass",
+   "shipped": "auto",
+   "in_shipped": true,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "auto",
+    "single_plane"
+   ]
+  },
+  {
+   "key": "mass.perturbers.z_tolerance",
+   "section": "mass",
+   "shipped": 0.01,
+   "in_shipped": true,
+   "default": 0.01,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.perturbers.min_flexion_shift_arcsec",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "mass.perturbers.include_ids",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "mass.perturbers.exclude_ids",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "mass.perturbers.priors.theta_E_max_factor",
+   "section": "mass",
+   "shipped": 3.0,
+   "in_shipped": true,
+   "default": 3.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.perturbers.priors.position_sigma_arcsec",
+   "section": "mass",
+   "shipped": 0.3,
+   "in_shipped": true,
+   "default": 0.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.perturbers.priors.fix_positions",
+   "section": "mass",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "mass.perturbers.cosmology.H0_fid",
+   "section": "mass",
+   "shipped": 70.0,
+   "in_shipped": true,
+   "default": 70.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "mass.perturbers.cosmology.Om0",
+   "section": "mass",
+   "shipped": 0.3,
+   "in_shipped": true,
+   "default": 0.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.initial",
+   "section": "light",
+   "shipped": "double-sersic",
+   "in_shipped": true,
+   "default": "sersic",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "sersic",
+    "double-sersic",
+    "triple-sersic",
+    "MGE",
+    "MGE+double-sersic",
+    "MGE+triple-sersic"
+   ]
+  },
+  {
+   "key": "light.lens.refit.enabled",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.ps_treatment",
+   "section": "light",
+   "shipped": "mask",
+   "in_shipped": true,
+   "default": "downweight",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "downweight",
+    "mask",
+    "sigma_clip"
+   ]
+  },
+  {
+   "key": "light.lens.refit.ps_downweight_radius",
+   "section": "light",
+   "shipped": 0.5,
+   "in_shipped": true,
+   "default": 0.3,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.sky_anchor",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.mask_path",
+   "section": "light",
+   "shipped": "data/mask_lens_only.fits",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.profile",
+   "section": "light",
+   "shipped": "triple-sersic",
+   "in_shipped": true,
+   "default": "same",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "same",
+    "sersic",
+    "double-sersic",
+    "triple-sersic",
+    "MGE",
+    "MGE+double-sersic",
+    "MGE+triple-sersic"
+   ]
+  },
+  {
+   "key": "light.lens.refit.simple_source",
+   "section": "light",
+   "shipped": "stage1",
+   "in_shipped": true,
+   "default": "cf",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "cf",
+    "stage1"
+   ]
+  },
+  {
+   "key": "light.lens.refit.uncouple_ellipticities",
+   "section": "light",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.ellipticity_twist_sigma",
+   "section": "light",
+   "shipped": 10.0,
+   "in_shipped": true,
+   "default": 0.05,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.uncouple_centers",
+   "section": "light",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.mge_n_components",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.adam_steps",
+   "section": "light",
+   "shipped": 3000,
+   "in_shipped": true,
+   "default": 3000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_iters",
+   "section": "light",
+   "shipped": 3,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.smooth_bounds",
+   "section": "light",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.n_sersic_min",
+   "section": "light",
+   "shipped": 0.2,
+   "in_shipped": true,
+   "default": 0.2,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.n_sersic_max",
+   "section": "light",
+   "shipped": 8.0,
+   "in_shipped": true,
+   "default": 8.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.init_cf_joint",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.refit.mask_arc",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.couple_sersic_ellipticities",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.mge.n_components",
+   "section": "light",
+   "shipped": 20,
+   "in_shipped": true,
+   "default": 8,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.mge.sigma_min",
+   "section": "light",
+   "shipped": 0.03,
+   "in_shipped": true,
+   "default": 0.03,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.mge.sigma_max",
+   "section": "light",
+   "shipped": 2.5,
+   "in_shipped": true,
+   "default": 2.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "light.lens.couple_sersic_centers",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": false,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.sky_background",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.point_sources.enabled",
+   "section": "light",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.point_sources.fft_rendering",
+   "section": "light",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "light.sky_psf",
+   "section": "light",
+   "shipped": "unconvolved",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "unconvolved",
+    "convolved"
+   ]
+  },
+  {
+   "key": "stages.gd.source.type",
+   "section": "stages",
+   "shipped": "shapelets",
+   "in_shipped": true,
+   "default": "shapelets",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "shapelets",
+    "sersic",
+    "double-sersic",
+    "corr_field"
+   ]
+  },
+  {
+   "key": "stages.gd.source.n_max",
+   "section": "stages",
+   "shipped": 16,
+   "in_shipped": true,
+   "default": 16,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.adam.steps",
+   "section": "stages",
+   "shipped": 1000,
+   "in_shipped": true,
+   "default": 1000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.adam.lr",
+   "section": "stages",
+   "shipped": 0.003,
+   "in_shipped": true,
+   "default": 0.003,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.adam.warmup_fraction",
+   "section": "stages",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.adam.grad_clip",
+   "section": "stages",
+   "shipped": 10.0,
+   "in_shipped": true,
+   "default": 10.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.adam.cosine_decay",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.maxiter",
+   "section": "stages",
+   "shipped": 1200,
+   "in_shipped": true,
+   "default": 1200,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.tol",
+   "section": "stages",
+   "shipped": 1e-05,
+   "in_shipped": true,
+   "default": 1e-05,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.lbfgs.impl",
+   "section": "stages",
+   "shipped": "optax",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "optax",
+    "jaxopt"
+   ]
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.mode",
+   "section": "stages",
+   "shipped": "discrete",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "discrete",
+    "continuous",
+    "off"
+   ]
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.levels",
+   "section": "stages",
+   "shipped": [
+    16,
+    8,
+    4,
+    2,
+    1
+   ],
+   "in_shipped": true,
+   "default": [
+    16.0,
+    8.0,
+    4.0,
+    2.0,
+    1.0
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.adam_steps",
+   "section": "stages",
+   "shipped": 400,
+   "in_shipped": true,
+   "default": 400,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.lbfgs_maxiter",
+   "section": "stages",
+   "shipped": 400,
+   "in_shipped": true,
+   "default": 400,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.ramp",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.halving.keep",
+   "section": "stages",
+   "shipped": [
+    32,
+    16,
+    8,
+    4,
+    2
+   ],
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.refine.top",
+   "section": "stages",
+   "shipped": 1,
+   "in_shipped": true,
+   "default": 5,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.refine.perturbations_per_top",
+   "section": "stages",
+   "shipped": 1,
+   "in_shipped": true,
+   "default": 1,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.refine.perturbation_scale",
+   "section": "stages",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.refine.adam_steps",
+   "section": "stages",
+   "shipped": 2600,
+   "in_shipped": true,
+   "default": 1800,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.refine.lbfgs_maxiter",
+   "section": "stages",
+   "shipped": 3000,
+   "in_shipped": true,
+   "default": 2200,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.enabled",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.sigma",
+   "section": "stages",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.mean_init.fraction",
+   "section": "stages",
+   "shipped": 0.8,
+   "in_shipped": true,
+   "default": 0.8,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.retry.max_iterations",
+   "section": "stages",
+   "shipped": 1,
+   "in_shipped": true,
+   "default": 1,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.retry.chi2_red_threshold",
+   "section": "stages",
+   "shipped": 2.0,
+   "in_shipped": true,
+   "default": 2.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.gd.optimizer.save_phase_results",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_warmstart.enabled",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_warmstart.adam_steps",
+   "section": "stages",
+   "shipped": 8000,
+   "in_shipped": true,
+   "default": 5000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_warmstart.adam_lr",
+   "section": "stages",
+   "shipped": 0.001,
+   "in_shipped": true,
+   "default": 0.001,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_warmstart.patience",
+   "section": "stages",
+   "shipped": 400,
+   "in_shipped": true,
+   "default": 200,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.enabled",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.lens_light",
+   "section": "stages",
+   "shipped": "free",
+   "in_shipped": true,
+   "default": "free",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "free",
+    "fixed"
+   ]
+  },
+  {
+   "key": "stages.cf_joint.source.type",
+   "section": "stages",
+   "shipped": "corr_field",
+   "in_shipped": true,
+   "default": "corr_field",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.num_pixels",
+   "section": "stages",
+   "shipped": 128,
+   "in_shipped": true,
+   "default": 80,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.mean_intensity",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.source.offset_std",
+   "section": "stages",
+   "shipped": [
+    0.1,
+    0.001
+   ],
+   "in_shipped": true,
+   "default": [
+    0.5,
+    0.001
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false,
+   "elem_type": "float"
+  },
+  {
+   "key": "stages.cf_joint.source.loglogavgslope",
+   "section": "stages",
+   "shipped": [
+    -3.5,
+    0.1
+   ],
+   "in_shipped": true,
+   "default": [
+    -3.0,
+    1.5
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false,
+   "elem_type": "float"
+  },
+  {
+   "key": "stages.cf_joint.source.fluctuations",
+   "section": "stages",
+   "shipped": [
+    1.0,
+    0.5
+   ],
+   "in_shipped": true,
+   "default": [
+    1.5,
+    1.0
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false,
+   "elem_type": "float"
+  },
+  {
+   "key": "stages.cf_joint.source.flexibility",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.source.asperity",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.source.cropped_border_size",
+   "section": "stages",
+   "shipped": 20,
+   "in_shipped": true,
+   "default": 20,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.exponentiate",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.interpolation_type",
+   "section": "stages",
+   "shipped": "fast_bilinear",
+   "in_shipped": true,
+   "default": "fast_bilinear",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "fast_bilinear",
+    "bilinear",
+    "bicubic"
+   ]
+  },
+  {
+   "key": "stages.cf_joint.source.adaptive_grid",
+   "section": "stages",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.mode",
+   "section": "stages",
+   "shipped": "auto",
+   "in_shipped": true,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "auto",
+    "signal",
+    "custom"
+   ]
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.inner_radius",
+   "section": "stages",
+   "shipped": "auto",
+   "in_shipped": true,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.outer_radius",
+   "section": "stages",
+   "shipped": 2.8,
+   "in_shipped": true,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.custom_path",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_threshold",
+   "section": "stages",
+   "shipped": 3.0,
+   "in_shipped": true,
+   "default": 3.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_dilate_pix",
+   "section": "stages",
+   "shipped": 3,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_inner_factor",
+   "section": "stages",
+   "shipped": 0.0,
+   "in_shipped": true,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.arc_mask.signal_min_area",
+   "section": "stages",
+   "shipped": 50,
+   "in_shipped": true,
+   "default": 50,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.source.source_grid_scale",
+   "section": "stages",
+   "shipped": 0.5,
+   "in_shipped": true,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.adam_steps",
+   "section": "stages",
+   "shipped": 12000,
+   "in_shipped": true,
+   "default": 4000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.adam_lr",
+   "section": "stages",
+   "shipped": 0.001,
+   "in_shipped": true,
+   "default": 0.001,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.lbfgs_maxiter",
+   "section": "stages",
+   "shipped": 0,
+   "in_shipped": true,
+   "default": 0,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "stages.cf_joint.prior",
+   "section": "stages",
+   "shipped": "seed",
+   "in_shipped": true,
+   "default": "seed",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "seed",
+    "stage1"
+   ]
+  },
+  {
+   "key": "stages.cf_joint.convergence.enabled",
+   "section": "stages",
+   "shipped": false,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.convergence.window",
+   "section": "stages",
+   "shipped": 4000,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.convergence.abs_tol",
+   "section": "stages",
+   "shipped": 1.0,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.convergence.rel_tol",
+   "section": "stages",
+   "shipped": 0.0,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.convergence.min_steps",
+   "section": "stages",
+   "shipped": 0,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": false,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "psf.mode",
+   "section": "psf",
+   "shipped": "joint",
+   "in_shipped": true,
+   "default": "joint",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "joint",
+    "fixed",
+    "iterative"
+   ]
+  },
+  {
+   "key": "psf.input.oversample",
+   "section": "psf",
+   "shipped": 3,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "psf.input.error_map_path",
+   "section": "psf",
+   "shipped": "data/psf_error_map.fits",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "psf.iterative.n_iterations",
+   "section": "psf",
+   "shipped": 2,
+   "in_shipped": true,
+   "default": 2,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.n_starts_per_iteration",
+   "section": "psf",
+   "shipped": 20,
+   "in_shipped": true,
+   "default": 20,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.starred_oversample",
+   "section": "psf",
+   "shipped": null,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "psf.iterative.cutout_size_pix",
+   "section": "psf",
+   "shipped": "auto",
+   "in_shipped": true,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.parallelized",
+   "section": "psf",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.rotation_mode",
+   "section": "psf",
+   "shipped": "none",
+   "in_shipped": true,
+   "default": "none",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "none",
+    "90",
+    "all"
+   ]
+  },
+  {
+   "key": "psf.iterative.negative_sigma_clip",
+   "section": "psf",
+   "shipped": 2.0,
+   "in_shipped": true,
+   "default": 2.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.masking.mask_other_peaks",
+   "section": "psf",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.masking.radius_pix",
+   "section": "psf",
+   "shipped": 8,
+   "in_shipped": true,
+   "default": 8,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.masking.smoothing",
+   "section": "psf",
+   "shipped": "cosine",
+   "in_shipped": true,
+   "default": "cosine",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "cosine",
+    "hard",
+    "gaussian"
+   ]
+  },
+  {
+   "key": "psf.iterative.masking.smoothing_width_pix",
+   "section": "psf",
+   "shipped": 4.0,
+   "in_shipped": true,
+   "default": 4.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.error_map_during_recon.enabled",
+   "section": "psf",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "psf.iterative.error_map_during_recon.b_max",
+   "section": "psf",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "psf.joint.seed_path",
+   "section": "psf",
+   "shipped": "data/psf_starred_seed.npz",
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "psf.joint.free",
+   "section": "psf",
+   "shipped": [
+    "moffat",
+    "background"
+   ],
+   "in_shipped": true,
+   "default": [
+    "moffat",
+    "background"
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.oversample",
+   "section": "psf",
+   "shipped": null,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "psf.joint.supersampled",
+   "section": "psf",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.convolution_method",
+   "section": "psf",
+   "shipped": "fft",
+   "in_shipped": true,
+   "default": "fft",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.moffat_rel_sigma",
+   "section": "psf",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.moffat_phi_sigma",
+   "section": "psf",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.background.type",
+   "section": "psf",
+   "shipped": "error_map",
+   "in_shipped": true,
+   "default": "error_map",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "heuristic",
+    "error_map",
+    "scalar"
+   ]
+  },
+  {
+   "key": "psf.joint.priors.background.rel",
+   "section": "psf",
+   "shipped": 3.5,
+   "in_shipped": true,
+   "default": 3.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.background.floor",
+   "section": "psf",
+   "shipped": 1e-08,
+   "in_shipped": true,
+   "default": 1e-08,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.background.sigma",
+   "section": "psf",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "psf.joint.priors.background.error_map_alpha",
+   "section": "psf",
+   "shipped": 1.0,
+   "in_shipped": true,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.priors.background.space",
+   "section": "psf",
+   "shipped": "kernel",
+   "in_shipped": true,
+   "default": "kernel",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "background",
+    "kernel"
+   ]
+  },
+  {
+   "key": "psf.joint.priors.background.noncentered",
+   "section": "psf",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.regularization.lambda_scales",
+   "section": "psf",
+   "shipped": 3.0,
+   "in_shipped": true,
+   "default": 3.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.regularization.lambda_hf",
+   "section": "psf",
+   "shipped": 3.0,
+   "in_shipped": true,
+   "default": 3.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "psf.joint.regularization.lambda_positivity",
+   "section": "psf",
+   "shipped": 1000000.0,
+   "in_shipped": true,
+   "default": 1000000.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.use_time_delays",
+   "section": "likelihood",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.use_rayshoot_consistency",
+   "section": "likelihood",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.rayshoot_sigma",
+   "section": "likelihood",
+   "shipped": 0.001,
+   "in_shipped": true,
+   "default": 0.001,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.rayshoot_against_source_pos",
+   "section": "likelihood",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.use_rayshoot_sys_error",
+   "section": "likelihood",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.rayshoot_sys_error_range",
+   "section": "likelihood",
+   "shipped": [
+    5e-05,
+    0.005
+   ],
+   "in_shipped": true,
+   "default": [
+    5e-05,
+    0.005
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.use_image_pos_offsets",
+   "section": "likelihood",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.image_pos_offset_sigma",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": true,
+   "default": 0.01,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost",
+   "section": "likelihood",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.f_max",
+   "section": "likelihood",
+   "shipped": 1.0,
+   "in_shipped": true,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.frac_min_sep",
+   "section": "likelihood",
+   "shipped": 0.4,
+   "in_shipped": true,
+   "default": 0.4,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.min_npix",
+   "section": "likelihood",
+   "shipped": 2.5,
+   "in_shipped": true,
+   "default": 2.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.noise_boost_kwargs.max_npix",
+   "section": "likelihood",
+   "shipped": 6.0,
+   "in_shipped": true,
+   "default": 6.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.use_psf_error_map",
+   "section": "likelihood",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_b_max",
+   "section": "likelihood",
+   "shipped": 0.3,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_b_mode",
+   "section": "likelihood",
+   "shipped": "post_gd_free",
+   "in_shipped": true,
+   "default": "post_gd_free",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "joint",
+    "post_gd_fixed",
+    "post_gd_free"
+   ]
+  },
+  {
+   "key": "likelihood.astrometry_mode",
+   "section": "likelihood",
+   "shipped": "image_plane",
+   "in_shipped": true,
+   "default": "image_plane",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "image_plane",
+    "source_plane"
+   ]
+  },
+  {
+   "key": "likelihood.sigma_ast",
+   "section": "likelihood",
+   "shipped": 0.005,
+   "in_shipped": true,
+   "default": 0.005,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.td_common_source",
+   "section": "likelihood",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.use_kinematics",
+   "section": "likelihood",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.time_delays",
+   "section": "likelihood",
+   "shipped": {
+    "convention": "t_X - t_Y",
+    "delays": {
+     "AB": [
+      -9.0,
+      0.8
+     ],
+     "AC": [
+      -0.8,
+      0.7
+     ],
+     "AD": [
+      -13.8,
+      0.8
+     ]
+    },
+    "covariance": "independent"
+   },
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "json",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.D_dt_prior.type",
+   "section": "likelihood",
+   "shipped": "uniform",
+   "in_shipped": true,
+   "default": "uniform",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "uniform",
+    "log_uniform"
+   ]
+  },
+  {
+   "key": "likelihood.D_dt_prior.low",
+   "section": "likelihood",
+   "shipped": 500.0,
+   "in_shipped": true,
+   "default": 500.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.D_dt_prior.high",
+   "section": "likelihood",
+   "shipped": 10000.0,
+   "in_shipped": true,
+   "default": 10000.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.kappa_ext_prior.mean",
+   "section": "likelihood",
+   "shipped": 0.0,
+   "in_shipped": true,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "likelihood.kappa_ext_prior.sigma",
+   "section": "likelihood",
+   "shipped": 0.0,
+   "in_shipped": true,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.sampler",
+   "section": "sampling",
+   "shipped": "nifty",
+   "in_shipped": true,
+   "default": "nifty",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "nifty",
+    "nuts",
+    "nautilus",
+    "default"
+   ]
+  },
+  {
+   "key": "sampling.nifty.mode",
+   "section": "sampling",
+   "shipped": "nuts_only",
+   "in_shipped": true,
+   "default": "nuts_only",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "nuts_only",
+    "vi+nuts",
+    "vi_only"
+   ]
+  },
+  {
+   "key": "sampling.nifty.vi.algorithm",
+   "section": "sampling",
+   "shipped": "geoVI",
+   "in_shipped": true,
+   "default": "geoVI",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "geoVI",
+    "MGVI"
+   ]
+  },
+  {
+   "key": "sampling.nifty.vi.n_iterations",
+   "section": "sampling",
+   "shipped": 25,
+   "in_shipped": true,
+   "default": 25,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.n_samples_per_iteration",
+   "section": "sampling",
+   "shipped": 8,
+   "in_shipped": true,
+   "default": 8,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.init_spread",
+   "section": "sampling",
+   "shipped": 0.1,
+   "in_shipped": true,
+   "default": 0.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.quick_run",
+   "section": "sampling",
+   "shipped": false,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.cg_maxiter",
+   "section": "sampling",
+   "shipped": 100,
+   "in_shipped": true,
+   "default": 100,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.n_resample",
+   "section": "sampling",
+   "shipped": 500,
+   "in_shipped": true,
+   "default": 500,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.resample_batch_size",
+   "section": "sampling",
+   "shipped": 16,
+   "in_shipped": true,
+   "default": 16,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.vi.use_multi_gpu",
+   "section": "sampling",
+   "shipped": false,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.n_warmup",
+   "section": "sampling",
+   "shipped": 600,
+   "in_shipped": true,
+   "default": 3000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.n_samples",
+   "section": "sampling",
+   "shipped": 1000,
+   "in_shipped": true,
+   "default": 6000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.n_chains",
+   "section": "sampling",
+   "shipped": 2,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "sampling.nifty.nuts.target_accept",
+   "section": "sampling",
+   "shipped": 0.95,
+   "in_shipped": true,
+   "default": 0.8,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.max_tree_depth",
+   "section": "sampling",
+   "shipped": 11,
+   "in_shipped": true,
+   "default": 10,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.mass_matrix",
+   "section": "sampling",
+   "shipped": "adaptive_diag",
+   "in_shipped": true,
+   "default": "adaptive_diag",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "identity",
+    "adaptive_diag",
+    "diag_from_vi",
+    "block_from_vi"
+   ]
+  },
+  {
+   "key": "sampling.nifty.nuts.dense_block_names",
+   "section": "sampling",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "sampling.nifty.nuts.init_perturbation",
+   "section": "sampling",
+   "shipped": 0.001,
+   "in_shipped": true,
+   "default": 0.001,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.nuts.chain_method",
+   "section": "sampling",
+   "shipped": "auto",
+   "in_shipped": true,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "auto",
+    "parallel",
+    "vectorized",
+    "sequential"
+   ]
+  },
+  {
+   "key": "sampling.nifty.warmstart.polish",
+   "section": "sampling",
+   "shipped": "lbfgs",
+   "in_shipped": true,
+   "default": "lbfgs",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "lbfgs",
+    "off"
+   ]
+  },
+  {
+   "key": "sampling.nifty.warmstart.maxiter",
+   "section": "sampling",
+   "shipped": 3000,
+   "in_shipped": true,
+   "default": 3000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nifty.warmstart.gtol",
+   "section": "sampling",
+   "shipped": 1.0,
+   "in_shipped": true,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.n_posterior_samples_final",
+   "section": "sampling",
+   "shipped": 5000,
+   "in_shipped": true,
+   "default": 5000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.marginalize_psf",
+   "section": "sampling",
+   "shipped": false,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.marginalize_psf_background",
+   "section": "sampling",
+   "shipped": false,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.marginalize_psf_background_fwhm_box",
+   "section": "sampling",
+   "shipped": 80.0,
+   "in_shipped": true,
+   "default": 6.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nuts.n_warmup",
+   "section": "sampling",
+   "shipped": 3000,
+   "in_shipped": true,
+   "default": 3000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nuts.n_samples",
+   "section": "sampling",
+   "shipped": 5000,
+   "in_shipped": true,
+   "default": 5000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nuts.n_chains",
+   "section": "sampling",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "sampling.nuts.target_accept",
+   "section": "sampling",
+   "shipped": 0.8,
+   "in_shipped": true,
+   "default": 0.8,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nautilus.n_live",
+   "section": "sampling",
+   "shipped": 1000,
+   "in_shipped": true,
+   "default": 1000,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nautilus.use_jax",
+   "section": "sampling",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nautilus.use_multi_device",
+   "section": "sampling",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nautilus.batch_per_device",
+   "section": "sampling",
+   "shipped": 64,
+   "in_shipped": true,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "sampling.nautilus.uniform_priors",
+   "section": "sampling",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.save_plots",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_format",
+   "section": "plotting",
+   "shipped": "png",
+   "in_shipped": true,
+   "default": "png",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "png",
+    "pdf",
+    "svg"
+   ]
+  },
+  {
+   "key": "plotting.dpi",
+   "section": "plotting",
+   "shipped": 300,
+   "in_shipped": true,
+   "default": 300,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_psf",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_model_summary",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_model_summary_extended",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_residuals",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_corner",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_chains",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.plot_posterior_draws",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "plotting.n_posterior_draws_to_plot",
+   "section": "plotting",
+   "shipped": 3,
+   "in_shipped": true,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "plotting.corner_params",
+   "section": "plotting",
+   "shipped": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "in_shipped": true,
+   "default": [
+    "lens_theta_E",
+    "lens_gamma",
+    "lens_e1",
+    "lens_e2",
+    "lens_gamma1",
+    "lens_gamma2",
+    "lens_center_x",
+    "lens_center_y",
+    "D_dt"
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": false
+  },
+  {
+   "key": "plotting.max_corner_params",
+   "section": "plotting",
+   "shipped": 10,
+   "in_shipped": true,
+   "default": 10,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": false
+  },
+  {
+   "key": "plotting.save_priors",
+   "section": "plotting",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "blinding.enabled",
+   "section": "blinding",
+   "shipped": true,
+   "in_shipped": true,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "blinding.mode",
+   "section": "blinding",
+   "shipped": "absolute",
+   "in_shipped": true,
+   "default": "absolute",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "absolute",
+    "fractional"
+   ]
+  },
+  {
+   "key": "blinding.reference",
+   "section": "blinding",
+   "shipped": "mean",
+   "in_shipped": true,
+   "default": "mean",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "mean",
+    "median"
+   ]
+  },
+  {
+   "key": "blinding.scenario",
+   "section": "blinding",
+   "shipped": "previously_analyzed",
+   "in_shipped": true,
+   "default": "previously_analyzed",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": false,
+   "choices": [
+    "first",
+    "previously_analyzed",
+    "no_delays"
+   ]
+  },
+  {
+   "key": "blinding.parameters",
+   "section": "blinding",
+   "shipped": null,
+   "in_shipped": true,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "blinding.blind_stored_samples",
+   "section": "blinding",
+   "shipped": true,
+   "in_shipped": true,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": false
+  },
+  {
+   "key": "mass.main.bpl.n_quad",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 24,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.bpl.n_quad_potential",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 28,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.bpl.deflection",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "series",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "series",
+    "quadrature"
+   ]
+  },
+  {
+   "key": "mass.main.bpl.n_series",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 40,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.flexion.enabled",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.flexion.sigma",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.05,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.flexion.max",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "mass.main.center_sigma",
+   "section": "mass",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.ps_mask",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_grow",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.ps_sigma_clip_within",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "all",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "all",
+    "arc",
+    "ps_aperture"
+   ]
+  },
+  {
+   "key": "light.lens.refit.distinct_n_init",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.arc_mask_inner_radius",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.arc_mask_outer_radius",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.freeze_foreground_perts",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.ellipticity_max",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.refit.center_shift_sigma",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.05,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.starts",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 32,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.vmap_chunk_sizes",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    5,
+    2,
+    1
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.source.clip_source_to_arc_mask",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "psf.input.error_map_resampling",
+   "section": "psf",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "none",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "none",
+    "bilinear"
+   ]
+  },
+  {
+   "key": "likelihood.noise_model.psf_error_exponent",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.observed_sigma",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 220.1,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.sigma_error",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 4.2,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.aperture_kind",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "square",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.aperture_width",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.55,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.aperture_height",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.aperture_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.275,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.psf_sigma",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    0.05
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.psf_weight",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    1.0
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.distance_mpc",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1200.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.ds_over_dds",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.anisotropy_ratio_range",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    0.93,
+    1.06
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.anisotropy_ratio_fixed",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.kappa_ext",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.kappa_ext_sigma",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.sample_lambda_int",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.lambda_int_range",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    0.5,
+    1.5
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.lambda_int",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.light_radius_convention",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "major_axis",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "major_axis",
+    "circularized"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.multipole_mode",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "reject",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "reject",
+    "m3_monopole",
+    "monopole"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.radial_min",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1e-09,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.radial_max",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1000.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.radial_intervals",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 256,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.angular_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 128,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.abel_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.mode",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "aperture",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "aperture",
+    "resolved"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.ifu_file",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.sample_center_offset",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.center_offset_sigma",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.05,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.center_offset_max",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.15,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.psf_crop_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.resolved_sub_sampling",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 3,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.resolved_radial_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 96,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.resolved_los_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 128,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_sample",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_ratio_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 16,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_lambda_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 128,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_offset_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 7,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.dynamics",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "spherical",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "spherical",
+    "axisymmetric"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.frame_pa_x_deg",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": true,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.frame_parity",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_inclination_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 8,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_outer_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 200.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_radial_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_angular_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 10,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_char_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 40,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_los_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_table_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 192,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_force_table",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_force_seg",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 16,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_abel_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 64,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_derivative",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "analytic",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "analytic",
+    "jvp"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.axi_interp",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "auto",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "auto",
+    "gather",
+    "dense"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.axi_subsample_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_angular_map",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_center_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.2,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_center_subsampling",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 12,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_polar_rmin",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.0005,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_polar_radial",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 48,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_polar_angular",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 11,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.axi_precision",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "float64",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "float64",
+    "float32",
+    "auto"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.anisotropy_model",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "constant",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "constant",
+    "om",
+    "gom"
+   ]
+  },
+  {
+   "key": "likelihood.kinematics.a_ani_range",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    0.1,
+    5.0
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.beta_inf_range",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [
+    0.0,
+    0.95
+   ],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true,
+   "elem_type": "float"
+  },
+  {
+   "key": "likelihood.kinematics.importance_a_ani_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 24,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_beta_inf_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 8,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.covariance_scale",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.exclude_bins",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.dynamics_gamma_offset",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.0,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.dynamics_inner_break",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.inner_dgamma_range",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.tracer_exclude",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.inner_break_radius",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.5,
+   "in_dataclass": true,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_inner_nodes",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 9,
+   "in_dataclass": true,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "likelihood.kinematics.importance_error_scales",
+   "section": "likelihood",
+   "shipped": null,
+   "in_shipped": false,
+   "default": [],
+   "in_dataclass": true,
+   "type": "list",
+   "nullable": true
+  },
+  {
+   "key": "sampling.nifty.warmstart.stop_after",
+   "section": "sampling",
+   "shipped": null,
+   "in_shipped": false,
+   "default": false,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "blinding.encrypt",
+   "section": "blinding",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "blinding.key_env_var",
+   "section": "blinding",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "ALPACA_BLINDING_KEY",
+   "in_dataclass": true,
+   "type": "str",
+   "nullable": true
+  },
+  {
+   "key": "blinding.write_key_file",
+   "section": "blinding",
+   "shipped": null,
+   "in_shipped": false,
+   "default": true,
+   "in_dataclass": true,
+   "type": "bool",
+   "nullable": true
+  },
+  {
+   "key": "light.lens.ellipticity_max",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 0.4,
+   "in_dataclass": false,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "light.sky_background_fixed_amp",
+   "section": "light",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": false,
+   "type": "any",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.exec_mode",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": "auto",
+   "in_dataclass": false,
+   "type": "str",
+   "nullable": true,
+   "choices": [
+    "auto",
+    "vmap",
+    "sequential",
+    "distributed"
+   ]
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.level_hi",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 16.0,
+   "in_dataclass": false,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.level_lo",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 1.0,
+   "in_dataclass": false,
+   "type": "float",
+   "nullable": true
+  },
+  {
+   "key": "stages.gd.optimizer.anneal.segments",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": 5,
+   "in_dataclass": false,
+   "type": "int",
+   "nullable": true
+  },
+  {
+   "key": "stages.cf_joint.perturber_fields",
+   "section": "stages",
+   "shipped": null,
+   "in_shipped": false,
+   "default": null,
+   "in_dataclass": false,
+   "type": "json",
+   "nullable": true
+  }
+ ],
+ "presets": {
+  "quasar": {
+   "run": {
+    "output_dir": "run/",
+    "random_seed": 42,
+    "verbose": true,
+    "multistart": true,
+    "sampling": true,
+    "resume_from_previous": false,
+    "resume_multistart_path": null
+   },
+   "data": {
+    "pix_scale": 0.031228698402951588,
+    "source_oversample": 3,
+    "likelihood_mask_path": "data/mask_likelihood.fits",
+    "ps_min_sep": null,
+    "ps_lens_mask_radius": 0.35,
+    "ps_min_peak_frac": 0.15,
+    "lens_center_search_radius": 0.35,
+    "cutout_size": 219,
+    "n_ps_detect": null
+   },
+   "mass": {
+    "main": {
+     "profile": "EPL+Shear",
+     "multipoles": {
+      "orders": [],
+      "sigma": null,
+      "sigma_default": 0.02,
+      "r_ref_m1": 1.0,
+      "elliptical": false
+     },
+     "bpl": {
+      "gamma_in": {
+       "loc": 2.0,
+       "scale": 0.3,
+       "low": 1.3,
+       "high": 2.7
+      },
+      "gamma_out": {
+       "loc": 2.0,
+       "scale": 0.3,
+       "low": 1.3,
+       "high": 2.7
+      },
+      "r_break_frac": [
+       0.5,
+       2.0
+      ]
+     },
+     "theta_E_prior": null
+    },
+    "perturbers": {
+     "path": "data/perturbers.json",
+     "mode": "auto",
+     "z_tolerance": 0.01,
+     "min_flexion_shift_arcsec": null,
+     "include_ids": null,
+     "exclude_ids": null,
+     "priors": {
+      "theta_E_max_factor": 3.0,
+      "position_sigma_arcsec": 0.3,
+      "fix_positions": true
+     },
+     "cosmology": {
+      "H0_fid": 70.0,
+      "Om0": 0.3
+     }
+    }
+   },
+   "light": {
+    "lens": {
+     "initial": "double-sersic",
+     "refit": {
+      "enabled": true,
+      "ps_treatment": "mask",
+      "ps_downweight_radius": 0.5,
+      "sky_anchor": null,
+      "mask_path": "data/mask_lens_only.fits",
+      "profile": "triple-sersic",
+      "simple_source": "stage1",
+      "uncouple_ellipticities": false,
+      "ellipticity_twist_sigma": 10.0,
+      "uncouple_centers": false,
+      "mge_n_components": null,
+      "adam_steps": 3000,
+      "ps_sigma_clip": null,
+      "ps_sigma_clip_iters": 3,
+      "smooth_bounds": false,
+      "n_sersic_min": 0.2,
+      "n_sersic_max": 8.0,
+      "init_cf_joint": true,
+      "mask_arc": true
+     },
+     "couple_sersic_ellipticities": true,
+     "mge": {
+      "n_components": 20,
+      "sigma_min": 0.03,
+      "sigma_max": 2.5
+     },
+     "couple_sersic_centers": true
+    },
+    "sky_background": true,
+    "point_sources": {
+     "enabled": true,
+     "fft_rendering": false
+    },
+    "sky_psf": "unconvolved"
+   },
+   "stages": {
+    "gd": {
+     "source": {
+      "type": "shapelets",
+      "n_max": 16
+     },
+     "optimizer": {
+      "adam": {
+       "steps": 1000,
+       "lr": 0.003,
+       "warmup_fraction": 0.1,
+       "grad_clip": 10.0,
+       "cosine_decay": true
+      },
+      "lbfgs": {
+       "maxiter": 1200,
+       "tol": 1e-05,
+       "impl": "optax"
+      },
+      "anneal": {
+       "mode": "discrete",
+       "levels": [
+        16,
+        8,
+        4,
+        2,
+        1
+       ],
+       "adam_steps": 400,
+       "lbfgs_maxiter": 400,
+       "ramp": true
+      },
+      "halving": {
+       "keep": [
+        32,
+        16,
+        8,
+        4,
+        2
+       ]
+      },
+      "refine": {
+       "top": 1,
+       "perturbations_per_top": 1,
+       "perturbation_scale": 0.1,
+       "adam_steps": 2600,
+       "lbfgs_maxiter": 3000
+      },
+      "mean_init": {
+       "enabled": true,
+       "sigma": 0.1,
+       "fraction": 0.8
+      },
+      "retry": {
+       "max_iterations": 1,
+       "chi2_red_threshold": 2.0
+      },
+      "save_phase_results": true
+     }
+    },
+    "cf_warmstart": {
+     "enabled": true,
+     "adam_steps": 8000,
+     "adam_lr": 0.001,
+     "patience": 400
+    },
+    "cf_joint": {
+     "enabled": true,
+     "lens_light": "free",
+     "source": {
+      "type": "corr_field",
+      "num_pixels": 128,
+      "mean_intensity": null,
+      "offset_std": [
+       0.1,
+       0.001
+      ],
+      "loglogavgslope": [
+       -3.5,
+       0.1
+      ],
+      "fluctuations": [
+       1.0,
+       0.5
+      ],
+      "flexibility": null,
+      "asperity": null,
+      "cropped_border_size": 20,
+      "exponentiate": true,
+      "interpolation_type": "fast_bilinear",
+      "adaptive_grid": true,
+      "arc_mask": {
+       "mode": "auto",
+       "inner_radius": "auto",
+       "outer_radius": 2.8,
+       "custom_path": null,
+       "signal_threshold": 3.0,
+       "signal_dilate_pix": 3,
+       "signal_inner_factor": 0.0,
+       "signal_min_area": 50
+      },
+      "source_grid_scale": 0.5
+     },
+     "adam_steps": 12000,
+     "adam_lr": 0.001,
+     "lbfgs_maxiter": 0,
+     "prior": "seed",
+     "convergence": {
+      "enabled": false,
+      "window": 4000,
+      "abs_tol": 1.0,
+      "rel_tol": 0.0,
+      "min_steps": 0
+     }
+    }
+   },
+   "psf": {
+    "mode": "joint",
+    "input": {
+     "oversample": 3,
+     "error_map_path": "data/psf_error_map.fits"
+    },
+    "iterative": {
+     "n_iterations": 2,
+     "n_starts_per_iteration": 20,
+     "starred_oversample": null,
+     "cutout_size_pix": "auto",
+     "parallelized": true,
+     "rotation_mode": "none",
+     "negative_sigma_clip": 2.0,
+     "masking": {
+      "mask_other_peaks": true,
+      "radius_pix": 8,
+      "smoothing": "cosine",
+      "smoothing_width_pix": 4.0
+     },
+     "error_map_during_recon": {
+      "enabled": false,
+      "b_max": null
+     }
+    },
+    "joint": {
+     "seed_path": "data/psf_starred_seed.npz",
+     "free": [
+      "moffat",
+      "background"
+     ],
+     "oversample": null,
+     "supersampled": true,
+     "convolution_method": "fft",
+     "priors": {
+      "moffat_rel_sigma": 0.1,
+      "moffat_phi_sigma": 0.1,
+      "background": {
+       "type": "error_map",
+       "rel": 3.5,
+       "floor": 1e-08,
+       "sigma": null,
+       "error_map_alpha": 1.0,
+       "space": "kernel",
+       "noncentered": true
+      }
+     },
+     "regularization": {
+      "lambda_scales": 3.0,
+      "lambda_hf": 3.0,
+      "lambda_positivity": 1000000.0
+     }
+    }
+   },
+   "likelihood": {
+    "use_time_delays": true,
+    "use_rayshoot_consistency": true,
+    "rayshoot_sigma": 0.001,
+    "rayshoot_against_source_pos": true,
+    "use_rayshoot_sys_error": false,
+    "rayshoot_sys_error_range": [
+     5e-05,
+     0.005
+    ],
+    "use_image_pos_offsets": false,
+    "image_pos_offset_sigma": null,
+    "noise_model": {
+     "noise_boost": false,
+     "noise_boost_kwargs": {
+      "f_max": 1.0,
+      "radius": null,
+      "frac_min_sep": 0.4,
+      "min_npix": 2.5,
+      "max_npix": 6.0
+     },
+     "use_psf_error_map": true,
+     "psf_error_b_max": 0.3,
+     "psf_error_b_mode": "post_gd_free"
+    },
+    "astrometry_mode": "image_plane",
+    "sigma_ast": 0.005,
+    "td_common_source": true,
+    "use_kinematics": false,
+    "time_delays": {
+     "convention": "t_X - t_Y",
+     "delays": {
+      "AB": [
+       -9.0,
+       0.8
+      ],
+      "AC": [
+       -0.8,
+       0.7
+      ],
+      "AD": [
+       -13.8,
+       0.8
+      ]
+     },
+     "covariance": "independent"
+    },
+    "D_dt_prior": {
+     "type": "uniform",
+     "low": 500.0,
+     "high": 10000.0
+    },
+    "kappa_ext_prior": {
+     "mean": 0.0,
+     "sigma": 0.0
+    }
+   },
+   "sampling": {
+    "sampler": "nifty",
+    "nifty": {
+     "mode": "nuts_only",
+     "vi": {
+      "algorithm": "geoVI",
+      "n_iterations": 25,
+      "n_samples_per_iteration": 8,
+      "init_spread": 0.1,
+      "quick_run": false,
+      "cg_maxiter": 100,
+      "n_resample": 500,
+      "resample_batch_size": 16,
+      "use_multi_gpu": false
+     },
+     "nuts": {
+      "n_warmup": 600,
+      "n_samples": 1000,
+      "n_chains": 2,
+      "target_accept": 0.95,
+      "max_tree_depth": 11,
+      "mass_matrix": "adaptive_diag",
+      "dense_block_names": null,
+      "init_perturbation": 0.001,
+      "chain_method": "auto"
+     },
+     "warmstart": {
+      "polish": "lbfgs",
+      "maxiter": 3000,
+      "gtol": 1.0
+     }
+    },
+    "n_posterior_samples_final": 5000,
+    "marginalize_psf": false,
+    "marginalize_psf_background": false,
+    "marginalize_psf_background_fwhm_box": 80.0,
+    "nuts": {
+     "n_warmup": 3000,
+     "n_samples": 5000,
+     "n_chains": null,
+     "target_accept": 0.8
+    },
+    "nautilus": {
+     "n_live": 1000,
+     "use_jax": true,
+     "use_multi_device": true,
+     "batch_per_device": 64,
+     "uniform_priors": true
+    }
+   },
+   "plotting": {
+    "save_plots": true,
+    "plot_format": "png",
+    "dpi": 300,
+    "plot_psf": true,
+    "plot_model_summary": true,
+    "plot_model_summary_extended": true,
+    "plot_residuals": true,
+    "plot_corner": true,
+    "plot_chains": true,
+    "plot_posterior_draws": true,
+    "n_posterior_draws_to_plot": 3,
+    "corner_params": [
+     "lens_theta_E",
+     "lens_gamma",
+     "lens_e1",
+     "lens_e2",
+     "lens_gamma1",
+     "lens_gamma2",
+     "lens_center_x",
+     "lens_center_y",
+     "D_dt"
+    ],
+    "max_corner_params": 10,
+    "save_priors": true
+   },
+   "blinding": {
+    "enabled": true,
+    "mode": "absolute",
+    "reference": "mean",
+    "scenario": "previously_analyzed",
+    "parameters": null,
+    "blind_stored_samples": true
+   }
+  },
+  "galaxy": {
+   "run": {
+    "output_dir": "run/",
+    "random_seed": 42,
+    "verbose": true,
+    "multistart": true,
+    "sampling": true,
+    "resume_from_previous": false,
+    "resume_multistart_path": null
+   },
+   "data": {
+    "pix_scale": 0.031228698402951588,
+    "source_oversample": 3,
+    "likelihood_mask_path": "data/mask_likelihood.fits",
+    "ps_min_sep": null,
+    "ps_lens_mask_radius": 0.35,
+    "ps_min_peak_frac": 0.15,
+    "lens_center_search_radius": 0.35,
+    "cutout_size": 219,
+    "n_ps_detect": null
+   },
+   "mass": {
+    "main": {
+     "profile": "EPL+Shear",
+     "multipoles": {
+      "orders": [],
+      "sigma": null,
+      "sigma_default": 0.02,
+      "r_ref_m1": 1.0,
+      "elliptical": false
+     },
+     "bpl": {
+      "gamma_in": {
+       "loc": 2.0,
+       "scale": 0.3,
+       "low": 1.3,
+       "high": 2.7
+      },
+      "gamma_out": {
+       "loc": 2.0,
+       "scale": 0.3,
+       "low": 1.3,
+       "high": 2.7
+      },
+      "r_break_frac": [
+       0.5,
+       2.0
+      ]
+     },
+     "theta_E_prior": {
+      "center": 1.0,
+      "sigma": 10.0
+     }
+    },
+    "perturbers": {
+     "path": null,
+     "mode": "auto",
+     "z_tolerance": 0.01,
+     "min_flexion_shift_arcsec": null,
+     "include_ids": null,
+     "exclude_ids": null,
+     "priors": {
+      "theta_E_max_factor": 3.0,
+      "position_sigma_arcsec": 0.3,
+      "fix_positions": true
+     },
+     "cosmology": {
+      "H0_fid": 70.0,
+      "Om0": 0.3
+     }
+    }
+   },
+   "light": {
+    "lens": {
+     "initial": "double-sersic",
+     "refit": {
+      "enabled": true,
+      "ps_treatment": "mask",
+      "ps_downweight_radius": 0.5,
+      "sky_anchor": null,
+      "mask_path": "data/mask_lens_only.fits",
+      "profile": "triple-sersic",
+      "simple_source": "stage1",
+      "uncouple_ellipticities": false,
+      "ellipticity_twist_sigma": 10.0,
+      "uncouple_centers": false,
+      "mge_n_components": null,
+      "adam_steps": 3000,
+      "ps_sigma_clip": null,
+      "ps_sigma_clip_iters": 3,
+      "smooth_bounds": false,
+      "n_sersic_min": 0.2,
+      "n_sersic_max": 8.0,
+      "init_cf_joint": true,
+      "mask_arc": true
+     },
+     "couple_sersic_ellipticities": true,
+     "mge": {
+      "n_components": 20,
+      "sigma_min": 0.03,
+      "sigma_max": 2.5
+     },
+     "couple_sersic_centers": true
+    },
+    "sky_background": true,
+    "point_sources": {
+     "enabled": false,
+     "fft_rendering": false
+    },
+    "sky_psf": "unconvolved"
+   },
+   "stages": {
+    "gd": {
+     "source": {
+      "type": "shapelets",
+      "n_max": 16
+     },
+     "optimizer": {
+      "adam": {
+       "steps": 1000,
+       "lr": 0.003,
+       "warmup_fraction": 0.1,
+       "grad_clip": 10.0,
+       "cosine_decay": true
+      },
+      "lbfgs": {
+       "maxiter": 1200,
+       "tol": 1e-05,
+       "impl": "optax"
+      },
+      "anneal": {
+       "mode": "discrete",
+       "levels": [
+        16,
+        8,
+        4,
+        2,
+        1
+       ],
+       "adam_steps": 400,
+       "lbfgs_maxiter": 400,
+       "ramp": true
+      },
+      "halving": {
+       "keep": [
+        64,
+        32,
+        16,
+        8,
+        4
+       ]
+      },
+      "refine": {
+       "top": 4,
+       "perturbations_per_top": 1,
+       "perturbation_scale": 0.1,
+       "adam_steps": 2600,
+       "lbfgs_maxiter": 3000
+      },
+      "mean_init": {
+       "enabled": true,
+       "sigma": 0.1,
+       "fraction": 0.8
+      },
+      "retry": {
+       "max_iterations": 1,
+       "chi2_red_threshold": 2.0
+      },
+      "save_phase_results": true
+     }
+    },
+    "cf_warmstart": {
+     "enabled": true,
+     "adam_steps": 8000,
+     "adam_lr": 0.001,
+     "patience": 400
+    },
+    "cf_joint": {
+     "enabled": true,
+     "lens_light": "free",
+     "source": {
+      "type": "corr_field",
+      "num_pixels": 128,
+      "mean_intensity": null,
+      "offset_std": [
+       0.1,
+       0.001
+      ],
+      "loglogavgslope": [
+       -3.5,
+       0.1
+      ],
+      "fluctuations": [
+       1.0,
+       0.5
+      ],
+      "flexibility": null,
+      "asperity": null,
+      "cropped_border_size": 20,
+      "exponentiate": true,
+      "interpolation_type": "fast_bilinear",
+      "adaptive_grid": true,
+      "arc_mask": {
+       "mode": "auto",
+       "inner_radius": "auto",
+       "outer_radius": 2.8,
+       "custom_path": null,
+       "signal_threshold": 3.0,
+       "signal_dilate_pix": 3,
+       "signal_inner_factor": 0.0,
+       "signal_min_area": 50
+      },
+      "source_grid_scale": 0.5
+     },
+     "adam_steps": 80000,
+     "adam_lr": 0.001,
+     "lbfgs_maxiter": 0,
+     "prior": "seed",
+     "convergence": {
+      "enabled": true,
+      "window": 4000,
+      "abs_tol": 2.0,
+      "rel_tol": 0.0,
+      "min_steps": 0
+     }
+    }
+   },
+   "psf": {
+    "mode": "joint",
+    "input": {
+     "oversample": 3,
+     "error_map_path": "data/psf_error_map.fits"
+    },
+    "iterative": {
+     "n_iterations": 2,
+     "n_starts_per_iteration": 20,
+     "starred_oversample": null,
+     "cutout_size_pix": "auto",
+     "parallelized": true,
+     "rotation_mode": "none",
+     "negative_sigma_clip": 2.0,
+     "masking": {
+      "mask_other_peaks": true,
+      "radius_pix": 8,
+      "smoothing": "cosine",
+      "smoothing_width_pix": 4.0
+     },
+     "error_map_during_recon": {
+      "enabled": false,
+      "b_max": null
+     }
+    },
+    "joint": {
+     "seed_path": "data/psf_starred_seed.npz",
+     "free": [
+      "moffat",
+      "background"
+     ],
+     "oversample": null,
+     "supersampled": true,
+     "convolution_method": "fft",
+     "priors": {
+      "moffat_rel_sigma": 0.1,
+      "moffat_phi_sigma": 0.1,
+      "background": {
+       "type": "error_map",
+       "rel": 3.5,
+       "floor": 1e-08,
+       "sigma": null,
+       "error_map_alpha": 1.0,
+       "space": "kernel",
+       "noncentered": true
+      }
+     },
+     "regularization": {
+      "lambda_scales": 3.0,
+      "lambda_hf": 3.0,
+      "lambda_positivity": 1000000.0
+     }
+    }
+   },
+   "likelihood": {
+    "use_time_delays": false,
+    "use_rayshoot_consistency": false,
+    "rayshoot_sigma": 0.001,
+    "rayshoot_against_source_pos": true,
+    "use_rayshoot_sys_error": false,
+    "rayshoot_sys_error_range": [
+     5e-05,
+     0.005
+    ],
+    "use_image_pos_offsets": false,
+    "image_pos_offset_sigma": null,
+    "noise_model": {
+     "noise_boost": false,
+     "noise_boost_kwargs": {
+      "f_max": 1.0,
+      "radius": null,
+      "frac_min_sep": 0.4,
+      "min_npix": 2.5,
+      "max_npix": 6.0
+     },
+     "use_psf_error_map": false,
+     "psf_error_b_max": 0.3,
+     "psf_error_b_mode": "post_gd_free"
+    },
+    "astrometry_mode": "image_plane",
+    "sigma_ast": 0.005,
+    "td_common_source": true,
+    "use_kinematics": false,
+    "time_delays": null,
+    "D_dt_prior": {
+     "type": "uniform",
+     "low": 500.0,
+     "high": 10000.0
+    },
+    "kappa_ext_prior": {
+     "mean": 0.0,
+     "sigma": 0.0
+    }
+   },
+   "sampling": {
+    "sampler": "nifty",
+    "nifty": {
+     "mode": "nuts_only",
+     "vi": {
+      "algorithm": "geoVI",
+      "n_iterations": 25,
+      "n_samples_per_iteration": 8,
+      "init_spread": 0.1,
+      "quick_run": false,
+      "cg_maxiter": 100,
+      "n_resample": 500,
+      "resample_batch_size": 16,
+      "use_multi_gpu": false
+     },
+     "nuts": {
+      "n_warmup": 500,
+      "n_samples": 500,
+      "n_chains": 2,
+      "target_accept": 0.8,
+      "max_tree_depth": 12,
+      "mass_matrix": "adaptive_diag",
+      "dense_block_names": null,
+      "init_perturbation": 0.001,
+      "chain_method": "auto"
+     },
+     "warmstart": {
+      "polish": "lbfgs",
+      "maxiter": 3000,
+      "gtol": 1.0
+     }
+    },
+    "n_posterior_samples_final": 5000,
+    "marginalize_psf": false,
+    "marginalize_psf_background": false,
+    "marginalize_psf_background_fwhm_box": 80.0,
+    "nuts": {
+     "n_warmup": 3000,
+     "n_samples": 5000,
+     "n_chains": null,
+     "target_accept": 0.8
+    },
+    "nautilus": {
+     "n_live": 1000,
+     "use_jax": true,
+     "use_multi_device": true,
+     "batch_per_device": 64,
+     "uniform_priors": true
+    }
+   },
+   "plotting": {
+    "save_plots": true,
+    "plot_format": "png",
+    "dpi": 300,
+    "plot_psf": true,
+    "plot_model_summary": true,
+    "plot_model_summary_extended": true,
+    "plot_residuals": true,
+    "plot_corner": true,
+    "plot_chains": true,
+    "plot_posterior_draws": true,
+    "n_posterior_draws_to_plot": 3,
+    "corner_params": [
+     "lens_theta_E",
+     "lens_gamma",
+     "lens_e1",
+     "lens_e2",
+     "lens_gamma1",
+     "lens_gamma2",
+     "lens_center_x",
+     "lens_center_y"
+    ],
+    "max_corner_params": 10,
+    "save_priors": true
+   },
+   "blinding": {
+    "enabled": false,
+    "mode": "absolute",
+    "reference": "mean",
+    "scenario": "previously_analyzed",
+    "parameters": null,
+    "blind_stored_samples": true
+   }
+  }
+ }
+}
