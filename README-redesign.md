@@ -36,6 +36,20 @@ The quad rendering and the research arcs demonstration share `assets/redesign/le
 
 The embedded quasar simulator uses `epl-model.mjs` for the lens equation and numerical calculations, `epl-worker.js` to perform them off the main thread, and `epl-simulator.js` for controls and canvas drawing. These files live in `assets/redesign/`. Calculation starts when the applet approaches the viewport; lens mappings are cached between source changes. The original standalone simulator remains available. The separate synthetic time-delay exercise uses `lensing.js` and `lensing-model.mjs`.
 
+## Standalone lensing simulator
+
+`random/lensing_simulator.html` is the full simulator; the research page links to it. The former time-delay version is now a workspace of the same page: `random/lensing_simulator_timedelay.html` redirects to it with `#view=delays` and passes along any configuration in the link.
+
+It uses this site's typeface and two colours, with black plates for the source and image planes, and loads nothing from other servers. The code is in `random/lensing/` as plain scripts (no build, and the page also opens from disk):
+
+- `physics.js`: elliptical power law (Tessore & Metcalf series) with external shear, m = 3 and m = 4 multipoles, singular isothermal perturbers and a mass-sheet transform, in lenstronomy / herculens conventions (θ_E, e1, e2 as in ALPACA). Deflection, potential and Hessian are analytic. Also image finding by triangle mapping and Newton iteration, critical curves and caustics by contouring the two eigenvalues, a ray-shot magnification map, flat ΛCDM distances, the refit of the main lens to pinned image positions, and the procedural spiral galaxy that can stand in for the Sérsic host (exponential disc, bulge, logarithmic arms with dust lanes, star-forming clumps; the quasar sits in its nucleus).
+- `timedomain.js`: damped random walk, sinusoid or transient; sampling with cadence, seasons, photometric noise and microlensing; a dispersion estimate of the delays with its scatter over noise realisations.
+- `state.js`: every parameter with its range, the presets, and the link format. `render.js`: rasters and overlays. `panels.js`: tables, the pinned-model comparison, light curves and the H₀ strip. `app.js`: controls, pointer and keyboard interaction, undo, exports.
+
+The configuration is kept in the URL, so any state can be shared as a link. Presets "modelled on real systems" use the published redshifts with illustrative mass models; they are not the published lens models.
+
+`node --test tests/lensing-simulator.test.mjs` checks the physics against analytic results (derivatives of the potential, the isothermal sphere, the area inside the critical curve, mass-sheet invariance, distances and Einstein mass), the refit and the slope–H₀ degeneracy, delay recovery from sampled light curves, the spiral host (it reduces to an exponential disc, and its strongest angular harmonic is the number of arms), every preset's image count, and the link round trip.
+
 ## Verification
 
 Checked JavaScript syntax, local asset and cross-page anchor references, HTTP responses, preserved content counts, and the source copy against the original. The simulator's control IDs, labels, bilingual text, slider bounds and accessibility references were checked. The mobile-menu overlap was reproduced and fixed in headless Chrome. Checks covered all three pages after scrolling, two portrait sizes, a short landscape viewport, reduced motion, closing without losing scroll position, Escape, and switching to desktop. The corrected mobile menu was also inspected in a browser screenshot. Full simulator interaction testing and testing on physical iOS Safari remain to be done.

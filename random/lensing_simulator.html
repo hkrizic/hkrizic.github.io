@@ -2,1659 +2,204 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Strong Lensing Simulator — EPL Model</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a25;
-    --border: #2a2a3a;
-    --text: #e0e0ec;
-    --text-dim: #8888a0;
-    --accent: #ff4466;
-    --accent2: #44aaff;
-    --caustic: #ffcc00;
-    --critical: #00ffaa;
-    --source: #ff6644;
-    --image-color: #ff4466;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    overflow-x: hidden;
-    min-height: 100vh;
-  }
-
-  .app-header {
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: linear-gradient(180deg, rgba(255,68,102,0.04) 0%, transparent 100%);
-  }
-
-  .app-header h1 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 17px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-  }
-
-  .app-header h1 span { color: var(--accent); }
-
-  .app-header .subtitle {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 300;
-  }
-
-  .mode-switch-btn {
-    margin-left: auto;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 14px;
-    border-radius: 5px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-  .mode-switch-btn:hover {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-  .mode-switch-btn .arrow { font-size: 13px; }
-
-  .main-layout {
-    display: grid;
-    grid-template-columns: 310px 1fr 1fr;
-    height: calc(100vh - 57px);
-  }
-
-  .controls-panel {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 16px;
-  }
-
-  .control-section { margin-bottom: 20px; }
-
-  .control-section h3 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .control-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-
-  .control-row label {
-    font-size: 12px;
-    color: var(--text);
-    font-weight: 400;
-  }
-
-  .control-row .val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent2);
-    min-width: 45px;
-    text-align: right;
-  }
-
-  input[type="range"] {
-    width: 100%;
-    margin-top: 2px;
-    margin-bottom: 6px;
-    -webkit-appearance: none;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    outline: none;
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: var(--accent);
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 6px rgba(255,68,102,0.4);
-  }
-
-  .canvas-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    overflow: hidden;
-  }
-
-  .canvas-container canvas { cursor: crosshair; }
-
-  .canvas-label {
-    position: absolute;
-    top: 10px;
-    left: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    background: rgba(10,10,15,0.85);
-    padding: 3px 8px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    z-index: 10;
-  }
-
-  .canvas-container.source-plane { border-right: 1px solid var(--border); }
-
-  .legend {
-    position: absolute;
-    bottom: 10px;
-    left: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    z-index: 10;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-dim);
-  }
-
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .legend-line { width: 14px; height: 2px; border-radius: 1px; }
-
-  .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .checkbox-row input[type="checkbox"] {
-    accent-color: var(--accent);
-    width: 13px;
-    height: 13px;
-  }
-
-  .checkbox-row label {
-    font-size: 12px;
-    color: var(--text);
-    cursor: pointer;
-  }
-
-  .info-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 10px;
-    margin-top: 8px;
-  }
-
-  .info-box p {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.5;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .info-box .hl1 { color: var(--caustic); }
-  .info-box .hl2 { color: var(--critical); }
-
-  .image-info { margin-top: 12px; }
-
-  .image-info .img-entry, .ref-table .img-entry {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .img-entry .img-label { font-weight: 600; min-width: 16px; }
-  .img-entry .img-pos { color: var(--text-dim); }
-  .img-entry .img-mag { color: var(--accent2); }
-  .img-entry .img-parity { font-size: 9px; }
-
-  .preset-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-right: 4px;
-    margin-bottom: 4px;
-  }
-
-  .preset-btn:hover {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  .coords-display {
-    position: absolute;
-    bottom: 10px;
-    right: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    background: rgba(10,10,15,0.85);
-    padding: 3px 8px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    z-index: 10;
-  }
-
-  .perf-display {
-    position: absolute;
-    top: 10px;
-    right: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    color: var(--text-dim);
-    background: rgba(10,10,15,0.85);
-    padding: 3px 8px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    z-index: 10;
-  }
-
-  .pert-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--pc, #ffb450);
-    border-radius: 5px;
-    padding: 8px 10px 4px;
-    margin-bottom: 8px;
-  }
-  .pert-card.selected { border-color: var(--pc, #ffb450); }
-  .pert-card .pert-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-  }
-  .pert-card .pert-name { font-weight: 600; color: var(--pc, #ffb450); }
-  .pert-card .pert-pos { color: var(--text-dim); font-size: 11px; margin-left: auto; }
-  .pert-card .pert-del {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 3px;
-    width: 20px; height: 20px;
-    line-height: 16px;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-  }
-  .pert-card .pert-del:hover { color: #fff; border-color: var(--accent); background: var(--accent); }
-  .pert-card input[type="checkbox"] { accent-color: var(--pc, #ffb450); width: 13px; height: 13px; }
-
-  .ref-table { margin-top: 8px; }
-  .ref-table .img-entry span { min-width: 0; }
-  .ref-summary {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    margin-top: 6px;
-    line-height: 1.6;
-  }
-  .ref-summary .good { color: var(--critical); }
-  .ref-summary .bad { color: var(--accent); }
-
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: var(--surface); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strong lensing simulator</title>
+<meta name="description" content="Interactive strong gravitational lensing: an elliptical power-law lens with shear, multipoles, satellites and a mass sheet; lensed quasar images, arcs, time delays and what they imply for the Hubble constant.">
+<link rel="stylesheet" href="lensing/style.css">
+<script>
+  // Set the theme before first paint.
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('lens.theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
 </head>
 <body>
 
-<div class="app-header">
-  <div>
-    <h1><span>◈</span> Strong Lensing Simulator</h1>
-    <div class="subtitle">EPL lens · Sérsic host galaxy + quasar point source · ray-traced extended images</div>
+<header class="top">
+  <a class="top-home" href="../research.html">Hrvoje Krizic</a>
+  <h1 class="top-title">Strong lensing simulator</h1>
+  <div class="tabs" role="group" aria-label="Workspace">
+    <button id="tab-imaging" data-view="imaging" aria-pressed="true">Imaging</button>
+    <button id="tab-delays" data-view="delays" aria-pressed="false">Time delays</button>
   </div>
-  <a href="lensing_simulator_timedelay.html" class="mode-switch-btn" title="Open the time-delay version">
-    Time Delay Mode <span class="arrow">→</span>
-  </a>
-</div>
-
-<div class="main-layout">
-  <div class="controls-panel">
-
-    <div class="control-section">
-      <h3>Lens (EPL)</h3>
-      <div class="control-row"><label>Einstein radius θ<sub>E</sub></label><span class="val" id="val-thetaE">1.20″</span></div>
-      <input type="range" id="thetaE" min="0.3" max="2.5" step="0.01" value="1.2">
-      <div class="control-row"><label>Power-law slope γ</label><span class="val" id="val-gamma">2.00</span></div>
-      <input type="range" id="gamma" min="1.2" max="2.8" step="0.01" value="2.0">
-      <div class="control-row"><label>Ellipticity ε₁</label><span class="val" id="val-e1">0.176</span></div>
-      <input type="range" id="e1" min="-0.7" max="0.7" step="0.005" value="0.176">
-      <div class="control-row"><label>Ellipticity ε₂</label><span class="val" id="val-e2">0.000</span></div>
-      <input type="range" id="e2" min="-0.7" max="0.7" step="0.005" value="0.0">
-      <div class="control-row"><label style="font-size:11px;color:var(--text-dim);">↳ derived</label><span class="val" id="val-eDerived" style="color:var(--text-dim);">q=0.70, φ=0°</span></div>
-      <div class="control-row"><label>Lens center x₀</label><span class="val" id="val-cx">0.00″</span></div>
-      <input type="range" id="cx" min="-1.0" max="1.0" step="0.01" value="0.0">
-      <div class="control-row"><label>Lens center y₀</label><span class="val" id="val-cy">0.00″</span></div>
-      <input type="range" id="cy" min="-1.0" max="1.0" step="0.01" value="0.0">
-    </div>
-
-    <div class="control-section">
-      <h3>External Shear</h3>
-      <div class="control-row"><label>Shear γ<sub>ext</sub></label><span class="val" id="val-shear">0.000</span></div>
-      <input type="range" id="shear" min="0" max="0.3" step="0.005" value="0.0">
-      <div class="control-row"><label>Shear angle φ<sub>ext</sub></label><span class="val" id="val-shearAngle">0°</span></div>
-      <input type="range" id="shearAngle" min="-90" max="90" step="1" value="0">
-    </div>
-
-    <div class="control-section">
-      <h3>Perturbers (SIS)</h3>
-      <div id="pertList"></div>
-      <button class="preset-btn" id="addPerturber">+ Add SIS</button>
-      <button class="preset-btn" id="clearPerturbers">Remove all</button>
-      <div class="info-box">
-        <p>Each perturber is a singular isothermal sphere, α = θ<sub>E,p</sub>·(θ−θ<sub>p</sub>)/|θ−θ<sub>p</sub>|. Drag a dot on the <span class="hl2">image plane</span> to move it; shift-click to drop a new one. Deflections add linearly, so several deflectors can produce the same image configuration.</p>
+  <div class="top-actions">
+    <button class="btn" id="undoBtn" title="Undo (Ctrl/⌘ Z)" disabled>Undo</button>
+    <button class="btn" id="redoBtn" title="Redo (Shift Ctrl/⌘ Z)" disabled>Redo</button>
+    <button class="btn" id="shareBtn" title="Copy a link that reopens this exact configuration">Copy link</button>
+    <div class="menu">
+      <button class="btn" id="exportBtn" aria-haspopup="true" aria-expanded="false">Export</button>
+      <div class="menu-list" id="exportMenu" hidden>
+        <button data-export="png-image">Image plane (PNG)</button>
+        <button data-export="png-source">Source plane (PNG)</button>
+        <button data-export="fits">Image as observed (FITS)</button>
+        <button data-export="csv">Light curves (CSV)</button>
+        <button data-export="python">Copy lenstronomy / herculens kwargs</button>
+        <button data-export="json">Save configuration (JSON)</button>
+        <button data-export="load">Open configuration…</button>
       </div>
     </div>
-
-    <div class="control-section">
-      <h3>Degeneracy check</h3>
-      <button class="preset-btn" id="pinRef">Pin current images</button>
-      <button class="preset-btn" id="clearRef">Clear pin</button>
-      <button class="preset-btn" id="refitMain" title="Refit the main EPL + external shear (and source) so they reproduce the pinned image positions, keeping the perturbers fixed">Refit main lens → pin</button>
-      <div class="checkbox-row" style="margin-top:4px;"><input type="checkbox" id="fitSlope"><label for="fitSlope">Let slope γ vary in the refit</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showRefCurves" checked><label for="showRefCurves">Show pinned critical curves / caustics</label></div>
-      <div class="ref-summary" id="refSummary"></div>
-      <div class="ref-table" id="refTable"></div>
-      <div class="info-box">
-        <p>Pin the images of one lens model, then change it: move or delete a perturber, add a second one, or click <em>Refit</em> to make the main lens compensate (it fits the bright, μ≥1, images). Hollow rings show the pinned images. The table compares positions (Δθ) and normalised fluxes (f = μ/Σμ). When positions match but fluxes or caustics differ, the two models are degenerate in astrometry alone.</p>
-      </div>
-    </div>
-
-    <div class="control-section">
-      <h3>Source — Quasar</h3>
-      <div class="control-row"><label>QSO flux (relative)</label><span class="val" id="val-qsoFlux">1.00</span></div>
-      <input type="range" id="qsoFlux" min="0" max="3.0" step="0.05" value="1.0">
-      <div class="info-box">
-        <p>Click/drag on the <span class="hl1">source plane</span> to move the quasar+host. Lensed images appear on the <span class="hl2">image plane</span> via ray-tracing.</p>
-      </div>
-    </div>
-
-    <div class="control-section">
-      <h3>Source — Host Galaxy (Sérsic)</h3>
-      <div class="control-row"><label>Effective radius R<sub>eff</sub></label><span class="val" id="val-galReff">0.15″</span></div>
-      <input type="range" id="galReff" min="0.02" max="0.6" step="0.005" value="0.15">
-      <div class="control-row"><label>Sérsic index n</label><span class="val" id="val-galN">1.0</span></div>
-      <input type="range" id="galN" min="0.5" max="6.0" step="0.1" value="1.0">
-      <div class="control-row"><label>Axis ratio q<sub>s</sub></label><span class="val" id="val-galQ">0.70</span></div>
-      <input type="range" id="galQ" min="0.1" max="1.0" step="0.01" value="0.7">
-      <div class="control-row"><label>PA φ<sub>s</sub></label><span class="val" id="val-galPA">30°</span></div>
-      <input type="range" id="galPA" min="-90" max="90" step="1" value="30">
-      <div class="control-row"><label>Galaxy flux (relative)</label><span class="val" id="val-galFlux">0.50</span></div>
-      <input type="range" id="galFlux" min="0" max="2.0" step="0.05" value="0.5">
-    </div>
-
-    <div class="control-section">
-      <h3>Display</h3>
-      <div class="checkbox-row"><input type="checkbox" id="showCaustics" checked><label for="showCaustics">Caustics</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showCritical" checked><label for="showCritical">Critical curves</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showGrid" checked><label for="showGrid">Grid</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showExtended" checked><label for="showExtended">Ray-traced host</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showPointImages" checked><label for="showPointImages">Point-source images</label></div>
-      <div class="checkbox-row"><input type="checkbox" id="showLensLabels" checked><label for="showLensLabels">Lens labels (G, G1, G2…)</label></div>
-      <div class="control-row"><label>Ray-trace resolution</label><span class="val" id="val-rtRes">200</span></div>
-      <input type="range" id="rtRes" min="80" max="400" step="10" value="200">
-      <div class="control-row"><label>Caustic resolution</label><span class="val" id="val-causticRes">500</span></div>
-      <input type="range" id="causticRes" min="120" max="1500" step="20" value="500">
-    </div>
-
-    <div class="control-section">
-      <h3>Presets</h3>
-      <button class="preset-btn" onclick="setPreset('quad')">Quad (cross)</button>
-      <button class="preset-btn" onclick="setPreset('cusp')">Cusp triple</button>
-      <button class="preset-btn" onclick="setPreset('fold')">Fold double</button>
-      <button class="preset-btn" onclick="setPreset('einstein')">Einstein ring</button>
-      <button class="preset-btn" onclick="setPreset('binary')">Two deflectors</button>
-      <button class="preset-btn" onclick="setPreset('satellite')">Quad + satellite</button>
-    </div>
-
-    <div class="control-section">
-      <h3>Image Positions</h3>
-      <div class="image-info" id="imageInfo">
-        <p style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">Move the source to see images</p>
-      </div>
-    </div>
+    <button class="btn" id="helpBtn">About</button>
+    <button class="btn" id="themeBtn" title="Switch between light and dark">Dark</button>
   </div>
+</header>
 
-  <!-- Source Plane -->
-  <div class="canvas-container source-plane">
-    <div class="canvas-label">Source Plane</div>
-    <canvas id="sourcePlane" width="550" height="550"></canvas>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-line" style="background:var(--caustic);"></div> Caustics</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--source);"></div> Quasar</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(120,180,255,0.6);"></div> Host galaxy</div>
-    </div>
-    <div class="coords-display" id="srcCoords">β = (0.00, 0.00)</div>
+<main class="app" id="app" data-view="imaging">
+
+  <div class="work">
+    <section class="stage" id="stage" aria-label="Source and image planes">
+      <figure class="plate" id="plateSrc">
+        <figcaption class="plate-head">
+          <span class="plate-title">Source plane</span>
+          <span class="plate-meta" id="srcMeta"></span>
+          <span class="zoom" role="group" aria-label="Source-plane zoom">
+            <button data-zoom="src-out" title="Wider field" aria-label="Zoom out">−</button>
+            <button data-zoom="src-in" title="Narrower field" aria-label="Zoom in">+</button>
+          </span>
+        </figcaption>
+        <div class="plate-box">
+          <canvas class="raster" id="srcRaster"></canvas>
+          <canvas class="overlay" id="srcOverlay" role="img" aria-label="Source plane: caustics and the position of the source. Drag to move the source."></canvas>
+        </div>
+        <p class="plate-status" id="srcStatus">&nbsp;</p>
+      </figure>
+
+      <figure class="plate" id="plateImg">
+        <figcaption class="plate-head">
+          <span class="plate-title">Image plane</span>
+          <span class="plate-meta" id="imgMeta"></span>
+          <span class="zoom" role="group" aria-label="Image-plane zoom">
+            <button data-zoom="img-out" title="Wider field" aria-label="Zoom out">−</button>
+            <button data-zoom="img-in" title="Narrower field" aria-label="Zoom in">+</button>
+          </span>
+        </figcaption>
+        <div class="plate-box">
+          <canvas class="raster" id="imgRaster"></canvas>
+          <canvas class="overlay" id="imgOverlay" role="img" aria-label="Image plane: lensed images, arcs and critical curves. Drag to place an image; drag the lens or a perturber to move it."></canvas>
+          <div class="drop-hint" id="dropHint" hidden>Drop an image to use it as the source</div>
+        </div>
+        <p class="plate-status" id="imgStatus">&nbsp;</p>
+      </figure>
+    </section>
+
+    <aside class="rail" id="rail" aria-label="Results">
+      <section class="card">
+        <h2>Images</h2>
+        <div id="imagesTable"></div>
+        <p class="note" id="imagesNote"></p>
+      </section>
+
+      <section class="card">
+        <h2>Lens</h2>
+        <dl class="facts" id="lensFacts"></dl>
+      </section>
+
+      <section class="card" id="refCard">
+        <h2>Compare with a pinned model</h2>
+        <p class="note" id="refIntro">Pin the current model as the truth, then change the lens. The table shows which observables still agree and what the changed model would conclude about H<sub>0</sub>.</p>
+        <div class="btn-row">
+          <button class="btn btn-solid" id="pinBtn">Pin this model</button>
+          <button class="btn" id="unpinBtn" hidden>Clear</button>
+          <button class="btn" id="refitBtn" hidden title="Adjust the main lens, external shear and source so the pinned image positions are reproduced. Multipoles, perturbers and the mass sheet are kept as they are.">Refit to pinned images</button>
+        </div>
+        <label class="check" id="fitSlopeRow" hidden><input type="checkbox" id="fitSlope"> Let the slope γ vary in the refit</label>
+        <div id="refVerdict"></div>
+        <div id="refTable"></div>
+      </section>
+    </aside>
+
+    <section class="dock" id="dock" aria-label="Light curves and time delays">
+      <div class="dock-main">
+        <div class="dock-head">
+          <h2>Light curves</h2>
+          <div class="legend" id="lcLegend"></div>
+          <div class="dock-tools">
+            <button class="btn btn-solid" id="playBtn">Play</button>
+            <label class="inline">Speed <input type="range" id="lcSpeed" min="0.2" max="4" step="0.1" value="1" aria-label="Playback speed"></label>
+            <div class="seg" role="group" aria-label="Vertical axis">
+              <button data-unit="mag" aria-pressed="true">Magnitude</button>
+              <button data-unit="flux" aria-pressed="false">Flux</button>
+            </div>
+            <label class="check"><input type="checkbox" id="lcAlign"> Undo the delays</label>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="lcCanvas" role="img" aria-label="Light curves of the lensed images. The delay table lists the same information."></canvas>
+          <div class="tip" id="lcTip" hidden></div>
+        </div>
+      </div>
+      <div class="dock-side">
+        <div class="dock-side-head">
+          <h2>Delays and H<sub>0</sub></h2>
+          <button class="btn" id="measureBtn" title="Estimate the delays from the monitoring data, with their scatter over noise realisations">Measure from the data</button>
+        </div>
+        <div id="delayTable"></div>
+        <div id="h0Strip"></div>
+        <p class="note" id="h0Note"></p>
+      </div>
+    </section>
   </div>
 
-  <!-- Image Plane -->
-  <div class="canvas-container image-plane">
-    <div class="canvas-label">Image Plane</div>
-    <canvas id="imagePlane" width="550" height="550"></canvas>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-line" style="background:var(--critical);"></div> Critical curves</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff4466;"></div> QSO image — minimum (+ parity)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#64a0ff;"></div> QSO image — saddle (− parity)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(140,200,255,0.45);"></div> Lensed host (extended)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,235,180,0.95);"></div> G — main lens</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,180,80,0.95);"></div> G1, G2, … — SIS perturbers</div>
-      <div class="legend-item"><div class="legend-dot" style="background:transparent;border:1.5px solid rgba(255,255,255,0.85);"></div> Pinned reference images</div>
-    </div>
-    <div class="coords-display" id="imgCoords">θ = (0.00, 0.00)</div>
-    <div class="perf-display" id="perfDisplay"></div>
+  <aside class="controls" id="controls" aria-label="Model parameters"></aside>
+</main>
+
+<dialog class="sheet" id="help" aria-labelledby="helpTitle">
+  <form method="dialog" class="sheet-head">
+    <h2 id="helpTitle">About this simulator</h2>
+    <button class="btn" value="close">Close</button>
+  </form>
+  <div class="sheet-body">
+    <section>
+      <h3>What it shows</h3>
+      <p>A galaxy between us and a distant quasar bends the quasar's light. The <strong>source plane</strong> is what is really there: the quasar and its host galaxy, and the caustics of the lens. The <strong>image plane</strong> is what a telescope sees: several images of the quasar, and the host galaxy stretched into arcs around the lens. Each image-plane pixel is traced back through the lens equation β = θ − α(θ) to the source, so the arcs are exact for the chosen model.</p>
+      <p>Solid curves are tangential critical curves and caustics; dashed ones are radial. When the source crosses a caustic, two images appear or merge on the matching critical curve. An isothermal lens (γ = 2) has no radial caustic; the dashed curve in the source plane is then the cut, inside which a second image exists.</p>
+    </section>
+    <section>
+      <h3>Using it</h3>
+      <ul>
+        <li>Drag in the source plane to move the source. Drag in the image plane to put an image where the pointer is.</li>
+        <li>Drag <b>G</b> to move the lens, and a perturber to move it. Shift-click the image plane to add a perturber; double-click one to remove it.</li>
+        <li>Hover the image plane to read convergence, shear, magnification and arrival time at that point, and to see where it comes from in the source plane. Hover the source plane to preview the images a source there would have.</li>
+        <li>Scroll over a plane, or use − and +, to change its field of view. Click a value to type it. Double-click a slider to reset it.</li>
+        <li>Arrow keys nudge the source (with Shift, in larger steps). Space plays the light curves. Ctrl/⌘ Z undoes.</li>
+        <li>Under Source, the host can be a smooth Sérsic profile, a spiral galaxy, a test pattern, or your own picture: drop an image file on the image plane.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>The model</h3>
+      <p>The main lens is an elliptical power law, κ = (3 − γ)/2 · (θ<sub>E</sub>√q / R)<sup>γ−1</sup> with R² = q²x² + y², evaluated with the series of Tessore &amp; Metcalf (2015). θ<sub>E</sub>, e<sub>1</sub> and e<sub>2</sub> follow lenstronomy and herculens, so parameters can be copied to and from ALPACA runs. To this are added an external shear, m = 3 and m = 4 multipoles, and any number of singular isothermal perturbers, all in the lens plane. Deflection, potential and Hessian are analytic, so magnifications and arrival times are exact rather than finite differences.</p>
+      <p>The <strong>mass sheet</strong> control applies κ → λκ + (1 − λ) and rescales the source by λ. The images, arcs and flux ratios do not change at all; the time delays, and the H<sub>0</sub> one would infer, scale with λ (Falco, Gorenstein &amp; Shapiro 1985). Imaging alone cannot see this, which is why stellar kinematics and the line of sight enter time-delay cosmography.</p>
+      <p>Images fainter than a magnification of 10<sup>−4</sup> are not listed. Perturbers are in the same plane as the lens; there is no multi-plane lensing here.</p>
+    </section>
+    <section>
+      <h3>Time delays and H<sub>0</sub></h3>
+      <p>Light reaches us along paths that make the arrival time τ(θ) = ½|θ − β|² − ψ(θ) stationary: minima, saddle points and maxima of the arrival-time surface. Turn on the arrival-time contours to see them. The delay between two images is Δt = (D<sub>Δt</sub>/c) Δτ, with D<sub>Δt</sub> = (1 + z<sub>d</sub>) D<sub>d</sub>D<sub>s</sub>/D<sub>ds</sub> ∝ 1/H<sub>0</sub> (Refsdal 1964). Distances are for flat ΛCDM.</p>
+      <p>In the time-delay workspace the quasar varies as a damped random walk (Kelly, Bechtold &amp; Siemiginowska 2009), a sinusoid, or a single transient. Every image repeats the same signal after its delay. With monitoring switched on, the curves are sampled at a cadence, in observing seasons, with photometric noise and optionally microlensing. <em>Measure from the data</em> estimates the delays by shifting one curve against another, and turns them into H<sub>0</sub> using the lens model on screen. Its error bar covers photometric noise only and assumes the lens model is right.</p>
+      <p>Pinning a model makes that last assumption testable: change the slope, add a sheet or remove a satellite, refit the image positions, and read off how far H<sub>0</sub> moves while the astrometry still agrees.</p>
+    </section>
+    <section>
+      <h3>The image as observed</h3>
+      <p>The spiral host is an exponential disc of old stars with a bulge, logarithmic arms of young stars, dust lanes along the arms and star-forming clumps; the quasar sits in its nucleus. Structure like this is what lets a real arc constrain the lens, because every clump has to appear in each image at the place the model predicts. A spiral also has a handedness: images with negative magnification show it wound the other way.</p>
+      <p>Lensing conserves surface brightness, so both planes share one brightness scale and one asinh stretch (Lupton et al. 2004). An instrument adds a Gaussian point-spread function, detector pixels and noise; the values are round numbers for each instrument, not a calibration. Quasar images are true point sources with the same point-spread function.</p>
+    </section>
+    <section>
+      <h3>References</h3>
+      <p class="refs">Refsdal 1964, MNRAS 128, 307 · Falco, Gorenstein &amp; Shapiro 1985, ApJ 289, L1 · Blandford &amp; Narayan 1986, ApJ 310, 568 · Lupton et al. 2004, PASP 116, 133 · Kelly, Bechtold &amp; Siemiginowska 2009, ApJ 698, 895 · Tessore &amp; Metcalf 2015, A&amp;A 580, A79 · <a href="https://arxiv.org/abs/2401.04165" target="_blank" rel="noopener">Saha, Sluse, Wagner &amp; Williams 2024</a></p>
+    </section>
   </div>
-</div>
-
-<script>
-// ======================================================
-// EPL Strong Lensing Simulator with extended Sérsic host
-// ======================================================
-
-const srcCanvas = document.getElementById('sourcePlane');
-const imgCanvas = document.getElementById('imagePlane');
-const srcCtx = srcCanvas.getContext('2d');
-const imgCtx = imgCanvas.getContext('2d');
-
-// --- State ---
-let params = {
-  thetaE: 1.2, gamma: 2.0, q: 0.7, phi: 0, cx: 0, cy: 0,
-  shear: 0.0, shearAngle: 0,
-  qsoFlux: 1.0,
-  galReff: 0.15, galN: 1.0, galQ: 0.7, galPA: 30, galFlux: 0.5,
-};
-
-// SIS perturbers: { thetaE, x, y, on }. Labelled G1, G2, … by index.
-let perturbers = [];
-let selectedPert = -1;
-const PERT_COLORS = [
-  [255,180, 80], [190,130,255], [ 80,220,200], [255,120,190], [160,220, 90], [120,170,255],
-];
-function pertColor(i, a=0.95) {
-  const c = PERT_COLORS[i % PERT_COLORS.length];
-  return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-}
-
-// Pinned reference (degeneracy check): images + curves from an earlier lens model
-let refPin = null;
-
-let sourcePos = { x: 0.1, y: -0.1 };
-let showCaustics = true, showCritical = true, showGrid = true;
-let showExtended = true, showPointImages = true;
-let showLensLabels = true;
-let rtRes = 200;
-let causticRes = 500;
-
-const fieldOfView = 3.0;
-let dragging = false;
-
-// --- Lens-shape parameterization helpers ---
-// Standard "shear-like" ellipticity convention: ε = (1-q)/(1+q).
-// ε₁ = ε cos(2φ), ε₂ = ε sin(2φ). Circular ⇒ (0, 0); no φ singularity at q=1.
-const EPS_MAX = 0.7; // clip to keep q above ~0.176 (matches old q slider min)
-function qPhiToEps(q, phiDeg) {
-  const eps = (1 - q) / (1 + q);
-  const phiRad = phiDeg * Math.PI / 180;
-  return { e1: eps * Math.cos(2*phiRad), e2: eps * Math.sin(2*phiRad) };
-}
-function epsToQPhi(e1, e2) {
-  let eps = Math.hypot(e1, e2);
-  if (eps > EPS_MAX) {
-    const scale = EPS_MAX / eps;
-    e1 *= scale; e2 *= scale; eps = EPS_MAX;
-  }
-  if (eps < 1e-9) return { q: 1.0, phi: 0 };
-  const phiDeg = 0.5 * Math.atan2(e2, e1) * 180 / Math.PI;
-  const q = (1 - eps) / (1 + eps);
-  return { q, phi: phiDeg };
-}
-function syncEpsDerivedDisplay() {
-  document.getElementById('val-eDerived').textContent =
-    `q=${params.q.toFixed(2)}, φ=${params.phi.toFixed(0)}°`;
-}
-
-// --- Coordinate transforms ---
-function a2p(x, y, c) {
-  const s = c.width / (2 * fieldOfView);
-  return { px: c.width/2 + x*s, py: c.height/2 - y*s };
-}
-function p2a(px, py, c) {
-  const s = c.width / (2 * fieldOfView);
-  return { x: (px - c.width/2)/s, y: -(py - c.height/2)/s };
-}
-
-// --- Sérsic profile ---
-// I(r) = I_e * exp(-b_n * ((r/R_eff)^(1/n) - 1))
-// b_n ≈ 2n - 1/3 + 4/(405n) for n > 0.36
-function sersicBn(n) {
-  return 2*n - 1/3 + 4/(405*n) + 46/(25515*n*n);
-}
-
-function sersicProfile(dx, dy) {
-  const { galReff, galN, galQ, galPA, galFlux } = params;
-  if (galFlux <= 0) return 0;
-
-  const pa = galPA * Math.PI / 180;
-  const cosP = Math.cos(pa), sinP = Math.sin(pa);
-  const x = cosP * dx + sinP * dy;
-  const y = (-sinP * dx + cosP * dy) / galQ;
-  const r = Math.sqrt(x*x + y*y);
-
-  if (r < 1e-10) return galFlux; // peak
-  const bn = sersicBn(galN);
-  const intensity = galFlux * Math.exp(-bn * (Math.pow(r / galReff, 1/galN) - 1));
-  return intensity;
-}
-
-// Source brightness at position (sx, sy) in source plane
-function sourceBrightness(sx, sy) {
-  const dx = sx - sourcePos.x;
-  const dy = sy - sourcePos.y;
-
-  // Host galaxy (Sérsic)
-  const gal = sersicProfile(dx, dy);
-
-  // Quasar (compact Gaussian, ~PSF)
-  const qsoSigma = 0.015; // very compact
-  const r2 = dx*dx + dy*dy;
-  const qso = params.qsoFlux * Math.exp(-r2 / (2 * qsoSigma * qsoSigma));
-
-  return gal + qso;
-}
-
-// --- EPL deflection (Tessore & Metcalf 2015, exact hypergeometric form) ---
-// κ(R) = (3-γ)/2 · (b/R)^(γ-1),  R = √(q²x² + y²),  major axis along x
-// α(R, φ) = 2b/(1+q) · (b/R)^(t-1) · e^{iφ} · ₂F₁(1, t/2; 2-t/2; -((1-q)/(1+q)) e^{2iφ})
-// where t = γ - 1 and φ = atan2(y, q·x).  Curl-free; convergence matches κ exactly.
-function eplDeflection(theta_x, theta_y) {
-  const { thetaE, gamma, q, phi: phiDeg, cx, cy } = params;
-  const phiRad = phiDeg * Math.PI / 180;
-  let dx = theta_x - cx, dy = theta_y - cy;
-  const cosP = Math.cos(phiRad), sinP = Math.sin(phiRad);
-  let x = cosP*dx + sinP*dy;
-  let y = -sinP*dx + cosP*dy;
-
-  const t = gamma - 1;
-  const b = thetaE;
-  let alpha_x, alpha_y;
-
-  if (Math.abs(1 - q) < 1e-6) {
-    // Circular EPL — exact closed form
-    const r = Math.sqrt(x*x + y*y);
-    if (r < 1e-12) { alpha_x = 0; alpha_y = 0; }
-    else {
-      const dm = Math.pow(b, t) / Math.pow(r, t - 1);
-      alpha_x = dm * x / r;
-      alpha_y = dm * y / r;
-    }
-  } else {
-    // Elliptical EPL — Tessore & Metcalf (2015) hypergeometric series
-    const R = Math.sqrt(q*q*x*x + y*y);
-    if (R < 1e-12) { alpha_x = 0; alpha_y = 0; }
-    else {
-      const phiE = Math.atan2(y, q*x);
-      const e = (1 - q)/(1 + q);
-      const c2 = Math.cos(2*phiE), s2 = Math.sin(2*phiE);
-      const zRe = -e*c2, zIm = -e*s2;
-      // F = ₂F₁(1, t/2; 2-t/2; z) by series; |z| = e < 1 so it converges
-      const aH = 1.0, bH = t/2, cH = 2 - t/2;
-      let termRe = 1, termIm = 0, sumRe = 1, sumIm = 0;
-      for (let n = 0; n < 80; n++) {
-        const fac = (aH + n)*(bH + n)/((cH + n)*(n + 1));
-        const trNew = fac*(termRe*zRe - termIm*zIm);
-        const tiNew = fac*(termRe*zIm + termIm*zRe);
-        termRe = trNew; termIm = tiNew;
-        sumRe += termRe; sumIm += termIm;
-        if (Math.hypot(termRe, termIm) < 1e-12) break;
-      }
-      const radial = (2*b/(1 + q)) * Math.pow(b/R, t - 1);
-      const cE = Math.cos(phiE), sE = Math.sin(phiE);
-      alpha_x = radial * (cE*sumRe - sE*sumIm);
-      alpha_y = radial * (cE*sumIm + sE*sumRe);
-    }
-  }
-
-  // Rotate back to sky frame
-  let ax_sky = cosP*alpha_x - sinP*alpha_y;
-  let ay_sky = sinP*alpha_x + cosP*alpha_y;
-
-  // External shear (centred at lens position; constant offset is degenerate)
-  const shRad = params.shearAngle * Math.PI / 180;
-  const g1 = params.shear * Math.cos(2*shRad);
-  const g2 = params.shear * Math.sin(2*shRad);
-  ax_sky += g1*dx + g2*dy;
-  ay_sky += g2*dx - g1*dy;
-
-  // Perturbers: softened isothermal spheres — α = θ_E,p · (θ−θ_p) / √(|θ−θ_p|² + r_c²)
-  // Deflections add linearly, so each SIS just sums into α.
-  const rc2 = 1e-4; // small core to avoid singularity at the perturber centre
-  for (const p of perturbers) {
-    if (!p.on || p.thetaE <= 0) continue;
-    const px = theta_x - p.x;
-    const py = theta_y - p.y;
-    const pr = Math.sqrt(px*px + py*py + rc2);
-    ax_sky += p.thetaE * px / pr;
-    ay_sky += p.thetaE * py / pr;
-  }
-
-  return { ax: ax_sky, ay: ay_sky };
-}
-
-function lensEquation(tx, ty) {
-  const { ax, ay } = eplDeflection(tx, ty);
-  return { bx: tx - ax, by: ty - ay };
-}
-
-// --- Find point-source images via grid + Newton ---
-function findImages(bx, by) {
-  const images = [];
-  const gridN = 180;
-  const range = fieldOfView * 0.95;
-  const step = 2*range / gridN;
-  const candidates = [];
-
-  for (let i = 0; i < gridN; i++) {
-    for (let j = 0; j < gridN; j++) {
-      const tx = -range + (i+0.5)*step;
-      const ty = -range + (j+0.5)*step;
-      const s = lensEquation(tx, ty);
-      const d = Math.sqrt((s.bx-bx)**2 + (s.by-by)**2);
-      if (d < step*2) candidates.push({x:tx, y:ty});
-    }
-  }
-
-  for (const c of candidates) {
-    let x = c.x, y = c.y;
-    for (let it = 0; it < 25; it++) {
-      const s = lensEquation(x, y);
-      const fx = s.bx - bx, fy = s.by - by;
-      if (Math.sqrt(fx*fx+fy*fy) < 1e-10) break;
-      const h = 1e-6;
-      const s1 = lensEquation(x+h, y), s2 = lensEquation(x, y+h);
-      const A11=(s1.bx-s.bx)/h, A12=(s2.bx-s.bx)/h;
-      const A21=(s1.by-s.by)/h, A22=(s2.by-s.by)/h;
-      const det = A11*A22-A12*A21;
-      if (Math.abs(det)<1e-15) break;
-      x -= (A22*fx-A12*fy)/det;
-      y -= (-A21*fx+A11*fy)/det;
-    }
-    const s = lensEquation(x, y);
-    if (Math.sqrt((s.bx-bx)**2+(s.by-by)**2) < 1e-5 && Math.abs(x)<fieldOfView && Math.abs(y)<fieldOfView) {
-      let dup = false;
-      for (const img of images) if (Math.sqrt((img.x-x)**2+(img.y-y)**2)<0.01) { dup=true; break; }
-      if (!dup) {
-        const h=1e-5;
-        const s0=lensEquation(x,y), s1=lensEquation(x+h,y), s2=lensEquation(x,y+h);
-        const A11=(s1.bx-s0.bx)/h, A12=(s2.bx-s0.bx)/h;
-        const A21=(s1.by-s0.by)/h, A22=(s2.by-s0.by)/h;
-        const det=A11*A22-A12*A21;
-        images.push({x,y,mu:Math.min(1/Math.abs(det),999),parity:det>0?1:-1});
-      }
-    }
-  }
-  images.sort((a,b)=>b.mu-a.mu);
-  return images;
-}
-
-// --- Critical curves & caustics ---
-function computeCurves() {
-  const cc = [], ca = [];
-  const nPts = causticRes;
-  for (let k = 0; k < nPts; k++) {
-    const ang = 2*Math.PI*k/nPts;
-    let prevDet = null;
-    // Perturbers add small closed critical curves; sample radially finer so they aren't skipped
-    const nR = perturbers.some(p => p.on) ? 160 : 80;
-    const rMin = 0.01, rMax = fieldOfView*0.95;
-    for (let ir = 0; ir <= nR; ir++) {
-      const r = rMin + (rMax-rMin)*ir/nR;
-      const tx = r*Math.cos(ang), ty = r*Math.sin(ang);
-      const h = 1e-5;
-      const s=lensEquation(tx,ty);
-      const s1=lensEquation(tx+h,ty), s2=lensEquation(tx,ty+h);
-      const det=(s1.bx-s.bx)/h*(s2.by-s.by)/h-(s2.bx-s.bx)/h*(s1.by-s.by)/h;
-      if (prevDet!==null && prevDet*det<0) {
-        let lo=rMin+(rMax-rMin)*(ir-1)/nR, hi=r;
-        for (let b=0;b<20;b++) {
-          const mid=(lo+hi)/2;
-          const mx=mid*Math.cos(ang),my=mid*Math.sin(ang);
-          const ms=lensEquation(mx,my);
-          const ms1=lensEquation(mx+h,my),ms2=lensEquation(mx,my+h);
-          const md=(ms1.bx-ms.bx)/h*(ms2.by-ms.by)/h-(ms2.bx-ms.bx)/h*(ms1.by-ms.by)/h;
-          if(prevDet*md<0) hi=mid; else { lo=mid; prevDet=md; }
-        }
-        const rf=(lo+hi)/2;
-        const fx=rf*Math.cos(ang),fy=rf*Math.sin(ang);
-        cc.push({x:fx,y:fy});
-        const fs=lensEquation(fx,fy);
-        ca.push({x:fs.bx,y:fs.by});
-      }
-      prevDet=det;
-    }
-  }
-  return {criticalCurves:cc,caustics:ca};
-}
-
-// --- Ray-trace extended source: for each image-plane pixel, map to source plane and sample ---
-function rayTraceExtended(ctx, canvas) {
-  const N = rtRes;
-  const range = fieldOfView;
-  const imgData = ctx.createImageData(N, N);
-  let maxVal = 0;
-  const vals = new Float32Array(N*N);
-
-  for (let j = 0; j < N; j++) {
-    for (let i = 0; i < N; i++) {
-      const tx = -range + 2*range*(i+0.5)/N;
-      const ty = range - 2*range*(j+0.5)/N; // j=0 is top = +y
-      const {bx,by} = lensEquation(tx, ty);
-      const val = sourceBrightness(bx, by);
-      vals[j*N+i] = val;
-      if (val > maxVal) maxVal = val;
-    }
-  }
-
-  if (maxVal < 1e-10) return;
-
-  // Render with arcsinh stretch for dynamic range
-  const stretch = 5.0 / maxVal;
-  for (let j = 0; j < N; j++) {
-    for (let i = 0; i < N; i++) {
-      const val = vals[j*N+i];
-      const norm = Math.asinh(val * stretch) / Math.asinh(5.0);
-      const idx = (j*N+i)*4;
-      // Blue-white colormap for the host, warm for QSO
-      const t = Math.min(norm, 1);
-      imgData.data[idx]   = Math.floor(40*t + 200*t*t*t); // R
-      imgData.data[idx+1] = Math.floor(80*t + 180*t*t*t); // G
-      imgData.data[idx+2] = Math.floor(180*t + 75*t*t);   // B
-      imgData.data[idx+3] = Math.floor(Math.min(255, 300*t));
-    }
-  }
-
-  const tmp = document.createElement('canvas');
-  tmp.width = N; tmp.height = N;
-  tmp.getContext('2d').putImageData(imgData, 0, 0);
-  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
-}
-
-// --- Draw source on source plane ---
-function drawSource(ctx, canvas) {
-  const N = 200;
-  const srcFOV = fieldOfView;
-  const imgData = ctx.createImageData(N, N);
-  let maxVal = 0;
-  const vals = new Float32Array(N*N);
-
-  for (let j = 0; j < N; j++) {
-    for (let i = 0; i < N; i++) {
-      const sx = -srcFOV + 2*srcFOV*(i+0.5)/N;
-      const sy = srcFOV - 2*srcFOV*(j+0.5)/N;
-      const val = sourceBrightness(sx, sy);
-      vals[j*N+i] = val;
-      if (val > maxVal) maxVal = val;
-    }
-  }
-
-  if (maxVal < 1e-10) return;
-  const stretch = 5.0 / maxVal;
-
-  for (let j = 0; j < N; j++) {
-    for (let i = 0; i < N; i++) {
-      const val = vals[j*N+i];
-      const norm = Math.asinh(val * stretch) / Math.asinh(5.0);
-      const idx = (j*N+i)*4;
-      const t = Math.min(norm, 1);
-      imgData.data[idx]   = Math.floor(40*t + 200*t*t*t);
-      imgData.data[idx+1] = Math.floor(80*t + 180*t*t*t);
-      imgData.data[idx+2] = Math.floor(180*t + 75*t*t);
-      imgData.data[idx+3] = Math.floor(Math.min(255, 300*t));
-    }
-  }
-
-  const tmp = document.createElement('canvas');
-  tmp.width = N; tmp.height = N;
-  tmp.getContext('2d').putImageData(imgData, 0, 0);
-  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
-}
-
-// --- Grid drawing ---
-function drawGrid(ctx, canvas) {
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 0.5;
-  for (let a = -3; a <= 3; a += 0.5) {
-    let p1=a2p(a,-fieldOfView,canvas), p2=a2p(a,fieldOfView,canvas);
-    ctx.beginPath(); ctx.moveTo(p1.px,p1.py); ctx.lineTo(p2.px,p2.py); ctx.stroke();
-    p1=a2p(-fieldOfView,a,canvas); p2=a2p(fieldOfView,a,canvas);
-    ctx.beginPath(); ctx.moveTo(p1.px,p1.py); ctx.lineTo(p2.px,p2.py); ctx.stroke();
-  }
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.font = '10px JetBrains Mono';
-  ctx.textAlign = 'center';
-  for (let a = -2; a <= 2; a++) {
-    if (!a) continue;
-    let p = a2p(a,0,canvas);
-    ctx.fillText(a+'″', p.px, canvas.height/2+14);
-    p = a2p(0,a,canvas);
-    ctx.fillText(a+'″', canvas.width/2-18, p.py+4);
-  }
-  const o = a2p(0,0,canvas);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 0.5;
-  ctx.beginPath(); ctx.moveTo(o.px-8,o.py); ctx.lineTo(o.px+8,o.py); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(o.px,o.py-8); ctx.lineTo(o.px,o.py+8); ctx.stroke();
-}
-
-const IMG_LABELS = ['A','B','C','D','E','F'];
-let lastImages = [];
-let showRefCurves = true;
-let cachedCurves = null, curvesDirty = true;
-let renderPending = false;
-
-function render() {
-  if (renderPending) return;
-  renderPending = true;
-  requestAnimationFrame(_render);
-}
-
-function _render() {
-  renderPending = false;
-  const t0 = performance.now();
-  const W = srcCanvas.width, H = srcCanvas.height;
-
-  // === Source Plane ===
-  srcCtx.fillStyle = '#08080d';
-  srcCtx.fillRect(0, 0, W, H);
-  if (showGrid) drawGrid(srcCtx, srcCanvas);
-
-  // Draw source (galaxy + quasar)
-  drawSource(srcCtx, srcCanvas);
-
-  // Caustics
-  if (showCaustics || showCritical) {
-    if (curvesDirty) { cachedCurves = computeCurves(); curvesDirty = false; }
-  }
-  if (showCaustics && cachedCurves) {
-    srcCtx.fillStyle = 'rgba(255,204,0,0.7)';
-    for (const p of cachedCurves.caustics) {
-      const {px,py} = a2p(p.x,p.y,srcCanvas);
-      srcCtx.fillRect(px-0.8,py-0.8,1.6,1.6);
-    }
-  }
-
-  // Source crosshair
-  const sp = a2p(sourcePos.x, sourcePos.y, srcCanvas);
-  srcCtx.strokeStyle = 'rgba(255,102,68,0.9)';
-  srcCtx.lineWidth = 1.5;
-  srcCtx.beginPath(); srcCtx.moveTo(sp.px-10,sp.py); srcCtx.lineTo(sp.px+10,sp.py); srcCtx.stroke();
-  srcCtx.beginPath(); srcCtx.moveTo(sp.px,sp.py-10); srcCtx.lineTo(sp.px,sp.py+10); srcCtx.stroke();
-
-  // === Image Plane ===
-  imgCtx.fillStyle = '#08080d';
-  imgCtx.fillRect(0, 0, W, H);
-  if (showGrid) drawGrid(imgCtx, imgCanvas);
-
-  // Ray-traced extended source
-  if (showExtended) {
-    rayTraceExtended(imgCtx, imgCanvas);
-  }
-
-  // Critical curves
-  if (showCritical && cachedCurves) {
-    imgCtx.fillStyle = 'rgba(0,255,170,0.6)';
-    for (const p of cachedCurves.criticalCurves) {
-      const {px,py} = a2p(p.x,p.y,imgCanvas);
-      imgCtx.fillRect(px-0.8,py-0.8,1.6,1.6);
-    }
-  }
-
-  // Main lens "G"
-  const lc = a2p(params.cx, params.cy, imgCanvas);
-  if (showLensLabels) {
-    imgCtx.fillStyle = 'rgba(255,235,180,0.95)';
-    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.fill();
-    imgCtx.strokeStyle = 'rgba(0,0,0,0.6)'; imgCtx.lineWidth = 1;
-    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.stroke();
-    imgCtx.font = 'bold 13px JetBrains Mono';
-    imgCtx.fillStyle = 'rgba(255,235,180,0.95)';
-    imgCtx.textAlign = 'left';
-    imgCtx.fillText('G', lc.px + 8, lc.py - 6);
-  } else {
-    imgCtx.strokeStyle = 'rgba(255,255,255,0.3)'; imgCtx.lineWidth = 1;
-    imgCtx.beginPath(); imgCtx.arc(lc.px, lc.py, 5, 0, 2*Math.PI); imgCtx.stroke();
-  }
-
-  // Perturbers "G1", "G2", …
-  const sPx = imgCanvas.width / (2 * fieldOfView);
-  perturbers.forEach((p, i) => {
-    const pp = a2p(p.x, p.y, imgCanvas);
-    const alpha = p.on ? 1 : 0.35;
-    // Influence radius ~ θ_E,p, faint dashed circle showing reach
-    imgCtx.strokeStyle = pertColor(i, 0.35 * alpha);
-    imgCtx.setLineDash([3, 3]);
-    imgCtx.lineWidth = 1;
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, Math.max(p.thetaE * sPx, 1), 0, 2*Math.PI); imgCtx.stroke();
-    imgCtx.setLineDash([]);
-    // Solid centre dot (hollow when disabled)
-    imgCtx.fillStyle = pertColor(i, 0.95 * alpha);
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, 4, 0, 2*Math.PI);
-    if (p.on) imgCtx.fill();
-    imgCtx.strokeStyle = p.on ? 'rgba(0,0,0,0.6)' : pertColor(i, 0.6);
-    imgCtx.lineWidth = i === selectedPert ? 2 : 1;
-    imgCtx.beginPath(); imgCtx.arc(pp.px, pp.py, i === selectedPert ? 6 : 4, 0, 2*Math.PI); imgCtx.stroke();
-    if (showLensLabels) {
-      imgCtx.font = 'bold 12px JetBrains Mono';
-      imgCtx.fillStyle = pertColor(i, 0.95 * alpha);
-      imgCtx.textAlign = 'left';
-      imgCtx.fillText('G' + (i+1), pp.px + 7, pp.py - 5);
-    }
-  });
-
-  // Point-source images
-  const images = findImages(sourcePos.x, sourcePos.y);
-  lastImages = images;
-  const labels = IMG_LABELS;
-
-  // Pinned reference: ghost critical curves / caustics + hollow image rings
-  if (refPin) {
-    if (showRefCurves && refPin.curves) {
-      if (showCritical) {
-        imgCtx.fillStyle = 'rgba(255,255,255,0.22)';
-        for (const p of refPin.curves.criticalCurves) {
-          const {px,py} = a2p(p.x,p.y,imgCanvas);
-          imgCtx.fillRect(px-0.6,py-0.6,1.2,1.2);
-        }
-      }
-      if (showCaustics) {
-        srcCtx.fillStyle = 'rgba(255,255,255,0.22)';
-        for (const p of refPin.curves.caustics) {
-          const {px,py} = a2p(p.x,p.y,srcCanvas);
-          srcCtx.fillRect(px-0.6,py-0.6,1.2,1.2);
-        }
-      }
-    }
-    imgCtx.strokeStyle = 'rgba(255,255,255,0.85)';
-    imgCtx.lineWidth = 1.5;
-    imgCtx.font = '11px JetBrains Mono';
-    imgCtx.textAlign = 'right';
-    refPin.images.forEach((img, i) => {
-      const {px,py} = a2p(img.x, img.y, imgCanvas);
-      imgCtx.beginPath(); imgCtx.arc(px, py, 9, 0, 2*Math.PI); imgCtx.stroke();
-      imgCtx.fillStyle = 'rgba(255,255,255,0.8)';
-      imgCtx.fillText((labels[i]||''+(i+1)) + '′', px - 11, py + 14);
-    });
-    const sp0 = a2p(refPin.source.x, refPin.source.y, srcCanvas);
-    srcCtx.strokeStyle = 'rgba(255,255,255,0.7)'; srcCtx.lineWidth = 1;
-    srcCtx.beginPath(); srcCtx.arc(sp0.px, sp0.py, 7, 0, 2*Math.PI); srcCtx.stroke();
-  }
-  updateRefComparison(images);
-  let infoHTML = '';
-
-  if (showPointImages) {
-    for (let i = 0; i < images.length; i++) {
-      const img = images[i];
-      const {px,py} = a2p(img.x, img.y, imgCanvas);
-      const colFull = img.parity>0 ? '#ff4466' : '#64a0ff';
-      const col = img.parity>0 ? 'rgba(255,68,102,0.8)' : 'rgba(100,160,255,0.8)';
-
-      // Size ~ sqrt(mu)
-      const r = 3 * Math.sqrt(Math.min(img.mu, 50));
-
-      const glow = imgCtx.createRadialGradient(px,py,0,px,py,r*2);
-      glow.addColorStop(0, img.parity>0 ? 'rgba(255,68,102,0.5)' : 'rgba(100,160,255,0.5)');
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      imgCtx.fillStyle = glow;
-      imgCtx.beginPath(); imgCtx.arc(px,py,r*2,0,2*Math.PI); imgCtx.fill();
-
-      imgCtx.fillStyle = col;
-      imgCtx.beginPath(); imgCtx.arc(px,py,r,0,2*Math.PI); imgCtx.fill();
-
-      const label = labels[i]||''+(i+1);
-      imgCtx.font = 'bold 12px JetBrains Mono';
-      imgCtx.fillStyle = colFull;
-      imgCtx.textAlign = 'left';
-      imgCtx.fillText(label, px+r+4, py-4);
-
-      imgCtx.strokeStyle = colFull; imgCtx.lineWidth = 1.5;
-      imgCtx.beginPath(); imgCtx.moveTo(px-5,py); imgCtx.lineTo(px+5,py); imgCtx.stroke();
-      imgCtx.beginPath(); imgCtx.moveTo(px,py-5); imgCtx.lineTo(px,py+5); imgCtx.stroke();
-
-      const ps = img.parity>0 ? '<span style="color:#ff4466">+</span>' : '<span style="color:#64a0ff">−</span>';
-      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${colFull}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
-    }
-  } else {
-    for (let i = 0; i < images.length; i++) {
-      const img = images[i];
-      const colFull = img.parity>0 ? '#ff4466' : '#64a0ff';
-      const label = labels[i]||''+(i+1);
-      const ps = img.parity>0 ? '<span style="color:#ff4466">+</span>' : '<span style="color:#64a0ff">−</span>';
-      infoHTML += `<div class="img-entry"><span class="img-label" style="color:${colFull}">${label}</span><span class="img-pos">(${img.x.toFixed(3)},${img.y.toFixed(3)})</span><span class="img-mag">μ=${img.mu.toFixed(1)}</span><span class="img-parity">${ps}</span></div>`;
-    }
-  }
-
-  document.getElementById('imageInfo').innerHTML = infoHTML || '<p style="font-size:11px;color:var(--text-dim);font-family:JetBrains Mono,monospace;">No images found</p>';
-  document.getElementById('srcCoords').textContent = `β = (${sourcePos.x.toFixed(3)}, ${sourcePos.y.toFixed(3)})`;
-
-  const dt = performance.now() - t0;
-  document.getElementById('perfDisplay').textContent = `${dt.toFixed(0)} ms`;
-}
-
-// --- UI Binding ---
-const allSliders = {
-  thetaE:    { key:'thetaE',    fmt: v=>v.toFixed(2)+'″' },
-  gamma:     { key:'gamma',     fmt: v=>v.toFixed(2) },
-  cx:        { key:'cx',        fmt: v=>v.toFixed(2)+'″' },
-  cy:        { key:'cy',        fmt: v=>v.toFixed(2)+'″' },
-  shear:     { key:'shear',     fmt: v=>v.toFixed(3) },
-  shearAngle:{ key:'shearAngle',fmt: v=>v.toFixed(0)+'°' },
-  qsoFlux:   { key:'qsoFlux',   fmt: v=>v.toFixed(2) },
-  galReff:   { key:'galReff',   fmt: v=>v.toFixed(3)+'″' },
-  galN:      { key:'galN',      fmt: v=>v.toFixed(1) },
-  galQ:      { key:'galQ',      fmt: v=>v.toFixed(2) },
-  galPA:     { key:'galPA',     fmt: v=>v.toFixed(0)+'°' },
-  galFlux:   { key:'galFlux',   fmt: v=>v.toFixed(2) },
-};
-
-const lensParams = new Set(['thetaE','gamma','cx','cy','shear','shearAngle']);
-
-for (const [id, cfg] of Object.entries(allSliders)) {
-  const el = document.getElementById(id);
-  if (!el) continue;
-  el.addEventListener('input', () => {
-    const v = parseFloat(el.value);
-    params[cfg.key] = v;
-    document.getElementById('val-'+id).textContent = cfg.fmt(v);
-    if (lensParams.has(id)) curvesDirty = true;
-    render();
-  });
-}
-
-// Ellipticity component sliders (ε₁, ε₂) — drive params.q and params.phi
-function handleEpsSlider() {
-  const e1Raw = parseFloat(document.getElementById('e1').value);
-  const e2Raw = parseFloat(document.getElementById('e2').value);
-  const { q, phi } = epsToQPhi(e1Raw, e2Raw);
-  params.q = q;
-  params.phi = phi;
-  document.getElementById('val-e1').textContent = e1Raw.toFixed(3);
-  document.getElementById('val-e2').textContent = e2Raw.toFixed(3);
-  syncEpsDerivedDisplay();
-  curvesDirty = true;
-  render();
-}
-document.getElementById('e1').addEventListener('input', handleEpsSlider);
-document.getElementById('e2').addEventListener('input', handleEpsSlider);
-
-// Resolution slider
-document.getElementById('rtRes').addEventListener('input', (e) => {
-  rtRes = parseInt(e.target.value);
-  document.getElementById('val-rtRes').textContent = rtRes;
-  render();
-});
-
-// Caustic / critical-curve resolution slider
-document.getElementById('causticRes').addEventListener('input', (e) => {
-  causticRes = parseInt(e.target.value);
-  document.getElementById('val-causticRes').textContent = causticRes;
-  curvesDirty = true;
-  render();
-});
-
-// Checkboxes
-for (const [id, setter] of [
-  ['showCaustics', v => showCaustics=v],
-  ['showCritical', v => showCritical=v],
-  ['showGrid', v => showGrid=v],
-  ['showExtended', v => showExtended=v],
-  ['showPointImages', v => showPointImages=v],
-  ['showLensLabels', v => showLensLabels=v],
-]) {
-  document.getElementById(id).addEventListener('change', e => { setter(e.target.checked); render(); });
-}
-
-// Source dragging on source plane
-srcCanvas.addEventListener('mousedown', e => {
-  dragging = true;
-  const rect = srcCanvas.getBoundingClientRect();
-  const sx = srcCanvas.width/rect.width, sy = srcCanvas.height/rect.height;
-  const pos = p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, srcCanvas);
-  sourcePos.x = pos.x; sourcePos.y = pos.y;
-  render();
-});
-srcCanvas.addEventListener('mousemove', e => {
-  const rect = srcCanvas.getBoundingClientRect();
-  const sx = srcCanvas.width/rect.width, sy = srcCanvas.height/rect.height;
-  const pos = p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, srcCanvas);
-  if (dragging) { sourcePos.x=pos.x; sourcePos.y=pos.y; render(); }
-  document.getElementById('srcCoords').textContent = `β = (${pos.x.toFixed(3)}, ${pos.y.toFixed(3)})`;
-});
-window.addEventListener('mouseup', () => dragging=false);
-
-// Touch support
-srcCanvas.addEventListener('touchstart', e => {
-  e.preventDefault(); dragging = true;
-  const rect = srcCanvas.getBoundingClientRect();
-  const t = e.touches[0];
-  const sx = srcCanvas.width/rect.width, sy = srcCanvas.height/rect.height;
-  const pos = p2a((t.clientX-rect.left)*sx, (t.clientY-rect.top)*sy, srcCanvas);
-  sourcePos.x=pos.x; sourcePos.y=pos.y; render();
-}, {passive:false});
-srcCanvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (!dragging) return;
-  const rect = srcCanvas.getBoundingClientRect();
-  const t = e.touches[0];
-  const sx = srcCanvas.width/rect.width, sy = srcCanvas.height/rect.height;
-  const pos = p2a((t.clientX-rect.left)*sx, (t.clientY-rect.top)*sy, srcCanvas);
-  sourcePos.x=pos.x; sourcePos.y=pos.y; render();
-}, {passive:false});
-srcCanvas.addEventListener('touchend', () => dragging=false);
-
-// --- Image plane: cursor tracking + perturber drag/shift-click ---
-let draggingPert = -1;
-
-function imgPlanePos(e) {
-  const rect = imgCanvas.getBoundingClientRect();
-  const sx = imgCanvas.width/rect.width, sy = imgCanvas.height/rect.height;
-  return p2a((e.clientX-rect.left)*sx, (e.clientY-rect.top)*sy, imgCanvas);
-}
-
-// Index of the perturber under the cursor (within a few pixels), or -1
-function perturberAt(pos) {
-  const tolArcsec = 12 / (imgCanvas.width / (2 * fieldOfView));
-  let best = -1, bestD = tolArcsec;
-  perturbers.forEach((p, i) => {
-    const d = Math.hypot(pos.x - p.x, pos.y - p.y);
-    if (d < bestD) { bestD = d; best = i; }
-  });
-  return best;
-}
-
-function movePerturber(i, x, y) {
-  perturbers[i].x = Math.max(-fieldOfView, Math.min(fieldOfView, x));
-  perturbers[i].y = Math.max(-fieldOfView, Math.min(fieldOfView, y));
-  const card = document.getElementById('pertList').children[i];
-  if (card) card.querySelector('.pert-pos').textContent = `(${perturbers[i].x.toFixed(2)}, ${perturbers[i].y.toFixed(2)})″`;
-  if (perturbers[i].on) curvesDirty = true;
-}
-
-function startPertDrag(i) {
-  draggingPert = i;
-  selectPerturber(i);
-  imgCanvas.style.cursor = 'grabbing';
-}
-
-imgCanvas.addEventListener('mousemove', e => {
-  const pos = imgPlanePos(e);
-  document.getElementById('imgCoords').textContent = `θ = (${pos.x.toFixed(3)}, ${pos.y.toFixed(3)})`;
-  if (draggingPert >= 0) {
-    movePerturber(draggingPert, pos.x, pos.y);
-    render();
-  } else {
-    imgCanvas.style.cursor = perturberAt(pos) >= 0 ? 'grab' : 'crosshair';
-  }
-});
-
-imgCanvas.addEventListener('mousedown', e => {
-  const pos = imgPlanePos(e);
-  const hit = perturberAt(pos);
-  if (hit >= 0) {
-    startPertDrag(hit);
-  } else if (e.shiftKey) {
-    // Shift-click drops a new SIS perturber here
-    addPerturber(pos.x, pos.y);
-    startPertDrag(perturbers.length - 1);
-  }
-  render();
-});
-
-window.addEventListener('mouseup', () => {
-  if (draggingPert >= 0) {
-    draggingPert = -1;
-    imgCanvas.style.cursor = 'crosshair';
-  }
-});
-
-// Touch support for perturbers on the image plane
-imgCanvas.addEventListener('touchstart', e => {
-  if (!e.touches.length) return;
-  const t = e.touches[0];
-  const pos = imgPlanePos({ clientX: t.clientX, clientY: t.clientY });
-  const hit = perturberAt(pos);
-  if (hit >= 0) {
-    e.preventDefault();
-    startPertDrag(hit);
-    render();
-  }
-}, {passive:false});
-imgCanvas.addEventListener('touchmove', e => {
-  if (draggingPert < 0 || !e.touches.length) return;
-  e.preventDefault();
-  const t = e.touches[0];
-  const pos = imgPlanePos({ clientX: t.clientX, clientY: t.clientY });
-  movePerturber(draggingPert, pos.x, pos.y);
-  render();
-}, {passive:false});
-imgCanvas.addEventListener('touchend', () => { draggingPert = -1; });
-
-// --- Perturber list (sidebar) ---
-function addPerturber(x, y, thetaE = 0.15) {
-  perturbers.push({ x, y, thetaE, on: true });
-  selectedPert = perturbers.length - 1;
-  curvesDirty = true;
-  buildPertList();
-}
-
-function removePerturber(i) {
-  perturbers.splice(i, 1);
-  if (selectedPert === i) selectedPert = -1;
-  else if (selectedPert > i) selectedPert--;
-  curvesDirty = true;
-  buildPertList();
-  render();
-}
-
-function selectPerturber(i) {
-  selectedPert = i;
-  [...document.getElementById('pertList').querySelectorAll('.pert-card')]
-    .forEach((c, k) => c.classList.toggle('selected', k === i));
-}
-
-function buildPertList() {
-  const list = document.getElementById('pertList');
-  list.innerHTML = '';
-  if (!perturbers.length) {
-    list.innerHTML = '<p style="font-size:11px;color:var(--text-dim);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px;">No perturbers. Add one, or shift-click the image plane.</p>';
-    return;
-  }
-  perturbers.forEach((p, i) => {
-    const card = document.createElement('div');
-    card.className = 'pert-card' + (i === selectedPert ? ' selected' : '');
-    card.style.setProperty('--pc', pertColor(i, 1));
-    card.innerHTML = `
-      <div class="pert-head">
-        <input type="checkbox" ${p.on ? 'checked' : ''} title="Enable this deflector">
-        <span class="pert-name">G${i+1}</span>
-        <span class="pert-pos">(${p.x.toFixed(2)}, ${p.y.toFixed(2)})″</span>
-        <button class="pert-del" title="Remove G${i+1}">×</button>
-      </div>
-      <div class="control-row"><label>Einstein radius θ<sub>E,${i+1}</sub></label><span class="val">${p.thetaE.toFixed(3)}″</span></div>
-      <input type="range" min="0" max="1.5" step="0.005" value="${p.thetaE}">`;
-    const val = card.querySelector('.val');
-    card.querySelector('input[type="range"]').addEventListener('input', e => {
-      p.thetaE = parseFloat(e.target.value);
-      val.textContent = p.thetaE.toFixed(3) + '″';
-      curvesDirty = true;
-      render();
-    });
-    card.querySelector('input[type="checkbox"]').addEventListener('change', e => {
-      p.on = e.target.checked;
-      curvesDirty = true;
-      render();
-    });
-    card.querySelector('.pert-del').addEventListener('click', () => removePerturber(i));
-    card.addEventListener('mousedown', () => { selectPerturber(i); render(); });
-    list.appendChild(card);
-  });
-}
-
-document.getElementById('addPerturber').addEventListener('click', () => {
-  // Drop new deflectors around the Einstein ring so they do something visible
-  const ang = (0.25 + 0.37 * perturbers.length) * 2 * Math.PI;
-  const r = params.thetaE;
-  addPerturber(params.cx + r*Math.cos(ang), params.cy + r*Math.sin(ang));
-  render();
-});
-document.getElementById('clearPerturbers').addEventListener('click', () => {
-  perturbers = [];
-  selectedPert = -1;
-  curvesDirty = true;
-  buildPertList();
-  render();
-});
-
-// --- Degeneracy check: pin images of one model, compare against another ---
-function pinReference() {
-  if (curvesDirty) { cachedCurves = computeCurves(); curvesDirty = false; }
-  refPin = {
-    images: lastImages.map(im => ({ ...im })),
-    source: { ...sourcePos },
-    curves: cachedCurves,
-  };
-  render();
-}
-
-// Greedy nearest-neighbour match of current images to pinned ones
-function matchToPin(images) {
-  const used = new Set();
-  return refPin.images.map(ref => {
-    let best = -1, bestD = Infinity;
-    images.forEach((img, k) => {
-      if (used.has(k)) return;
-      const d = Math.hypot(img.x - ref.x, img.y - ref.y);
-      if (d < bestD) { bestD = d; best = k; }
-    });
-    if (best >= 0 && bestD < 0.5) { used.add(best); return { ref, img: images[best], d: bestD }; }
-    return { ref, img: null, d: null };
-  });
-}
-
-function updateRefComparison(images) {
-  const summary = document.getElementById('refSummary');
-  const table = document.getElementById('refTable');
-  if (!refPin) {
-    summary.innerHTML = '<span style="color:var(--text-dim)">No reference pinned.</span>';
-    table.innerHTML = '';
-    return;
-  }
-  const pairs = matchToPin(images);
-  const sumRef = refPin.images.reduce((s, im) => s + im.mu, 0) || 1;
-  const sumNow = images.reduce((s, im) => s + im.mu, 0) || 1;
-  const matched = pairs.filter(p => p.img);
-  const rms = matched.length ? Math.sqrt(matched.reduce((s, p) => s + p.d*p.d, 0) / matched.length) : NaN;
-  const fluxRms = matched.length ? Math.sqrt(matched.reduce((s, p) => {
-    const df = p.img.mu/sumNow - p.ref.mu/sumRef; return s + df*df;
-  }, 0) / matched.length) : NaN;
-
-  // Verdict uses the bright (μ ≥ 1) images; demagnified central images are rarely observed
-  const nBrightNow = images.filter(im => im.mu >= 1).length;
-  const brightPairs = pairs.filter(p => p.ref.mu >= 1);
-  const countOk = nBrightNow === brightPairs.length && brightPairs.every(p => p.img);
-  const brightMatched = brightPairs.filter(p => p.img);
-  const brightRms = brightMatched.length ? Math.sqrt(brightMatched.reduce((s, p) => s + p.d*p.d, 0) / brightMatched.length) : NaN;
-  const posOk = countOk && brightRms < 0.01;
-  const faintDiff = (images.length - nBrightNow) !== (pairs.length - brightPairs.length);
-  summary.innerHTML =
-    `Bright images (μ≥1): <span class="${countOk ? 'good' : 'bad'}">${nBrightNow} now / ${brightPairs.length} pinned</span>` +
-    (faintDiff ? `<br><span style="color:var(--text-dim)">Faint images: ${images.length - nBrightNow} now / ${pairs.length - brightPairs.length} pinned</span>` : '') + '<br>' +
-    `rms Δθ: <span class="${posOk ? 'good' : 'bad'}">${isNaN(rms) ? '—' : (rms*1000).toFixed(1) + ' mas'}</span>` +
-    ` · rms Δf: <span class="${fluxRms < 0.02 ? 'good' : 'bad'}">${isNaN(fluxRms) ? '—' : fluxRms.toFixed(3)}</span>` +
-    (posOk && fluxRms >= 0.02 ? '<br><span style="color:var(--caustic)">Positions degenerate; flux ratios differ.</span>' : '') +
-    (posOk && fluxRms < 0.02 ? '<br><span class="good">Indistinguishable from the pinned model.</span>' : '');
-
-  table.innerHTML = pairs.map((p, i) => {
-    const lab = (IMG_LABELS[i] || ''+(i+1)) + '′';
-    const fRef = (p.ref.mu/sumRef).toFixed(3);
-    if (!p.img) return `<div class="img-entry"><span class="img-label">${lab}</span><span class="img-pos bad" style="color:var(--accent)">missing</span><span class="img-mag">f ${fRef} → —</span></div>`;
-    return `<div class="img-entry"><span class="img-label">${lab}</span><span class="img-pos">Δθ=${(p.d*1000).toFixed(1)} mas</span><span class="img-mag">f ${fRef} → ${(p.img.mu/sumNow).toFixed(3)}</span></div>`;
-  }).join('');
-}
-
-// Set a main-lens slider + readout from code
-function syncSlider(id, v) {
-  const el = document.getElementById(id);
-  el.value = v;
-  document.getElementById('val-'+id).textContent = allSliders[id].fmt(v);
-}
-
-// Refit main EPL + external shear + source so the pinned image positions are reproduced,
-// with the perturbers held fixed. Minimises the image-plane-weighted source-plane χ²,
-//   χ² = Σ_i |A_i⁻¹ (β(θ_i) − β_s)|²,
-// with Nelder–Mead.  Positions alone (2 per image) rarely pin down all the parameters.
-function refitMainLens() {
-  if (!refPin || refPin.images.length < 2) return;
-  const fitSlope = document.getElementById('fitSlope').checked;
-  const saved = { ...params };
-  // Demagnified (μ < 1) central images are usually unobservable; fit only the bright ones
-  const pts = refPin.images.filter(im => im.mu >= 1).map(im => ({ x: im.x, y: im.y }));
-  if (pts.length < 2) return;
-
-  const sh = params.shearAngle * Math.PI / 180;
-  const eps0 = qPhiToEps(params.q, params.phi);
-  // x = [θE, ε1, ε2, x0, y0, γ1, γ2, βx, βy, (γ)]
-  const x0 = [params.thetaE, eps0.e1, eps0.e2, params.cx, params.cy,
-              params.shear*Math.cos(2*sh), params.shear*Math.sin(2*sh),
-              refPin.source.x, refPin.source.y];
-  if (fitSlope) x0.push(params.gamma);
-
-  function apply(x) {
-    params.thetaE = x[0];
-    const qp = epsToQPhi(x[1], x[2]);
-    params.q = qp.q; params.phi = qp.phi;
-    params.cx = x[3]; params.cy = x[4];
-    params.shear = Math.hypot(x[5], x[6]);
-    params.shearAngle = 0.5 * Math.atan2(x[6], x[5]) * 180 / Math.PI;
-    if (fitSlope) params.gamma = x[9];
-  }
-
-  function cost(x) {
-    let pen = 0;
-    const clamp = (v, lo, hi) => { if (v < lo) pen += (lo-v)*1e3; if (v > hi) pen += (v-hi)*1e3; };
-    clamp(x[0], 0.3, 2.5); clamp(Math.hypot(x[1], x[2]), 0, 0.69);
-    clamp(x[3], -1, 1); clamp(x[4], -1, 1); clamp(Math.hypot(x[5], x[6]), 0, 0.3);
-    if (fitSlope) clamp(x[9], 1.2, 2.8);
-    if (pen > 0) return 1e3 + pen;
-    apply(x);
-    let chi2 = 0;
-    const h = 1e-5;
-    for (const p of pts) {
-      const s = lensEquation(p.x, p.y);
-      const s1 = lensEquation(p.x+h, p.y), s2 = lensEquation(p.x, p.y+h);
-      const A11=(s1.bx-s.bx)/h, A12=(s2.bx-s.bx)/h, A21=(s1.by-s.by)/h, A22=(s2.by-s.by)/h;
-      const det = A11*A22 - A12*A21;
-      const dbx = s.bx - x[7], dby = s.by - x[8];
-      if (Math.abs(det) < 1e-6) { chi2 += 1e2*(dbx*dbx + dby*dby); continue; }
-      const ex = ( A22*dbx - A12*dby)/det;
-      const ey = (-A21*dbx + A11*dby)/det;
-      chi2 += ex*ex + ey*ey;
-    }
-    return chi2;
-  }
-
-  function optimise(start) {
-    let best = start, bestF = cost(start);
-    for (let restart = 0; restart < 5; restart++) {
-      const r = nelderMead(cost, best, restart < 2 ? 0.08 : 0.02, 3000);
-      if (r.f < bestF) { best = r.x; bestF = r.f; }
-    }
-    return { x: best, f: bestF };
-  }
-
-  // Starting points: the current model, and a round lens centred on the image centroid
-  const n = pts.length;
-  const gx = pts.reduce((a, p) => a + p.x, 0) / n, gy = pts.reduce((a, p) => a + p.y, 0) / n;
-  const rMean = pts.reduce((a, p) => a + Math.hypot(p.x - gx, p.y - gy), 0) / n;
-  const clampC = v => Math.max(-1, Math.min(1, v));
-  const starts = [x0];
-  for (const [e1, e2] of [[0, 0], [0.15, 0], [0, 0.15], [-0.15, 0]]) {
-    const st = [Math.max(0.3, Math.min(2.5, rMean)), e1, e2, clampC(gx), clampC(gy), 0, 0, 0, 0];
-    if (fitSlope) st.push(2.0);
-    apply(st);
-    const b = pts.map(p => lensEquation(p.x, p.y));
-    st[7] = b.reduce((a, q) => a + q.bx, 0) / n;
-    st[8] = b.reduce((a, q) => a + q.by, 0) / n;
-    starts.push(st);
-  }
-
-  // A small source-plane χ² can still hide extra images (source parked on a caustic),
-  // so judge every candidate by solving for its actual images.
-  const nBrightPin = pts.length;
-  let best = null, bestScore = Infinity;
-  for (const st of starts) {
-    const r = optimise(st);
-    if (r.f >= 1e3) continue;
-    apply(r.x);
-    const imgs = findImages(r.x[7], r.x[8]);
-    const bright = imgs.filter(im => im.mu >= 1);
-    let rms = 0;
-    for (const p of pts) {
-      const d = Math.min(...imgs.map(im => Math.hypot(im.x - p.x, im.y - p.y)), 1);
-      rms += d*d;
-    }
-    rms = Math.sqrt(rms / pts.length);
-    const score = rms + 0.5 * Math.abs(bright.length - nBrightPin);
-    if (score < bestScore) { bestScore = score; best = r.x; }
-  }
-
-  if (!best) { Object.assign(params, saved); render(); return; }
-  apply(best);
-  sourcePos.x = best[7]; sourcePos.y = best[8];
-  ['thetaE','cx','cy','shear','shearAngle','gamma'].forEach(id => syncSlider(id, params[id]));
-  const eps = qPhiToEps(params.q, params.phi);
-  document.getElementById('e1').value = eps.e1;
-  document.getElementById('e2').value = eps.e2;
-  document.getElementById('val-e1').textContent = eps.e1.toFixed(3);
-  document.getElementById('val-e2').textContent = eps.e2.toFixed(3);
-  syncEpsDerivedDisplay();
-  curvesDirty = true;
-  render();
-}
-
-function nelderMead(f, x0, step, maxIter) {
-  const n = x0.length;
-  let simplex = [x0.slice()];
-  for (let i = 0; i < n; i++) { const x = x0.slice(); x[i] += step; simplex.push(x); }
-  let fs = simplex.map(f);
-  for (let it = 0; it < maxIter; it++) {
-    const order = fs.map((v, i) => i).sort((a, b) => fs[a] - fs[b]);
-    simplex = order.map(i => simplex[i]); fs = order.map(i => fs[i]);
-    if (Math.abs(fs[n] - fs[0]) < 1e-14) break;
-    const c = new Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let k = 0; k < n; k++) c[k] += simplex[i][k] / n;
-    const pt = (t) => c.map((ck, k) => ck + t*(simplex[n][k] - ck));
-    const xr = pt(-1), fr = f(xr);
-    if (fr < fs[0]) {
-      const xe = pt(-2), fe = f(xe);
-      if (fe < fr) { simplex[n] = xe; fs[n] = fe; } else { simplex[n] = xr; fs[n] = fr; }
-    } else if (fr < fs[n-1]) {
-      simplex[n] = xr; fs[n] = fr;
-    } else {
-      const xc = fr < fs[n] ? pt(-0.5) : pt(0.5), fc = f(xc);
-      if (fc < Math.min(fr, fs[n])) { simplex[n] = xc; fs[n] = fc; }
-      else {
-        for (let i = 1; i <= n; i++) {
-          simplex[i] = simplex[i].map((v, k) => simplex[0][k] + 0.5*(v - simplex[0][k]));
-          fs[i] = f(simplex[i]);
-        }
-      }
-    }
-  }
-  return { x: simplex[0], f: fs[0] };
-}
-
-document.getElementById('pinRef').addEventListener('click', pinReference);
-document.getElementById('clearRef').addEventListener('click', () => { refPin = null; render(); });
-document.getElementById('refitMain').addEventListener('click', () => {
-  if (!refPin) pinReference();
-  refitMainLens();
-});
-document.getElementById('showRefCurves').addEventListener('change', e => { showRefCurves = e.target.checked; render(); });
-
-// --- Presets ---
-function setPreset(name) {
-  const P = {
-    quad:     { thetaE:1.2, gamma:2.0, q:0.65, phi:30, cx:0, cy:0, shear:0.05, shearAngle:15, qsoFlux:1.0, galReff:0.15, galN:1.0, galQ:0.7, galPA:30, galFlux:0.5, sx:0.05, sy:0.02 },
-    cusp:     { thetaE:1.2, gamma:2.0, q:0.55, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.12, galN:1.5, galQ:0.6, galPA:45, galFlux:0.6, sx:0.0, sy:0.22 },
-    fold:     { thetaE:1.0, gamma:2.0, q:0.8, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.18, galN:1.0, galQ:0.8, galPA:0, galFlux:0.4, sx:0.4, sy:0.3 },
-    einstein: { thetaE:1.2, gamma:2.0, q:0.95, phi:0, cx:0, cy:0, shear:0.0, shearAngle:0, qsoFlux:0.5, galReff:0.08, galN:1.0, galQ:0.9, galPA:0, galFlux:1.0, sx:0.0, sy:0.0 },
-    // Two comparable galaxies (G + G1): pin, delete G1, and refit to see a single EPL+shear mimic them
-    binary:   { thetaE:0.85, gamma:2.0, q:0.9, phi:0, cx:-0.4, cy:0, shear:0.0, shearAngle:0, qsoFlux:1.0, galReff:0.1, galN:1.0, galQ:0.8, galPA:20, galFlux:0.5, sx:0.08, sy:0.05,
-                perts:[{ x:0.75, y:0.1, thetaE:0.55 }] },
-    // Quad with a small satellite just outside one image: astrometry barely moves, flux ratio does
-    satellite:{ thetaE:1.2, gamma:2.0, q:0.65, phi:30, cx:0, cy:0, shear:0.05, shearAngle:15, qsoFlux:1.0, galReff:0.15, galN:1.0, galQ:0.7, galPA:30, galFlux:0.5, sx:0.05, sy:0.02,
-                perts:[{ x:1.27, y:1.0, thetaE:0.08 }] },
-  };
-  const p = P[name]; if (!p) return;
-
-  for (const [id, cfg] of Object.entries(allSliders)) {
-    if (p[cfg.key] !== undefined) {
-      params[cfg.key] = p[cfg.key];
-      const el = document.getElementById(id);
-      if (el) { el.value = p[cfg.key]; document.getElementById('val-'+id).textContent = cfg.fmt(p[cfg.key]); }
-    }
-  }
-  // Lens shape: presets use canonical (q, φ) — derive ε₁, ε₂ for the sliders
-  if (p.q !== undefined) params.q = p.q;
-  if (p.phi !== undefined) params.phi = p.phi;
-  const eps = qPhiToEps(params.q, params.phi);
-  document.getElementById('e1').value = eps.e1;
-  document.getElementById('e2').value = eps.e2;
-  document.getElementById('val-e1').textContent = eps.e1.toFixed(3);
-  document.getElementById('val-e2').textContent = eps.e2.toFixed(3);
-  syncEpsDerivedDisplay();
-
-  // Each preset defines the full deflector set (and starts a fresh comparison)
-  refPin = null;
-  perturbers = (p.perts || []).map(q => ({ ...q, on: true }));
-  selectedPert = -1;
-  buildPertList();
-
-  sourcePos.x = p.sx; sourcePos.y = p.sy;
-  curvesDirty = true;
-  render();
-}
-
-// --- Resize ---
-function resizeCanvases() {
-  const avail = (window.innerWidth - 310) / 2;
-  const size = Math.min(avail, window.innerHeight - 57, 700);
-  const px = Math.floor(Math.max(size, 300));
-  srcCanvas.width = px; srcCanvas.height = px;
-  imgCanvas.width = px; imgCanvas.height = px;
-  srcCanvas.style.width = '100%'; srcCanvas.style.height = '100%';
-  imgCanvas.style.width = '100%'; imgCanvas.style.height = '100%';
-  render();
-}
-
-window.addEventListener('resize', resizeCanvases);
-resizeCanvases();
-setPreset('quad');
-</script>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<input type="file" id="fileJSON" accept="application/json,.json" hidden>
+<input type="file" id="fileImage" accept="image/*" hidden>
+
+<script src="lensing/physics.js"></script>
+<script src="lensing/timedomain.js"></script>
+<script src="lensing/state.js"></script>
+<script src="lensing/render.js"></script>
+<script src="lensing/panels.js"></script>
+<script src="lensing/app.js"></script>
 </body>
 </html>
