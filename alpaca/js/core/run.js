@@ -6,6 +6,7 @@ import { H0FromDdt } from "../physics/cosmology.js";
 import { keyStore, catalogStore } from "./prefs.js";
 import { perturberPositions, detectLensCenter } from "../physics/catalog.js";
 import { unsupportedReason } from "../physics/kinematics.js";
+import { mainProfileOf, isCompositeProfile, COMPOSITE_CHAM, COMPOSITE_SERSIC } from "../physics/composite.js";
 import { WorkerClient } from "./workerclient.js";
 
 // separate worker for the kinematic predictions (seconds of work) so forward-model panels never wait on it
@@ -13,7 +14,7 @@ let kinWorker = null;
 const kinCall = (...a) => (kinWorker ||= new WorkerClient()).call(...a);
 const KIN_COLUMNS = /^(lens_theta_E|lens_gamma|log_light_amp_L[23]?|light_(Re|n|e1|e2)_L[23]?|kin_(anisotropy_ratio|lambda_int|inner_dgamma))$/;
 
-const STAGE_LABELS = { shapelets: "Shapelets multistart", lens_light_refit: "Lens-light refit", cf_joint: "Joint CF + PSF", cf_warmstart: "CF warm-start" };
+const STAGE_LABELS = { shapelets: "Shapelets multistart", lens_light_refit: "Lens-light refit", cf_joint: "Joint CF + PSF", cf_warmstart: "CF warm-start", mass_upgrade: "Mass upgrade (EPL safeguard)" };
 // npz entry holding the blinded MAP values sealed with the run's key (alpaca.pipeline.staged._SEALED_NPZ_KEY)
 export const SEALED_NPZ_KEY = "__sealed_blinded__";
 
@@ -61,6 +62,7 @@ export function paramGroup(name) {
   if (/^lens_(theta_E|gamma$|e1|e2|center)/.test(name) || name === "lens_gamma") return "Lens mass";
   if (/^lens_gamma[12]$/.test(name)) return "External shear";
   if (/^lens_/.test(name)) return "Lens mass";
+  if (/^stellar:/.test(name)) return "Lens mass"; // multiband composite: the reference band's light the stellar mass follows
   if (/^(log_)?light_.*_L\d?$/.test(name) || /^log_mge/.test(name)) return "Lens light";
   if (/_S$/.test(name) || /^source_|^shapelets/.test(name)) return "Source light";
   if (/^(x_image|y_image|log_ps_amp|ps_amp)/.test(name)) return "Point sources";
@@ -68,7 +70,7 @@ export function paramGroup(name) {
   if (/^pert\d+_/.test(name)) return "Perturbers";
   if (/^psf_/.test(name)) return "PSF";
   if (/^kin_|^lambda_int$/.test(name)) return "Kinematics & mass sheet";
-  if (/^(D_dt|H0|D_d|log_sigma_rayshoot)/.test(name)) return "Cosmography";
+  if (/^(D_dt|H0|D_d|log_sigma_rayshoot|cosmo_)/.test(name)) return "Cosmography";
   if (/^sky/.test(name)) return "Sky";
   return "Other";
 }
@@ -523,6 +525,26 @@ export class Run {
     this.unblinded = true;
   }
 
+  // Om of every draw: the sampled cosmo_Om0 (true values; multi-plane runs with mass.perturbers.cosmology.sample_Om0,
+  // ALPACA >= 0.6.2) unless an Om was typed for this lens (cosmo.omTyped), else the fixed cosmo.Om. Throws when Om is
+  // sampled and blinded without a key.
+  async omFor(post, cosmo) {
+    if (cosmo?.omTyped || !post.columns.cosmo_Om0) return cosmo?.Om ?? 0.3;
+    const om = await this.trueColumn(post, "cosmo_Om0");
+    if (!om) throw new Error("cosmo_Om0 (sampled Ωm) is blinded and no key is loaded.");
+    return om;
+  }
+
+  // Main-deflector model of the run's posterior / final fit: "EPL", "COMPOSITE_CHAM_NFW" or "COMPOSITE_SERSIC_NFW".
+  get mainProfile() {
+    const main = this.config?.mass?.main || {};
+    const names = new Set(this.paramSummary.map((r) => r.name));
+    if (!/composite/i.test(main.profile || "") && !names.has("lens_f_b")) return "EPL";
+    return (main.composite_light || (names.has("light_lwc_L") ? "chameleon" : "sersic")) === "sersic" ? COMPOSITE_SERSIC : COMPOSITE_CHAM;
+  }
+  get isComposite() { return isCompositeProfile(this.mainProfile); }
+  get compositeLabel() { return this.mainProfile === COMPOSITE_SERSIC ? "composite: Sérsic stars + NFW" : "composite: double-chameleon stars + NFW"; }
+
   // Mass-sheet factor lambda_int (1 - kappa_ext) per draw (true values), or null without kinematics.
   // Throws when lambda_int is sampled but missing from this posterior set or blinded without a key.
   async massSheetFactor(post) {
@@ -538,16 +560,20 @@ export class Run {
   // H0 samples from the true D_dt. physical=true applies the mass sheet of a kinematics run,
   // H0_phys = H0(D_dt) * lambda_int (1 - kappa_ext); `model` is always the lens-model (lambda = 1) H0.
   // Requires the run to be unblinded, not blinded, or a loaded key.
-  async h0Samples({ zl, zs, Om = 0.3, src = null, physical = true }) {
+  // With a sampled Om (cosmo_Om0) every draw is converted at its own Om unless omTyped (an Om typed by the user).
+  async h0Samples({ zl, zs, Om = 0.3, omTyped = false, src = null, physical = true }) {
     const post = await this.posterior(src || this.massSheetSource);
     if (!post.columns.D_dt) throw new Error("No D_dt column in the posterior.");
     const ddtModel = await this.trueColumn(post, "D_dt");
     if (!ddtModel) throw new Error("D_dt is blinded and no key is loaded.");
-    const model = Float64Array.from(ddtModel, (d) => H0FromDdt(d, zl, zs, Om));
+    const om = await this.omFor(post, { Om, omTyped });
+    const model = H0FromDdt(ddtModel, zl, zs, om);
+    const omSampled = typeof om !== "number";
     const f = physical ? await this.massSheetFactor(post) : null;
-    if (!f) return { ddt: ddtModel, ddtModel, samples: model, model, physical: false, src: post.src };
+    const omOut = omSampled ? om : null;
+    if (!f) return { ddt: ddtModel, ddtModel, samples: model, model, physical: false, src: post.src, omSampled, om: omOut };
     const ddt = Float64Array.from(ddtModel, (d, i) => d / f.lamTot[i]);
-    return { ddt, ddtModel, samples: Float64Array.from(ddt, (d) => H0FromDdt(d, zl, zs, Om)), model, lam: f.lam, lamTot: f.lamTot, physical: true, src: post.src };
+    return { ddt, ddtModel, samples: H0FromDdt(ddt, zl, zs, om), model, lam: f.lam, lamTot: f.lamTot, physical: true, src: post.src, omSampled, om: omOut };
   }
 
   async unblindedArtifacts(extra = {}) {
@@ -561,7 +587,7 @@ export class Run {
     const record = {
       source_samples_dir: this.name + "/05_posterior/samples", mode: this.offsetsMode || "absolute", reference: this.blinding?.reference || "mean",
       restored_absolute_means: means, written_by: "alpaca-analysis (browser)", written_at: new Date().toISOString(),
-      H0: extra.h0 ? { median: extra.h0.median, lo68: extra.h0.lo68, hi68: extra.h0.hi68, std: extra.h0.std, z_lens: extra.zl, z_source: extra.zs, Om: extra.Om, cosmology: "flat LCDM", from: extra.physical ? "D_dt_physical = D_dt / (lambda_int (1 - kappa_ext))" : "D_dt" } : null,
+      H0: extra.h0 ? { median: extra.h0.median, lo68: extra.h0.lo68, hi68: extra.h0.hi68, std: extra.h0.std, z_lens: extra.zl, z_source: extra.zs, Om: extra.omStats ? { sampled: "cosmo_Om0, each draw at its own Om", median: extra.omStats.median, lo68: extra.omStats.lo68, hi68: extra.omStats.hi68 } : extra.Om, cosmology: "flat LCDM", from: extra.physical ? "D_dt_physical = D_dt / (lambda_int (1 - kappa_ext))" : "D_dt" } : null,
       D_dt: extra.ddt ? { median: extra.ddt.median, lo68: extra.ddt.lo68, hi68: extra.ddt.hi68, std: extra.ddt.std, coordinate: extra.physical ? "physical" : "lens model" } : null,
     };
     if (extra.physical) {
@@ -635,7 +661,7 @@ export class Run {
         if (!c) throw new Error(`${n} is blinded and no key is loaded.`);
         columns[n] = Float64Array.from(c);
       }
-      if (!columns.lens_gamma || !columns.lens_theta_E) throw new Error("the posterior has no EPL lens_theta_E / lens_gamma columns");
+      if (!columns.lens_gamma || !columns.lens_theta_E) throw new Error(this.isComposite ? "composite kinematics (stars + NFW) are not ported to the browser" : "the posterior has no EPL lens_theta_E / lens_gamma columns");
       const config = this.config.likelihood.kinematics;
       const r = await kinCall("kinPredict", { config, columns, n: post.nSamples, lambdaOne }, Object.values(columns).map((c) => c.buffer));
       let map = null;
@@ -722,7 +748,12 @@ export class Run {
     const zSource = this.catalog?.target?.z_source ?? null;
     const isMultiplane = perturbers.some((p) => p.plane !== "main") && zLens != null && zSource != null;
     const cosmo = { H0: this.config?.mass?.perturbers?.cosmology?.H0_fid ?? 70, Om: this.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3 };
-    const nSersic = bf.light_Re_L3 !== undefined ? 3 : bf.light_Re_L2 !== undefined ? 2 : 1;
+    // main deflector from the stage's own parameters: with the EPL safeguard, stages 1-3 are an EPL and stage 4 /
+    // the posterior the configured composite
+    const mainProfile = mainProfileOf(bf, this.config) || "EPL";
+    // main lens light: the double chameleon (light_lwc_L*, centred on the mass centre) or 1-3 Sersics
+    const lensLight = bf.light_lwc_L !== undefined ? "chameleon" : "sersic";
+    const nSersic = lensLight === "chameleon" ? 2 : bf.light_Re_L3 !== undefined ? 3 : bf.light_Re_L2 !== undefined ? 2 : 1;
     let nPs = 0;
     while (bf[`x_image_${nPs}`] !== undefined) nPs++;
     const src = this.config?.stages?.cf_joint?.source || this.config?.model?.corr_field || {};
@@ -733,7 +764,7 @@ export class Run {
       geo: { isMultiplane, zLens, zSource, perturbers, cosmo },
       perturbers,
       nSrc: src.num_pixels ?? 128, sourceGridScale: src.source_grid_scale ?? 1.0,
-      nSersic, useSky: bf.sky_amp !== undefined, nPs,
+      mainProfile, lensLight, nSersic, useSky: bf.sky_amp !== undefined, nPs,
       approxPlanes: perturbers.length > 0 && (!this.catalog || unresolved.length > 0),
       psfPath: psf.path,
     };
@@ -840,7 +871,7 @@ export class Run {
         try {
           const bf = await this.bestFit("final");
           const params = Object.fromEntries(Object.entries(bf.params).filter(([, v]) => typeof v === "number"));
-          if (params.lens_gamma !== undefined) {
+          if (mainProfileOf(params)) {
             ps = (await this.render("final", params, null, { lensLight: false, source: false, pointSources: true })).ps;
             sigma = new Float64Array(noise.length);
             for (let k = 0; k < sigma.length; k++) sigma[k] = Math.sqrt(noise[k] ** 2 + b * b * (ps ? ps[k] : 0) ** 2);

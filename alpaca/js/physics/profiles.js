@@ -1,5 +1,6 @@
 // Mass and light profiles, ported 1:1 from herculens (+ ALPACA's patches).
 // All functions operate on flat Float64Arrays and ADD into the outputs.
+import { compositeDeflection, isCompositeProfile } from "./composite.js";
 
 export function ellipticity2phiq(e1, e2) {
   const phi = Math.atan2(e2, e1) / 2;
@@ -153,7 +154,9 @@ export function deflectProfile(name, x, y, kw, ax, ay) {
     case "SIS": return sisDeflection(x, y, kw, ax, ay);
     case "SIE":
     case "NIE": return sieDeflection(x, y, kw, ax, ay);
-    default: throw new Error("Unsupported mass profile " + name);
+    default:
+      if (isCompositeProfile(name)) return compositeDeflection(name, x, y, kw, ax, ay);
+      throw new Error("Unsupported mass profile " + name);
   }
 }
 

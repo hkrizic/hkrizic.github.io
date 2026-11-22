@@ -7,6 +7,7 @@ import { el, section, row, select, number, checkbox, button, downloadPNG, badge,
 import { Plot } from "../ui/plot.js";
 import { runOf, runRow, otherRun, busy, unblindUI, fmtNum, cosmologyOf, cosmologySection } from "./common.js";
 import { H0FromDdt } from "../physics/cosmology.js";
+import { compositeMassKwargs, compositeRadialProfile } from "../physics/composite.js";
 import { histogram, kde1d, kde2d, massLevels, summarize, pearson, rng, resampleIndex, quantileSorted } from "../core/stats.js";
 import { marchingSquares } from "../core/contours.js";
 import { series, alpha, THEME } from "../ui/theme.js";
@@ -18,6 +19,8 @@ const KIN_LABEL = { aperture: "aperture velocity dispersion", resolved: "resolve
 const frac = (arr) => { const s = summarize(arr); return s.std / Math.abs(s.mean); };
 const pct = (v, d = 2) => (v == null || !Number.isFinite(v) ? "–" : (100 * v).toFixed(d) + " %");
 const pm = (s, d) => `${s.median.toFixed(d)} +${(s.hi68 - s.median).toFixed(d)} −${(s.median - s.lo68).toFixed(d)}`;
+// the radial-slope parameter of the main deflector: the EPL's gamma, else the composite's stellar fraction
+const slopeParam = (names) => (names.includes("lens_gamma") ? "lens_gamma" : names.includes("lens_f_b") ? "lens_f_b" : null);
 const digits = (s) => Math.max(0, Math.min(6, 2 - Math.floor(Math.log10(Math.max(1e-12, s.hi68 - s.lo68)))));
 
 // kappa_ext draws for the what-if (truncated below 0.99)
@@ -82,8 +85,7 @@ async function analyse(run, src, s, cosmo) {
   a.hasDdt = !!post.columns.D_dt;
   a.hasTrue = !!ddt && (!(ms.kinematics && ms.sampleLambda) || !!a.lamTrue);
   if (ddt) {
-    const H = (d) => (cosmo.hasZ ? H0FromDdt(d, cosmo.zl, cosmo.zs, cosmo.Om) : 1e5 / d);
-    a.h0Model = Float64Array.from(ddt, H);
+    a.h0Model = cosmo.hasZ ? H0FromDdt(ddt, cosmo.zl, cosmo.zs, await run.omFor(post, cosmo)) : Float64Array.from(ddt, (d) => 1e5 / d);
     if (ms.kinematics && (a.lamTrue || !ms.sampleLambda)) {
       a.lamTot = a.lamTrue ? Float64Array.from(a.lamTrue, (l) => l * (1 - ms.kappaExt)) : new Float64Array(ddt.length).fill(ms.lambdaFixed * (1 - ms.kappaExt));
       a.h0Phys = Float64Array.from(a.h0Model, (h, i) => h * a.lamTot[i]);
@@ -394,8 +396,9 @@ export default {
       // 3. degeneracy contours
       {
         const names = post.scalarNames;
-        const dx = A.hasLam ? "kin_lambda_int" : names.includes("lens_gamma") ? "lens_gamma" : names[0];
-        const dy = A.hasLam ? (names.includes("lens_gamma") ? "lens_gamma" : "D_dt") : names.includes("D_dt") ? "D_dt" : names[1];
+        const sp = slopeParam(names);
+        const dx = A.hasLam ? "kin_lambda_int" : sp || names[0];
+        const dy = A.hasLam ? (sp || "D_dt") : names.includes("D_dt") ? "D_dt" : names[1];
         const px = names.includes(state.pairX) ? state.pairX : dx, py = names.includes(state.pairY) ? state.pairY : dy;
         const r = pearson(post.columns[px], post.columns[py]);
         const { plot, cap } = addPlot(grid, `Degeneracy: ${px} vs ${py}`, "", { xlabel: px + (post.blindedColumns.includes(px) ? " (Δ)" : ""), ylabel: py + (post.blindedColumns.includes(py) ? " (Δ)" : "") });
@@ -417,29 +420,46 @@ export default {
       // 4. MST family of the convergence profile
       {
         const gShown = post.columns.lens_gamma;
+        // composite main deflector: its own circularised convergence (stars + NFW) per draw instead of the EPL's
+        const composite = !gShown && run.isComposite && !!post.columns.lens_f_b;
         // blinded gamma / lambda are replaced by an isothermal / unit reference plus their deviations
         const gIll = !!gShown && post.blindedColumns.includes("lens_gamma"), lIll = A.hasLam && A.lamBlinded;
         const illustrative = gIll || lIll;
         const ref = (v, base) => (A.mode === "fractional" ? base * (1 + v) : base + v);
-        const n = Math.min(post.nSamples, 500), step = Math.max(1, Math.floor(post.nSamples / n));
-        const gam = [], lt = [];
+        const n = Math.min(post.nSamples, composite ? 200 : 500), step = Math.max(1, Math.floor(post.nSamples / n));
+        const gam = [], lt = [], drawIdx = [];
         for (let i = 0; i < post.nSamples; i += step) {
+          drawIdx.push(i);
           gam.push(!gShown ? 2 : gIll ? ref(gShown[i], 2) : gShown[i]);
           const l = A.hasLam ? (lIll ? ref(A.lamShown[i], 1) : A.lamShown[i]) : A.what?.lam ? A.what.lam[i] : ms.kinematics ? ms.lambdaFixed : 1;
           const k = A.what?.kap ? A.what.kap[i] : ms.kinematics ? ms.kappaExt : 0;
           lt.push(l * (1 - k));
         }
         const xs = Float64Array.from({ length: 90 }, (_, i) => 0.08 * Math.pow(3.2 / 0.08, i / 89));
+        // fn(d, j): value of draw d at radius xs[j]
         const bands = (fn) => {
           const lo = new Float64Array(xs.length), md = new Float64Array(xs.length), hi = new Float64Array(xs.length);
           const tmp = new Float64Array(gam.length);
-          xs.forEach((x, j) => { for (let i = 0; i < gam.length; i++) tmp[i] = fn(gam[i], lt[i], x); const s = Float64Array.from(tmp).sort(); lo[j] = quantileSorted(s, 0.16); md[j] = quantileSorted(s, 0.5); hi[j] = quantileSorted(s, 0.84); });
+          xs.forEach((x, j) => { for (let d = 0; d < gam.length; d++) tmp[d] = fn(d, j); const s = Float64Array.from(tmp).sort(); lo[j] = quantileSorted(s, 0.16); md[j] = quantileSorted(s, 0.5); hi[j] = quantileSorted(s, 0.84); });
           return { lo, md, hi };
         };
-        const kap = (g, x) => ((3 - g) / 2) * Math.pow(x, 1 - g);
-        const model = bands((g, l, x) => kap(g, x));
+        let kapAt;
+        if (composite) {
+          const prof = run.mainProfile;
+          const rows = drawIdx.map((i) => {
+            const p = {};
+            for (const nm of post.scalarNames) p[nm] = post.columns[nm][i];
+            try { const kw = compositeMassKwargs(prof, p); return compositeRadialProfile(prof, kw, Float64Array.from(xs, (x) => x * kw.theta_E)).total; }
+            catch (e) { return new Float64Array(xs.length).fill(NaN); }
+          });
+          kapAt = (d, j) => rows[d][j];
+        } else {
+          const kap = (g, x) => ((3 - g) / 2) * Math.pow(x, 1 - g);
+          kapAt = (d, j) => kap(gam[d], xs[j]);
+        }
+        const model = bands((d, j) => kapAt(d, j));
         const hasSheet = lt.some((v) => Math.abs(v - 1) > 1e-9);
-        const phys = hasSheet ? bands((g, l, x) => l * kap(g, x) + (1 - l)) : null;
+        const phys = hasSheet ? bands((d, j) => lt[d] * kapAt(d, j) + (1 - lt[d])) : null;
         const thE = post.columns.lens_theta_E ? summarize(post.columns.lens_theta_E).median : null;
         const apR = ms.kinematics && ms.mode === "aperture" ? (ms.aperture.kind === "square" ? ms.aperture.width / 2 : ms.aperture.radius) : null;
         const { plot, cap } = addPlot(grid, "MST family of the convergence profile", "", { xlabel: "R / θ_E", ylabel: "κ(R)" });
@@ -456,7 +476,7 @@ export default {
         };
         plot.draw();
         cap.textContent = (illustrative ? `Illustrative (blinded): the posterior spread is applied to ${[gIll ? "an isothermal reference, γ = 2 + Δγ" : null, lIll ? "λ_int = 1 + Δλ_int" : null].filter(Boolean).join(" and ")}, so no blinded value is shown. ` : "") +
-          "Circularised EPL, κ = (3 − γ)/2 (R/θ_E)^(1−γ); 68 % bands. The internal sheet λ_tot = λ_int (1 − κ_ext) rotates the profile about κ = 1, keeps θ_E and the imaging, and scales every time delay by λ_tot." + (apR && thE ? " Shaded: the kinematic aperture." : "");
+          (composite ? `Composite (${run.compositeLabel.replace(/^composite: /, "")}), circularised: every CSE component in its own product-average radius, κ(R) = Σ A / [2 (S² + R²)^{3/2}], ${drawIdx.length} draws; 68 % bands.` : "Circularised EPL, κ = (3 − γ)/2 (R/θ_E)^(1−γ); 68 % bands.") + " The internal sheet λ_tot = λ_int (1 − κ_ext) rotates the profile about κ = 1, keeps θ_E and the imaging, and scales every time delay by λ_tot." + (apR && thE ? " Shaded: the kinematic aperture." : "");
       }
 
       // 5. kinematic nuisances
@@ -521,8 +541,8 @@ export default {
         sources.length > 1 ? section("Posterior", row("Set", select(sources, state.src || run.massSheetSource, (v) => { state.src = v; load(); }))) : "",
         cosmologySection(run, state, load),
         names.length ? section("Degeneracy plot",
-          row("x", select(opt, names.includes(state.pairX) ? state.pairX : (A.hasLam ? "kin_lambda_int" : "lens_gamma"), (v) => { state.pairX = v; load(); })),
-          row("y", select(opt, names.includes(state.pairY) ? state.pairY : (A.hasLam ? "lens_gamma" : "D_dt"), (v) => { state.pairY = v; load(); })),
+          row("x", select(opt, names.includes(state.pairX) ? state.pairX : (A.hasLam ? "kin_lambda_int" : slopeParam(names) || names[0]), (v) => { state.pairX = v; load(); })),
+          row("y", select(opt, names.includes(state.pairY) ? state.pairY : (A.hasLam ? slopeParam(names) || "D_dt" : "D_dt"), (v) => { state.pairY = v; load(); })),
         ) : "",
         section("Display",
           ctx.app.runs.length > 1 ? checkbox("Overlay / compare the other run", state.compare, (v) => { state.compare = v; load(); }) : el("div", { class: "muted small" }, "Load a second run (e.g. the same lens without kinematics) to compare budgets."),

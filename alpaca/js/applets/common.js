@@ -33,7 +33,9 @@ export function cosmologyOf(run, state = null) {
   const own = { zl: t.z_lens ?? null, zs: t.z_source ?? null, Om: run.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3 };
   const typed = state?.cosmo?.key === lensKey(run) ? state.cosmo : {};
   const c = { zl: typed.zl ?? own.zl, zs: typed.zs ?? own.zs, Om: typed.Om ?? own.Om };
-  return { ...c, hasZ: c.zl != null && c.zs != null, manual: ["zl", "zs", "Om"].some((k) => c[k] !== own[k]) };
+  // runs that sample Om (posterior column cosmo_Om0, ALPACA >= 0.6.2): every draw uses its own Om unless one is typed
+  const omSampled = run.paramSummary?.some((r) => r.name === "cosmo_Om0") && typed.Om == null;
+  return { ...c, hasZ: c.zl != null && c.zs != null, manual: ["zl", "zs", "Om"].some((k) => c[k] !== own[k]), omTyped: typed.Om != null, omSampled: !!omSampled };
 }
 
 export function setCosmology(run, state, name, value) {
@@ -50,7 +52,7 @@ export function cosmologySection(run, state, onChange, extra = null) {
     row("z_lens", number(c.zl, set("zl"), { step: 0.0001, width: 90 })),
     row("z_source", number(c.zs, set("zs"), { step: 0.0001, width: 90 })),
     row("Ωm", number(c.Om, set("Om"), { step: 0.01, width: 70 })),
-    el("div", { class: "muted small" }, `Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm. Defaults: run ${run.label}'s catalog redshifts and config Ωm; values typed here apply to this lens only, every other run uses its own.`),
+    el("div", { class: "muted small" }, `Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm. Defaults: run ${run.label}'s catalog redshifts and config Ωm; values typed here apply to this lens only, every other run uses its own.` + (c.omSampled ? " This run samples Ωm (cosmo_Om0): every draw is converted at its own Ωm unless you type one." : "")),
     c.manual ? el("div", { class: "ctl-row" }, button("Use the run's values", () => { delete state.cosmo; onChange(); }, { small: true })) : null,
     extra,
   );

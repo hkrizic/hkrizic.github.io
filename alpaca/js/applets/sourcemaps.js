@@ -1,4 +1,5 @@
 import { el, section, row, select, cmapSelect, stretchSelect, checkbox, button, downloadPNG } from "../ui/widgets.js";
+import { mainProfileOf } from "../physics/composite.js";
 import { ImageView } from "../ui/imagecanvas.js";
 import { runOf, runRow, busy, errorBox, infoBox } from "./common.js";
 
@@ -29,7 +30,7 @@ export default {
         try {
           const bf = await run.bestFit("final");
           const params = Object.fromEntries(Object.entries(bf.params).filter(([, v]) => typeof v === "number"));
-          if (params.lens_gamma !== undefined) {
+          if (mainProfileOf(params)) {
             const r = await run.render("final", params, bf.source, { lensLight: false, pointSources: false, source: true, unconvolved: true });
             if (r.sourceGrid) { const g = r.sourceGrid; const h = g.step / 2; extent = [g.x0 - h, g.x1 + h, g.y0 - h, g.y1 + h]; units = "arcsec"; }
           }

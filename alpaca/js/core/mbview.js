@@ -6,6 +6,15 @@
 // alpaca.multiband.model.JointModel.view: its own sites without the prefix, plus every shared site, where shared
 // image-plane positions (*center_x/_y, x_image_i/y_image_i) are read as value + (frame_dx, frame_dy).
 
+// Composite main deflector (ALPACA >= 0.6.1): one shared mass, so one stellar light, the reference band's. Every other
+// band's view also carries "stellar:<site>" = the reference band's value of each per-band light site the stars read
+// (double chameleon or Sersic), exactly as JointModel.view (no frame shift is applied to these copies there either).
+const STELLAR_SITES = [
+  "log_light_amp_L", "light_lwc_L", "light_ldw_L", "light_e1_L", "light_e2_L", "log_light_amp_L2", "light_lwc_L2", "light_ldw_L2", "light_e1_L2", "light_e2_L2",
+  ...["_L", "_L2", "_L3"].flatMap((s) => ["log_light_amp", "light_Re", "light_n", "light_e1", "light_e2", "light_center_x", "light_center_y"].map((p) => p + s)),
+].filter((v, i, a) => a.indexOf(v) === i);
+const isComposite = (shared) => shared.includes("lens_f_b");
+
 export const POS_X = /(center_x(_|$)|^x_image(_\d+)?$)/;
 export const POS_Y = /(center_y(_|$)|^y_image(_\d+)?$)/;
 
@@ -33,6 +42,9 @@ export function projectBand(names, samples, nS, nP, { band, reference = null, se
       keep.push([i, local, null]);
     } else if (!nm.includes(sep)) keep.push([i, nm, positionalAxis(nm)]);
   });
+  if (reference && band !== reference && isComposite(names.filter((n) => !n.includes(sep)))) {
+    for (const site of STELLAR_SITES) { const i = names.indexOf(reference + sep + site); if (i >= 0) keep.push([i, "stellar:" + site, null]); }
+  }
   const hasOffset = frameOffsets && band !== reference && dxIdx >= 0 && dyIdx >= 0;
   const outNames = keep.map((k) => k[1]);
   if (hasOffset) outNames.push("frame_dx", "frame_dy");
@@ -69,6 +81,9 @@ export function viewParams(params, { band, reference = null, sep = "__", frameOf
   for (const [k, v] of Object.entries(shared)) {
     const ax = positionalAxis(k);
     out[k] = hasOffset && ax && typeof v === "number" ? v + (ax === "x" ? dx : dy) : v;
+  }
+  if (reference && band !== reference && isComposite(Object.keys(shared))) {
+    for (const site of STELLAR_SITES) { const v = params[reference + sep + site]; if (v !== undefined) out["stellar:" + site] = v; }
   }
   return { params: out, frame: hasOffset ? { dx, dy } : null };
 }

@@ -32,6 +32,6 @@ export const PRESETS = [
   { id: "model", title: "Model lab + lensing", panels: [["model", { output: "model" }, "m"], ["model", { output: "resid" }, "m"], ["model", { output: "source" }, "m"], ["lensing", {}, "l"]] },
   { id: "rayshoot", title: "Ray-shooting lab", panels: [["rayshoot", {}, "xl"]] },
   { id: "checks", title: "Model checks: residuals · flux ratios · D_Δt budget", panels: [["residuals", {}, "xl"], ["fluxratios", {}, "l"], ["budget", {}, "l"]] },
-  { id: "msd", title: "Mass sheet & kinematics", panels: [["msd", {}, "xl"], ["h0", {}, "m"], ["corner", { params: ["kin_lambda_int", "lens_gamma", "kin_anisotropy_ratio", "lens_theta_E", "D_dt"] }, "l"]] },
+  { id: "msd", title: "Mass sheet & kinematics", panels: [["msd", {}, "xl"], ["h0", {}, "m"], ["corner", { params: ["kin_lambda_int", "lens_gamma", "lens_f_b", "lens_eta", "kin_anisotropy_ratio", "lens_theta_E", "D_dt"] }, "l"]] },
   { id: "multiband", title: "Multiband: bands · colours · chromatic", panels: [["mboverview", {}, "xl"], ["mbbands", {}, "xl"], ["mbchromatic", {}, "l"], ["params", {}, "m"]] },
 ];

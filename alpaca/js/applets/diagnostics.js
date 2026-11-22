@@ -24,7 +24,7 @@ export default {
   id: "diagnostics", title: "Sampler diagnostics", icon: "∿", description: "R̂ per parameter, acceptance and divergences, trace plots and autocorrelation-based effective sample sizes.", defaultSize: "m",
   available: (run) => run.features.posterior || run.features.nutsDiag,
   create(ctx, state, panel) {
-    Object.assign(state, { view: state.view || "rhat", params: state.params || ["lens_theta_E", "lens_gamma", "D_dt"], topN: state.topN ?? 25 });
+    Object.assign(state, { view: state.view || "rhat", params: state.params || ["lens_theta_E", "lens_gamma", "lens_f_b", "D_dt"], topN: state.topN ?? 25 });
     const body = el("div", { class: "stack" });
     panel.body.append(body);
     let plots = [];

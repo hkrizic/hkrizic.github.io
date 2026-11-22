@@ -17,7 +17,8 @@ export function openUnblindScreen(app, run) {
 
   // ------------------------------------------------------------ step 1: setup
   const zl0 = run.catalog?.target?.z_lens ?? null, zs0 = run.catalog?.target?.z_source ?? null;
-  const cfg = { zl: zl0, zs: zs0, Om: run.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3, scope: "session", download: false, key: "" };
+  // omTyped: an Ωm typed here replaces a sampled Ωm (cosmo_Om0); otherwise every draw is converted at its own Ωm
+  const cfg = { zl: zl0, zs: zs0, Om: run.config?.mass?.perturbers?.cosmology?.Om0 ?? 0.3, omTyped: false, scope: "session", download: false, key: "" };
   const canWrite = !!run.index.handle;
   const status = el("div", { class: "muted small" });
   const keyInput = textInput("", (v) => { cfg.key = v; }, { placeholder: "blinding key (ALPACA_BLINDING_KEY)", width: 300, type: "password" });
@@ -37,7 +38,8 @@ export function openUnblindScreen(app, run) {
       el("div", {},
         el("h4", {}, "Key"), keyRow,
         el("h4", {}, "Cosmology for H₀"),
-        el("div", { class: "ctl-row" }, el("span", { class: "ctl-label" }, "z_lens"), number(cfg.zl, (v) => { cfg.zl = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "z_source"), number(cfg.zs, (v) => { cfg.zs = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "Ωm"), number(cfg.Om, (v) => { cfg.Om = v; }, { step: 0.01, width: 70 })),
+        el("div", { class: "ctl-row" }, el("span", { class: "ctl-label" }, "z_lens"), number(cfg.zl, (v) => { cfg.zl = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "z_source"), number(cfg.zs, (v) => { cfg.zs = v; }, { step: 0.0001, width: 90 }), el("span", { class: "ctl-label" }, "Ωm"), number(cfg.Om, (v) => { cfg.Om = v; cfg.omTyped = true; }, { step: 0.01, width: 70 })),
+        run.paramSummary.some((r) => r.name === "cosmo_Om0") ? el("div", { class: "muted small" }, "This run samples Ωm (cosmo_Om0): every draw is converted at its own Ωm unless you type one here.") : null,
         el("div", { class: "muted small" }, "Flat ΛCDM; D_Δt ∝ 1/H₀ at fixed Ωm." + (run.massSheet.applies ? ` Kinematics run: H₀ is revealed from the physical distance D_Δt / [λ_int (1 − κ_ext)], κ_ext = ${run.massSheet.kappaExt}${run.massSheet.sampleLambda ? ", λ_int as sampled" : `, λ_int = ${run.massSheet.lambdaFixed}`}.` : "")),
       ),
       el("div", {},
@@ -74,16 +76,17 @@ export function openUnblindScreen(app, run) {
     // compute while the animation runs
     const work = (async () => {
       await run.unblindSession();
-      const h0 = await run.h0Samples({ zl: cfg.zl, zs: cfg.zs, Om: cfg.Om });
+      const h0 = await run.h0Samples({ zl: cfg.zl, zs: cfg.zs, Om: cfg.Om, omTyped: cfg.omTyped });
       const st = summarize(h0.samples);
       const dd = summarize(h0.ddt);
       const stModel = h0.physical ? summarize(h0.model) : null;
       const lam = h0.lam ? summarize(h0.lam) : null;
-      const extra = { h0: st, ddt: dd, zl: cfg.zl, zs: cfg.zs, Om: cfg.Om, physical: h0.physical, h0Model: stModel, src: h0.src };
+      const omStats = h0.om ? summarize(h0.om) : null;
+      const extra = { h0: st, ddt: dd, zl: cfg.zl, zs: cfg.zs, Om: cfg.Om, omStats, physical: h0.physical, h0Model: stModel, src: h0.src };
       let written = null;
       if (cfg.scope === "folder") written = await run.writeUnblinded(extra);
       if (cfg.scope === "download") written = await run.downloadUnblinded(extra);
-      return { st, dd, stModel, lam, physical: h0.physical, written };
+      return { st, dd, stModel, lam, omStats, physical: h0.physical, written };
     })();
 
     const T_SPIN = 3600, T_SETTLE = 1400;
@@ -114,7 +117,7 @@ export function openUnblindScreen(app, run) {
       const ms = run.massSheet;
       sub.append(
         el("div", { class: "cer-err" }, `+${(st.hi68 - st.median).toFixed(2)}  −${(st.median - st.lo68).toFixed(2)}  (68 %)   ·   ${(100 * st.std / st.median).toFixed(2)} % precision`),
-        el("div", { class: "cer-line" }, `${result.physical ? "physical D_Δt" : "D_Δt"} = ${pm(dd, 1)} Mpc   ·   z_l = ${cfg.zl}, z_s = ${cfg.zs}, Ωm = ${cfg.Om}`),
+        el("div", { class: "cer-line" }, `${result.physical ? "physical D_Δt" : "D_Δt"} = ${pm(dd, 1)} Mpc   ·   z_l = ${cfg.zl}, z_s = ${cfg.zs}, ${result.omStats ? `Ωm sampled = ${pm(result.omStats, 3)}` : `Ωm = ${cfg.Om}`}`),
         result.physical ? el("div", { class: "cer-line" }, (result.lam ? `λ_int = ${pm(result.lam, 3)}` : `λ_int = ${ms.lambdaFixed} (fixed)`) + `   ·   κ_ext = ${ms.kappaExt}   ·   lens-model H₀ (λ = 1) = ${pm(result.stModel, 2)}`) : null,
         el("div", { class: "cer-line muted" }, result.written ? `Written: ${result.written}` : "Session only — nothing was written."),
         el("div", { class: "cer-line muted" }, "Press ✕ or Esc to analyse the unblinded results."),

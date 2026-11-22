@@ -20,9 +20,8 @@ function transferables(obj, out = new Set()) {
 }
 
 function buildModel(spec) {
-  const geo = spec.geo.isMultiplane
-    ? buildGeometry({ zLens: spec.geo.zLens, zSource: spec.geo.zSource, perturbers: spec.geo.perturbers, cosmo: spec.geo.cosmo })
-    : singlePlaneGeometry({ zLens: spec.geo.zLens, zSource: spec.geo.zSource, perturbers: spec.geo.perturbers, cosmo: spec.geo.cosmo });
+  const g = { zLens: spec.geo.zLens, zSource: spec.geo.zSource, perturbers: spec.geo.perturbers, cosmo: spec.geo.cosmo, mainProfile: spec.mainProfile || "EPL" };
+  const geo = spec.geo.isMultiplane ? buildGeometry(g) : singlePlaneGeometry(g);
   return new ForwardModel({ ...spec, geo });
 }
 

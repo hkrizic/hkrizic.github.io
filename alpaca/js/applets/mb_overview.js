@@ -9,7 +9,7 @@ import { summarize } from "../core/stats.js";
 import { THEME, alpha } from "../ui/theme.js";
 
 const card = (title, ...children) => el("div", { class: "card" }, el("h3", {}, title), ...children);
-const MASS_LABEL = { lens_theta_E: "θ_E", lens_gamma: "γ (slope)", lens_e1: "e1", lens_e2: "e2", lens_gamma1: "γ_ext,1", lens_gamma2: "γ_ext,2", lens_center_x: "centre x", lens_center_y: "centre y" };
+const MASS_LABEL = { lens_theta_E: "θ_E", lens_gamma: "γ (slope)", lens_e1: "e1", lens_e2: "e2", lens_gamma1: "γ_ext,1", lens_gamma2: "γ_ext,2", lens_center_x: "centre x", lens_center_y: "centre y", lens_f_b: "f_b (stars in θ_E)", lens_eta: "η (M/L gradient)", lens_r_s: "r_s (NFW)" };
 // grey levels per band (monochrome theme), darkest = longest wavelength
 const bandColor = (i, n) => (n <= 1 ? THEME.fg : `rgb(${Math.round(170 * (1 - i / (n - 1)))},${Math.round(170 * (1 - i / (n - 1)))},${Math.round(170 * (1 - i / (n - 1)))})`);
 const MARKERS = ["circle", "square", "diamond", "triangle"];

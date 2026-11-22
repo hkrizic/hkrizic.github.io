@@ -2,8 +2,9 @@
 // (correlated-field) source + point sources, supersampled rendering, PSF
 // convolution on the supersampled grid, average pooling. Mirrors
 // herculens' MPLensImage / Numerics with ALPACA's patches.
-import { flatKwargsLens, splitKwargs, rayShoot } from "./multiplane.js";
+import { flatKwargsLens, splitKwargs, rayShoot, geometryAtOm } from "./multiplane.js";
 import { sersicLight, uniformLight } from "./profiles.js";
+import { chameleonLight, chameleonLightKwargs } from "./composite.js";
 import { Convolver } from "./fft.js";
 
 export function blockMean(img, rows, cols, f) {
@@ -48,7 +49,8 @@ export class ForwardModel {
    *  arcMask: Uint8Array/Float64Array (nx*nx) or null,
    *  geo: geometry from multiplane.js, perturbers: [{name, profiles}],
    *  nSrc: source grid size, sourceGridScale: float,
-   *  nSersic: number of lens-light Sersic components (1..3), sky: bool,
+   *  nSersic: number of main lens-light components (Sersic 1..3, or the 2 of the double chameleon),
+   *  lensLight: "sersic" | "chameleon" (double chameleon centred on the mass centre, ALPACA >= 0.6.1), sky: bool,
    *  nPs: number of point-source images, useSky
    */
   constructor(spec) {
@@ -95,24 +97,32 @@ export class ForwardModel {
     return m;
   }
 
-  planeKwargs(params) {
-    return splitKwargs(flatKwargsLens(params, this.perturbers), this.geo);
+  // Geometry of a parameter set: the fiducial one, or the one at its sampled Om (cosmo_Om0, multi-plane runs).
+  geoFor(params) { return geometryAtOm(this.geo, params.cosmo_Om0); }
+
+  planeKwargs(params, geo = this.geoFor(params)) {
+    return splitKwargs(flatKwargsLens(params, this.perturbers, this.geo.mainProfile), geo);
+  }
+
+  _shoot(params, x, y) {
+    const geo = this.geoFor(params);
+    return rayShoot(geo, this.planeKwargs(params, geo), x, y);
   }
 
   // Ray-shoot the supersampled grid through all planes.
   rayShootSS(params) {
     const { x, y } = this.gridSS();
-    return rayShoot(this.geo, this.planeKwargs(params), x, y);
+    return this._shoot(params, x, y);
   }
 
   rayShootNative(params) {
     const { x, y } = this.gridNative();
-    return rayShoot(this.geo, this.planeKwargs(params), x, y);
+    return this._shoot(params, x, y);
   }
 
   // Ray-shoot arbitrary image-plane points (flat arrays) to every plane.
   rayShootPoints(params, x, y) {
-    return rayShoot(this.geo, this.planeKwargs(params), Float64Array.from(x), Float64Array.from(y));
+    return this._shoot(params, Float64Array.from(x), Float64Array.from(y));
   }
 
   // Adaptive source grid from the ray-traced arc mask (herculens MPLensImage.mask_extent).
@@ -148,6 +158,7 @@ export class ForwardModel {
   }
 
   lensLightKwargs(params) {
+    if (this.lensLight === "chameleon") return chameleonLightKwargs(params);
     const comps = [];
     const suffixes = ["L", "L2", "L3"].slice(0, this.nSersic);
     for (const sfx of suffixes) {
@@ -167,7 +178,8 @@ export class ForwardModel {
   evalLensLight(params, x, y, { components = null, includeSky = true } = {}) {
     const out = new Float64Array(x.length);
     const comps = this.lensLightKwargs(params);
-    comps.forEach((kw, i) => { if (!components || components[i]) sersicLight(x, y, kw, out); });
+    const profile = this.lensLight === "chameleon" ? chameleonLight : sersicLight;
+    comps.forEach((kw, i) => { if (!components || components[i]) profile(x, y, kw, out); });
     if (includeSky && this.useSky && params.sky_amp !== undefined) uniformLight(params.sky_amp, out);
     return out;
   }

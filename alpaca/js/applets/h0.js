@@ -60,7 +60,7 @@ export default {
         const ddtStats = d.shown ? summarize(d.shown) : null;
         let h0Shown = null, h0Stats = null, h0Frac = null, h0Mode = null;
         if (d.ddt && c.hasZ) {
-          const h0 = Float64Array.from(d.ddt, (x) => H0FromDdt(x, c.zl, c.zs, c.Om));
+          const h0 = H0FromDdt(d.ddt, c.zl, c.zs, await r.omFor(p, c));
           const st = summarize(h0);
           h0Frac = st.std / st.mean;
           if (d.blindedRun) { const b = r.blindDerived(h0); h0Shown = b.values; h0Mode = b.mode; }
@@ -81,7 +81,8 @@ export default {
       }
       sets = next;
       const s0 = sets[0];
-      const zText = `flat ΛCDM Ωm=${cosmo.Om}, z_l=${cosmo.zl}, z_s=${cosmo.zs}${cosmo.manual ? " (set manually)" : ""}`;
+      const omText = cosmo.omSampled && post.columns.cosmo_Om0 ? "Ωm sampled (each draw at its own cosmo_Om0)" : `Ωm=${cosmo.Om}`;
+      const zText = `flat ΛCDM ${omText}, z_l=${cosmo.zl}, z_s=${cosmo.zs}${cosmo.manual ? " (set manually)" : ""}`;
       info.innerHTML = "";
       const cards = [];
       const fmtPm = (st, d) => `+${(st.hi68 - st.median).toFixed(d)} −${(st.median - st.lo68).toFixed(d)}`;

@@ -2,6 +2,7 @@
 // on top of herculens' MPMassModel conventions.
 import { etaMatrix, timeDelayDistance } from "./cosmology.js";
 import { deflectProfile } from "./profiles.js";
+import { isCompositeProfile, compositeMassKwargs } from "./composite.js";
 
 // perturbers: [{name, z, plane: 'main'|'foreground'|'background', profiles: ['SIS']}] in catalog order.
 export function buildGeometry({ zLens, zSource, perturbers = [], cosmo = { H0: 70, Om: 0.3 }, mainProfile = "EPL" }) {
@@ -29,8 +30,29 @@ export function buildGeometry({ zLens, zSource, perturbers = [], cosmo = { H0: 7
   const DdtFid = timeDelayDistance(zLens, zSource, cosmo);
   return {
     planeRedshifts, zSource: Number(zSource), mainIdx, planeSlots, profileLists,
-    eta, etaFlat: flat, deflScales, nPlanes: N, DdtFid, cosmo, isMultiplane: N > 1,
+    eta, etaFlat: flat, deflScales, nPlanes: N, DdtFid, cosmo, isMultiplane: N > 1, mainProfile,
   };
+}
+
+// The geometry at a sampled Om (mass.perturbers.cosmology.sample_Om0, ALPACA >= 0.6.2; posterior column cosmo_Om0):
+// the eta matrix, the source -> next-plane deflection factors and D_dt_fid follow Om (H0_fid unchanged, every eta
+// entry is H0-free), as alpaca.models.multiplane.mp_geometry_arrays. Single-plane geometries ignore Om (as ALPACA).
+// Cached per Om value on the base geometry.
+export function geometryAtOm(geo, Om) {
+  if (!geo.isMultiplane || Om === undefined || Om === null || !Number.isFinite(Om)) return geo;
+  if (Om === geo.cosmo.Om) return geo;
+  const cache = (geo._omCache ||= new Map());
+  let g = cache.get(Om);
+  if (g) return g;
+  const cosmo = { ...geo.cosmo, Om };
+  const { eta, flat } = etaMatrix([...geo.planeRedshifts, geo.zSource], cosmo);
+  const N = geo.nPlanes;
+  // the last mass plane's factor is exactly 1 (eta[N-1][N] = 1)
+  const deflScales = geo.planeRedshifts.map((_, j) => (j === N - 1 ? 1 : 1 / eta[j][N]));
+  g = { ...geo, eta, etaFlat: flat, deflScales, DdtFid: timeDelayDistance(geo.planeRedshifts[geo.mainIdx], geo.zSource, cosmo), cosmo, _omCache: undefined, Om };
+  cache.set(Om, g);
+  if (cache.size > 64) cache.delete(cache.keys().next().value);
+  return g;
 }
 
 // Single-plane geometry (no off-plane perturbers): one plane, eta trivial.
@@ -43,17 +65,21 @@ export function singlePlaneGeometry({ zLens = null, zSource = null, perturbers =
   return {
     planeRedshifts: [zLens], zSource, mainIdx: 0, planeSlots, profileLists, eta, etaFlat: [],
     deflScales: [1], nPlanes: 1, DdtFid: zLens != null && zSource != null ? timeDelayDistance(zLens, zSource, cosmo) : null,
-    cosmo, isMultiplane: false,
+    cosmo, isMultiplane: false, mainProfile,
   };
 }
 
-// Flat kwargs_lens list from a params dict: [main, SHEAR, one chunk per perturber].
-export function flatKwargsLens(params, perturbers = []) {
-  const out = [
-    {
+// Flat kwargs_lens list from a params dict: [main, SHEAR, one chunk per perturber]. mainProfile "EPL" or one of the
+// composites (composite.js: the stellar mass follows the lens-light sites, or their "stellar:" copies in multiband).
+export function flatKwargsLens(params, perturbers = [], mainProfile = "EPL") {
+  const main = isCompositeProfile(mainProfile)
+    ? compositeMassKwargs(mainProfile, params)
+    : {
       theta_E: params.lens_theta_E, e1: params.lens_e1, e2: params.lens_e2, gamma: params.lens_gamma,
       center_x: params.lens_center_x, center_y: params.lens_center_y,
-    },
+    };
+  const out = [
+    main,
     { gamma1: params.lens_gamma1, gamma2: params.lens_gamma2, ra_0: params.lens_center_x, dec_0: params.lens_center_y },
   ];
   for (const p of perturbers) {
@@ -81,6 +107,8 @@ function toNextPlane(profile, kw, s) {
   if (profile === "SIS" || profile === "SIE" || profile === "NIE") out.theta_E = kw.theta_E * s;
   else if (profile === "EPL") out.theta_E = kw.theta_E * Math.pow(s, 1 / (kw.gamma - 1));
   else if (profile === "SHEAR") { out.gamma1 = kw.gamma1 * s; out.gamma2 = kw.gamma2 * s; }
+  // composite: every component is linear in its normalisation (alpaca: the norm_scale multiplier)
+  else if (isCompositeProfile(profile)) out.norm_scale = (kw.norm_scale ?? 1) * s;
   else throw new Error("No deflection rescaling for " + profile);
   return out;
 }

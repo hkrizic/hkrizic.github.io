@@ -1,4 +1,5 @@
 import { el, section, row, select, checkbox, number, cmapSelect, stretchSelect, button, textInput, range, downloadPNG } from "../ui/widgets.js";
+import { mainProfileOf } from "../physics/composite.js";
 import { ImageView } from "../ui/imagecanvas.js";
 import { runOf, runRow, imageLayer, residualNorm, maskFrom, pointSourcePositions, busy, errorBox, chi2Reduced, fmtNum } from "./common.js";
 import { marchingSquares, mapPolylines } from "../core/contours.js";
@@ -85,7 +86,7 @@ export default {
         if (state.overlays.curves) {
           const bf = await run.bestFit("final");
           const params = Object.fromEntries(Object.entries(bf.params).filter(([, v]) => typeof v === "number"));
-          if (params.lens_gamma !== undefined) {
+          if (mainProfileOf(params)) {
             const L = await run.lensing("final", params, { oversample: 1 });
             ovs.push({ type: "polylines", lines: L.critical, width: 1.3 });
           }

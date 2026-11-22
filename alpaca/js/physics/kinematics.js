@@ -239,6 +239,7 @@ export function unsupportedReason(config) {
   if (kc.ds_over_dds == null) return "likelihood.kinematics.ds_over_dds is missing";
   const main = config?.mass?.main || {};
   if (/bpl/i.test(main.profile || "")) return "broken power-law main deflectors are not ported";
+  if (/composite/i.test(main.profile || "")) return "composite kinematics (stars deprojected numerically + NFW halo, alpaca.kinematics.composite) are not ported";
   const orders = main.multipoles?.orders || [];
   if (orders.some((m) => m % 2 === 0)) return "even multipoles enter the dynamics as a monopole, which is not ported";
   if (/mge/i.test(config?.light?.lens?.refit?.profile || "") || config?.light?.lens?.use_mge) return "MGE lens light is not supported by the kinematics";

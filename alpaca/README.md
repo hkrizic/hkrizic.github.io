@@ -71,6 +71,30 @@ need the IFU data file, which is not in the run folder; with an importance updat
 ALPACA is shown instead. Blinded runs show λ_int and H₀ only as
 deviations from their mean; the convergence-profile plot then uses an isothermal reference with the posterior spread.
 
+**Composite main deflector** (ALPACA ≥ 0.6.1, `mass.main.profile = "composite"`). Runs whose main deflector is the
+TDCOSMO composite (stars tied to the lens light with a mass-to-light gradient, plus an elliptical NFW halo) open like
+any other run. The sampled `lens_f_b`, `lens_eta` and `lens_r_s` are in the parameter table, the corner plot and the
+marginals (and in their default selections), and every forward-model panel renders the composite in the browser:
+the viewers' best-draw model, the model lab, the ray-shooting lab, the lensing maps, the residual statistics and the
+flux ratios. Both stellar tracers are ported (`js/physics/composite.js`):
+* the double chameleon (`composite_light = "chameleon"`), which is also rendered as the lens light;
+* the Sérsic stars of 0.6.2 (`"sersic"`): stars at the light centre, halo at the mass centre.
+
+The port evaluates ALPACA's CSE sums in float64 and solves the stellar least-squares fit for every draw. That is the
+`"exact"` composite numerics; ALPACA's default `"fast"` numerics sum the image grid in float32. The deflection agrees
+with ALPACA to ~1e-11 (`test/verify_composite.mjs`). The double-chameleon light alone (with an EPL) renders too.
+
+With the EPL safeguard (`stages.epl_safeguard`), stages 1–3 are EPL fits and stage 4 (*Mass upgrade*) is the
+composite; every stage is rendered with its own mass model. The mass-sheet applet draws the composite's circularised
+convergence (stars + NFW) instead of the EPL's power law. In multiband runs, every band's stellar mass follows the
+reference band's light: the `stellar:` entries of `JointModel.view`, which appear in the other bands' views.
+Not ported: the composite kinematics, so the predicted σ_v of the mass-sheet applet is unavailable for composite runs.
+
+**Sampled Ωm** (ALPACA 0.6.2, `mass.perturbers.cosmology.sample_Om0`, multi-plane runs). `cosmo_Om0` is a posterior
+column, blinded together with D_Δt. Every draw is ray-traced with the multi-plane geometry (η matrix, deflection
+factors) of its own Ωm. H₀ is also converted draw by draw at that Ωm, unless you type an Ωm in the cosmology settings
+of a panel or of the unblinding screen.
+
 **Multiband runs** (ALPACA ≥ 0.6.0, `run_multiband.py`). Drop the multiband output folder (the one holding `bands/`,
 `joint/` and `multiband_config_used.json`). It opens as one run with a **band switch** in the sidebar. Every band is
 shown through the joint fit: its own data, PSF, noise and stages from `bands/<band>/`, and the band's *view* of the
@@ -117,11 +141,14 @@ for older runs it lives outside the run folder (`data/perturbers.json`), so drop
 
 ## Forward model
 
-`js/physics` is a port of the exact model ALPACA samples (herculens + ALPACA patches): EPL (Tessore & Metcalf series),
-external shear, SIS/SIE perturbers and their Sérsic lens light, multi-plane ray shooting with the fiducial eta matrix, adaptive correlated-field
+`js/physics` is a port of the exact model ALPACA samples (herculens + ALPACA patches): EPL (Tessore & Metcalf series)
+or the composite (CSE sums of the chameleon or Sérsic stars and of the NFW, `composite.js`), external shear, SIS/SIE perturbers and their Sérsic lens light, multi-plane ray shooting with the fiducial eta matrix, adaptive correlated-field
 source grid, supersampled rendering, PSF convolution on the supersampled grid and average pooling, sub-pixel point sources.
 `test/verify_physics.mjs` compares it against reference arrays dumped from Python (`tools/dump_reference.py`);
-on the bundled example run all components agree to ~1e-8 relative.
+on the bundled example run all components agree to ~1e-8 relative. `test/verify_composite.mjs` does the same for the
+composite, the double-chameleon light, the sampled-Ωm geometry and the multiband `stellar:` views, against values from
+`tools/dump_composite_reference.py` (needs ALPACA ≥ 0.6.2):
+`PYTHONPATH=<alpaca> python tools/dump_composite_reference.py /tmp/ref.json && node test/verify_composite.mjs /tmp/ref.json`.
 
 ## Layout
 
